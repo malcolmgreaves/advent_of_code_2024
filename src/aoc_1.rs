@@ -1,3 +1,11 @@
-pub fn solve_aoc_1() -> &'static str {
-    return "hi from problem_1"
+pub fn solve_aoc_1() -> i32 {
+    sum_sorted_distances(&[3,4,2,1,3,3], &[4,3,5,3,9,3])
+}
+
+pub fn sum_sorted_distances(list1: &[i32], list2: &[i32]) -> i32 {
+    let mut list1 = list1.to_vec();
+    list1.sort();
+    let mut list2 = list2.to_vec();
+    list2.sort();
+    list1.iter().zip(list2.iter()).map(|(l1,l2)| if l1 < l2 { l2 - l1 } else { l1 - l2 }).sum()
 }
