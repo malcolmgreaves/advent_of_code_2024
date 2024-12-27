@@ -1,4 +1,5 @@
 pub fn solution() -> i32 {
+    // https://adventofcode.com/2024/day/1
     sum_sorted_distances(&[3,4,2,1,3,3], &[4,3,5,3,9,3])
 }
 
