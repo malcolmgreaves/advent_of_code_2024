@@ -1,8 +1,9 @@
-fn problem_1() {
-    println!("hi from problem_1")
-}
+mod aoc_1;
 
-fn main() {
-    problem_1();
-    println!("Hello, world!");
+use crate::aoc_1::solve_aoc_1;
+
+
+pub fn main() {
+    let message = solve_aoc_1();
+    println!("Hello! Message: \"{message}\"");
 }
