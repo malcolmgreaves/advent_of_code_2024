@@ -7,8 +7,16 @@
 
 pub fn solution() -> i32 {
     // https://adventofcode.com/2024/day/2
-    println!("ERROR: need to implement file reading from inputs/2");
-    -1
+    panic!("ERROR: need to implement file reading from inputs/2");
+    
+}
+
+fn count_ok_levels(levels: Vec<Vec<i32>>) -> i32 {
+    levels
+        .iter()
+        .map(|level| check_level(level))
+        .map(|x| if x { 1 } else { 0 })
+        .sum::<i32>()
 }
 
 fn check_level(level: &[i32]) -> bool {
@@ -56,19 +64,15 @@ mod test {
     #[test]
     fn example_solution() {
         let levels = [
-            [7, 6, 4, 2, 1],
-            [1, 2, 7, 8, 9],
-            [9, 7, 6, 2, 1],
-            [1, 3, 2, 4, 5],
-            [8, 6, 4, 4, 1],
-            [1, 3, 6, 7, 9],
-        ];
+            [7, 6, 4, 2, 1].to_vec(),
+            [1, 2, 7, 8, 9].to_vec(),
+            [9, 7, 6, 2, 1].to_vec(),
+            [1, 3, 2, 4, 5].to_vec(),
+            [8, 6, 4, 4, 1].to_vec(),
+            [1, 3, 6, 7, 9].to_vec(),
+        ].to_vec();
 
-        let result = levels
-            .map(|level| check_level(&level))
-            .map(|x| if x { 1 } else { 0 })
-            .iter()
-            .sum::<i32>();
+        let result = count_ok_levels(levels);
         assert!(result == 2);
     }
 }
