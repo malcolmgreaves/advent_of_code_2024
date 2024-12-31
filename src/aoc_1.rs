@@ -12,11 +12,6 @@ pub fn solution() -> i32 {
     sum_sorted_distances(&l1, &l2)
 }
 
-fn to_int(s: &str) -> i32 {
-    s.parse::<i32>()
-        .expect(format!("Could not convert to i32! Original: '{s}'").as_str())
-}
-
 fn sum_sorted_distances(list1: &[i32], list2: &[i32]) -> i32 {
     let mut list1 = list1.to_vec();
     list1.sort();
