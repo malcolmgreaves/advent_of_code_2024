@@ -1,23 +1,20 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use crate::io_help;
 
 pub fn solution() -> i32 {
     // https://adventofcode.com/2024/day/1
-    let f = File::open("./inputs/1").expect("Could not load file!");
-    let reader = BufReader::new(f);
-    let (l1, l2) = reader
-        .lines()
-        .map(|l| {
-            let l = l.expect("Could not read a line of text.");
-            let bits = l.trim().split("   ").collect::<Vec<&str>>();
-            (to_int(bits[0]), to_int(bits[1]))
+    let (l1, l2) = io_help::read_lines_as_ints("   ", "./inputs/1")
+        .into_iter()
+        .map(|x| {
+            assert!(x.len() == 2);
+            (x[0], x[1])
         })
         .unzip::<i32, i32, Vec<i32>, Vec<i32>>();
     sum_sorted_distances(&l1, &l2)
 }
 
 fn to_int(s: &str) -> i32 {
-    s.parse::<i32>().expect(format!("Could not convert to i32! Original: '{s}'").as_str())
+    s.parse::<i32>()
+        .expect(format!("Could not convert to i32! Original: '{s}'").as_str())
 }
 
 fn sum_sorted_distances(list1: &[i32], list2: &[i32]) -> i32 {

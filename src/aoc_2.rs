@@ -1,14 +1,8 @@
-// 7 6 4 2 1
-// 1 2 7 8 9
-// 9 7 6 2 1
-// 1 3 2 4 5
-// 8 6 4 4 1
-// 1 3 6 7 9
+use crate::io_help;
 
 pub fn solution() -> i32 {
     // https://adventofcode.com/2024/day/2
-    panic!("ERROR: need to implement file reading from inputs/2");
-    
+    count_ok_levels(io_help::read_lines_as_ints(" ", "./inputs/2").to_vec())
 }
 
 fn count_ok_levels(levels: Vec<Vec<i32>>) -> i32 {
@@ -70,7 +64,8 @@ mod test {
             [1, 3, 2, 4, 5].to_vec(),
             [8, 6, 4, 4, 1].to_vec(),
             [1, 3, 6, 7, 9].to_vec(),
-        ].to_vec();
+        ]
+        .to_vec();
 
         let result = count_ok_levels(levels);
         assert!(result == 2);
