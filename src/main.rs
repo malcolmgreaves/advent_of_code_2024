@@ -3,13 +3,16 @@ mod aoc_2;
 mod aoc_3;
 mod io_help;
 
-// use crate::aoc_1::solution;
+use std::collections::HashMap;
 
 pub fn main() {
-    let solutions = [aoc_1::solution(), aoc_2::solution(), aoc_3::solution()];
-    for i in 0..solutions.len() {
-        let ip1 = i + 1;
-        let soln = solutions[i];
-        println!("AOC {ip1} Solution: {soln}");
+    let solutions = HashMap::from([
+        ("AOC #1", aoc_1::solution()),
+        ("AOC #2", aoc_2::solution()),
+        ("AOC #3 pt.1", aoc_3::solution_pt1()),
+        ("AOC #3 pt.2", aoc_3::solution_pt2()),
+    ]);
+    for (name, result) in solutions.iter() {
+        println!("{name} Solution: {result}");
     }
 }

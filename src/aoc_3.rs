@@ -1,13 +1,16 @@
 use core::iter::Iterator;
-use std::fmt::Display;
 
 use regex::Regex;
 
 use crate::io_help::{self, to_int};
 
-pub fn solution() -> i32 {
+pub fn solution_pt1() -> i32 {
     // https://adventofcode.com/2024/day/3
     solve_inputs(&io_help::read_lines("./inputs/3").collect::<Vec<String>>())
+}
+
+pub fn solution_pt2() -> i32 {
+    panic!("not implemented");
 }
 
 pub struct MulGroup {
