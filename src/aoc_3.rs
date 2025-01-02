@@ -10,7 +10,10 @@ pub fn solution_pt1() -> i32 {
 }
 
 pub fn solution_pt2() -> i32 {
-    panic!("not implemented");
+    // turn a string into a sequence of instructions
+    // instructions are: mul(L,R), do, don't
+    // then process as state machine
+    solve_inputs_conditionals(&io_help::read_lines("./inputs/3").collect::<Vec<String>>())
 }
 
 pub struct MulGroup {
@@ -22,6 +25,41 @@ impl MulGroup {
     pub fn multiply(&self) -> i32 {
         self.left * self.right
     }
+}
+
+fn solve_inputs_conditionals(input_lines: &[String]) -> i32 {
+    input_lines
+        .iter()
+        .map(|l| sum_states(&process_into_states(l)))
+        .sum()
+}
+
+pub enum State {
+    MulGroup { left: i32, right: i32 },
+    Do,
+    Dont,
+}
+
+fn process_into_states(input_line: &str) -> Vec<State> {
+    panic!("unimplemented");
+}
+
+fn sum_states(states: &[State]) -> i32 {
+    let mut sum = 0;
+    let mut active = true;
+    for s in states {
+        match s {
+            State::MulGroup { left, right } => {
+                if active {
+                    let x = left * right;
+                    sum += x;
+                }
+            }
+            State::Do => active = true,
+            State::Dont => active = false,
+        }
+    }
+    sum
 }
 
 fn solve_inputs(input_lines: &[String]) -> i32 {
