@@ -1,12 +1,13 @@
 use core::iter::Iterator;
+use std::cmp::Ordering;
 
-use regex::Regex;
+use regex::{Match, Regex};
 
 use crate::io_help::{self, to_int};
 
 pub fn solution_pt1() -> i32 {
     // https://adventofcode.com/2024/day/3
-    solve_inputs(&io_help::read_lines("./inputs/3").collect::<Vec<String>>())
+    solve_inputs_mul(&io_help::read_lines("./inputs/3").collect::<Vec<String>>())
 }
 
 pub fn solution_pt2() -> i32 {
@@ -42,6 +43,41 @@ pub enum State {
 
 fn process_into_states(input_line: &str) -> Vec<State> {
     panic!("unimplemented");
+    let dont_regex = Regex::new(r"don't\(\)").unwrap();
+    let do_regex = Regex::new(r"do\(\)").unwrap();
+    let mul_regex = Regex::new(r"mul\([0-9]*,[0-9]*\)").unwrap();
+
+    let captures = |regex: Regex| -> Vec<_> {
+        regex
+            .captures(input_line)
+            .unwrap()
+            .iter()
+            .flatten()
+            .collect::<Vec<_>>()
+    };
+
+    let mut dont_caps = captures(dont_regex);
+    let mut do_caps = captures(do_regex);
+    let mut mul_caps = captures(mul_regex);
+
+    dont_caps.sort_by(|x, y| compare_matches_start(*x, *y));
+    do_caps.sort_by(|x, y| compare_matches_start(*x, *y));
+    mul_caps.sort_by(|x, y| compare_matches_start(*x, *y));
+
+    // go through, 3 counters
+    // take each one and then convert into State
+
+    panic!("unimplemented")
+}
+
+fn compare_matches_start(x: Match, y: Match) -> Ordering {
+    if x.start() < y.start() {
+        Ordering::Less
+    } else if x.start() > y.start() {
+        Ordering::Greater
+    } else {
+        Ordering::Equal
+    }
 }
 
 fn sum_states(states: &[State]) -> i32 {
@@ -62,7 +98,7 @@ fn sum_states(states: &[State]) -> i32 {
     sum
 }
 
-fn solve_inputs(input_lines: &[String]) -> i32 {
+fn solve_inputs_mul(input_lines: &[String]) -> i32 {
     input_lines
         .iter()
         .map(|l| sum_mul_groups(&regex_mul_groups(l.to_string())))
@@ -108,7 +144,7 @@ mod test {
     fn example_solution() {
         let example_input =
             "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))";
-        let result = solve_inputs(&[example_input.to_string()]);
+        let result = solve_inputs_mul(&[example_input.to_string()]);
         assert!(result == 161);
     }
 }
