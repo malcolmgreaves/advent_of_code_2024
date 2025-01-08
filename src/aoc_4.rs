@@ -24,23 +24,23 @@ fn count_terms<const L: usize, const N: usize>(term: &str, lines: &[[char; L]; N
     // (d) check if each window equals term, if so, increment++
     // (e) return increment total
 
-    let h = horizontals(lines);
-    let v = verticals(lines);
-    let d = diagonals(lines);
-
-    let mut expanding_all_lines: HashSet<String> = HashSet::new();
-    // (a) each "normal" direction
-    expanding_all_lines.extend(h.clone());
-    expanding_all_lines.extend(v.clone());
-    expanding_all_lines.extend(d.clone());
-    // (b) each "reversed" direction
-    expanding_all_lines.extend(h.into_iter().map(utils::reverse_string));
-    expanding_all_lines.extend(v.into_iter().map(utils::reverse_string));
-    expanding_all_lines.extend(d.into_iter().map(utils::reverse_string));
+    let increment = |expanded: Vec<String>| -> i32 {
+        let c1 = count(term, &expanded);
+        let c2 = count(term, &expanded.into_iter().map(utils::reverse_string));
+        c1 + c2
+    };
 
     let mut found = 0;
+    found += increment(horizontals(lines));
+    found += increment(verticals(lines));
+    found += increment(diagonals(lines));
+    found
+}
+
+fn count(term: &str, expanded: &[String]) -> i32 {
+    let mut found = 0;
     // (c, d, e) window, check, increment
-    expanding_all_lines.into_iter().for_each(|line| {
+    expanded.iter().for_each(|line| {
         line.chars()
             .collect::<Vec<_>>()
             .windows(term.len())
@@ -51,7 +51,6 @@ fn count_terms<const L: usize, const N: usize>(term: &str, lines: &[[char; L]; N
                 }
             })
     });
-
     found
 }
 
