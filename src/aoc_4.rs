@@ -1,7 +1,6 @@
 use core::iter::Iterator;
 
 use std::{
-    borrow::Borrow,
     cmp::{max, min},
     collections::HashSet,
 };
@@ -22,7 +21,9 @@ pub fn solution_pt1() -> i32 {
     count_terms("XMAS", &matrix);
 }
 
-fn count_terms<const L: usize, const N: usize>(term: &str, lines: &[[char; L]; N]) -> i32 {
+type CharMatrix = Vec<Vec<char>>;
+
+fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
     // (a) take the matrix and get out each full-length
     //  - horizontal
     //  - vertical
@@ -43,9 +44,9 @@ fn count_terms<const L: usize, const N: usize>(term: &str, lines: &[[char; L]; N
     };
 
     let mut found = 0;
-    found += increment(horizontals(lines));
-    found += increment(verticals(lines));
-    found += increment(diagonals(lines));
+    found += increment(horizontals(L, N, lines));
+    found += increment(verticals(L, N, lines));
+    found += increment(diagonals(L, N, lines));
     found
 }
 
@@ -66,27 +67,40 @@ fn count<'a>(term: &str, expanded: impl Iterator<Item = &'a String>) -> i32 {
     found
 }
 
-fn horizontals<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<String> {
-    lines.map(|line| line.iter().collect::<String>()).to_vec()
-}
-
-fn verticals<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<String> {
-    (0..N)
-        .map(|row| String::from_iter((0..L).map(|col| lines[row][col])))
+fn horizontals(L: usize, N: usize, lines: CharMatrix) -> Vec<String> {
+    assert_eq!(lines.len(), N);
+    lines
+        .iter()
+        .map(|line| {
+            assert_eq!(line.len(), L);
+            line.iter().collect::<String>()
+        })
         .collect::<Vec<_>>()
 }
 
-fn diagonals<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<String> {
+fn verticals(L: usize, N: usize, lines: CharMatrix) -> Vec<String> {
+    assert_eq!(lines.len(), N);
+    (0..N)
+        .map(|row| {
+            String::from_iter((0..L).map(|col| {
+                assert_eq!(lines[row].len(), L);
+                lines[row][col]
+            }))
+        })
+        .collect::<Vec<_>>()
+}
+
+fn diagonals(L: usize, N: usize, lines: CharMatrix) -> Vec<String> {
     // take the (NxL) matrix and convert into lists of index pairs
     // each list corresponds to a full diagonal
     // then, take each list and reindex into `lines` to get the full String
     let mut result = HashSet::new();
 
-    let d1 = diagonals_r2l(lines);
+    let d1 = diagonals_r2l(L, N, lines);
     result.extend(d1);
 
-    let transposed = utils::transpose(lines);
-    let d2 = diagonals_r2l(&transposed);
+    let transposed = utils::transpose(L, N, lines);
+    let d2 = diagonals_r2l(L, N, &transposed);
     result.extend(d2);
 
     // destructive: move each element **OUT OF** the hashset so we can construct a Vec<String<>
@@ -95,7 +109,9 @@ fn diagonals<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<Stri
     result.into_iter().collect::<Vec<_>>()
 }
 
-fn diagonals_r2l<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<String> {
+fn diagonals_r2l(L: usize, N: usize, lines: CharMatrix) -> Vec<String> {
+    assert_eq!(lines.len(), N);
+
     let n = TryInto::<i32>::try_into(N).unwrap();
     let m = TryInto::<i32>::try_into(L).unwrap();
 
@@ -104,6 +120,7 @@ fn diagonals_r2l<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<
             (max(0, d - m + 1)..min(n, d + 1))
                 .map(|x| {
                     // (x, d-x)
+
                     lines[TryInto::<usize>::try_into(x).unwrap()]
                         [TryInto::<usize>::try_into(d - x).unwrap()]
                 })
