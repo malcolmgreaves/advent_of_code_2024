@@ -11,9 +11,34 @@ pub fn solution_pt1() -> i32 {
 }
 
 fn count_terms<const L: usize, const N: usize>(term: &str, lines: &[[char; L]; N]) -> i32 {
-    // let mut lines = format_matrix(term, lines);
+    // take the matrix and get out each full-length
+    //  - horizontal
+    //  - vertical
+    //  - diagonal
+    // and also take the reverse of each
+    // take each of these (6 kinds in total) and break up into windows of term.len()
+    // check if each window equals term, if so, increment++
+    // return increment total
+
+    let expanded_all_lines: Vec<&str> = Vec::new();
 
     panic!("");
+}
+
+fn horizontals<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<String> {
+    lines.map(|line| line.iter().collect::<String>()).to_vec()
+}
+
+fn verticals<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<String> {
+    (0..N)
+        .map(|row| String::from_iter((0..L).map(|col| lines[row][col])))
+        .collect::<Vec<_>>()
+}
+
+fn diagonals<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<String> {
+    // take the (NxL) matrix and convert into lists of index pairs
+    // each list corresponds to a full diagonal
+    // then, take each list and reindex into `lines` to get the full String
 }
 
 // fn format_matrix<const L:usize, const N:usize>(term: &str, lines: &[[char; L]; N]) -> [[char; L]; N] {
