@@ -23,7 +23,7 @@ pub fn solution_pt1() -> i32 {
     // count_terms("XMAS", &matrix)
 }
 
-type CharMatrix = Vec<Vec<char>>;
+type CharMatrix = utils::Matrix<char>;
 
 fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
     // (a) take the matrix and get out each full-length
@@ -132,8 +132,9 @@ fn diagonals_r2l(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
 }
 
 pub fn solution_pt2() -> i32 {
-    panic!("UNIMPLEMENTED");
+    println!("UNIMPLEMENTED");
     // io_help::read_lines("./inputs/4").collect::<String>()
+    -1
 }
 
 #[cfg(test)]
