@@ -39,6 +39,7 @@ fn diagonals<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<Stri
     // take the (NxL) matrix and convert into lists of index pairs
     // each list corresponds to a full diagonal
     // then, take each list and reindex into `lines` to get the full String
+    panic!("");
 }
 
 // fn format_matrix<const L:usize, const N:usize>(term: &str, lines: &[[char; L]; N]) -> [[char; L]; N] {

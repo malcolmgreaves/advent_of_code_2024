@@ -48,7 +48,7 @@ fn similarity_score(list1: &[i32], list2: &[i32]) -> i32 {
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
 
     #[test]
