@@ -1,6 +1,7 @@
 use core::iter::Iterator;
 
 use std::{
+    borrow::Borrow,
     cmp::{max, min},
     collections::HashSet,
 };
@@ -25,8 +26,12 @@ fn count_terms<const L: usize, const N: usize>(term: &str, lines: &[[char; L]; N
     // (e) return increment total
 
     let increment = |expanded: Vec<String>| -> i32 {
-        let c1 = count(term, &expanded);
-        let c2 = count(term, &expanded.into_iter().map(utils::reverse_string));
+        let c1 = count(term, expanded.iter());
+        let rev_expanded: Vec<String> = expanded
+            .into_iter()
+            .map(utils::reverse_string)
+            .collect::<Vec<_>>();
+        let c2 = count(term, rev_expanded.iter());
         c1 + c2
     };
 
@@ -37,10 +42,10 @@ fn count_terms<const L: usize, const N: usize>(term: &str, lines: &[[char; L]; N
     found
 }
 
-fn count(term: &str, expanded: &[String]) -> i32 {
+fn count<'a>(term: &str, expanded: impl Iterator<Item = &'a String>) -> i32 {
     let mut found = 0;
     // (c, d, e) window, check, increment
-    expanded.iter().for_each(|line| {
+    expanded.for_each(|line| {
         line.chars()
             .collect::<Vec<_>>()
             .windows(term.len())
