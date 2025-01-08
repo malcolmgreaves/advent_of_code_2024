@@ -3,6 +3,7 @@ mod aoc_2;
 mod aoc_3;
 mod aoc_4;
 mod io_help;
+mod utils;
 
 use std::collections::BTreeMap;
 

@@ -2,7 +2,7 @@ use core::iter::Iterator;
 
 use std::cmp::{max, min};
 
-use crate::io_help;
+use crate::{io_help, utils};
 
 // https://adventofcode.com/2024/day/4
 
@@ -40,7 +40,13 @@ fn diagonals<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<Stri
     // take the (NxL) matrix and convert into lists of index pairs
     // each list corresponds to a full diagonal
     // then, take each list and reindex into `lines` to get the full String
-    panic!("");
+    let mut d1 = diagonals_r2l(lines);
+    let transposed = utils::transpose(lines);
+    let mut d2 = diagonals_r2l(&transposed);
+    let mut result = Vec::new();
+    result.append(&mut d1);
+    result.append(&mut d2);
+    result
 }
 
 fn diagonals_r2l<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<String> {
@@ -60,19 +66,6 @@ fn diagonals_r2l<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<
         .collect::<Vec<_>>()
 }
 
-// fn format_matrix<const L:usize, const N:usize>(term: &str, lines: &[[char; L]; N]) -> [[char; L]; N] {
-//     let term_set = term.chars().collect::<HashSet<char>>();
-//     let mut lines = lines.clone();
-//     for i in 0..N {
-//         for j in 0..L {
-//             if !(term_set.contains(&lines[i][j])) {
-//                 lines[i][j] = '.';
-//             }
-//         }
-//     }
-//     lines
-// }
-
 pub fn solution_pt2() -> i32 {
     panic!("UNIMPLEMENTED");
     // io_help::read_lines("./inputs/4").collect::<String>()
@@ -80,6 +73,8 @@ pub fn solution_pt2() -> i32 {
 
 #[cfg(test)]
 mod test {
+    use utils::transpose;
+
     use super::*;
 
     #[test]
@@ -117,11 +112,20 @@ mod test {
             ['q', 'r', 's', 't'],
             ['u', 'v', 'w', 'x'],
         ];
-        let result = diagonals_r2l(&example_input);
         let expected = ["a", "be", "cfi", "dgjm", "hknq", "loru", "psv", "tw", "x"];
+
+        let result = diagonals_r2l(&example_input);
         for e in expected {
             assert!(result.contains(&e.to_string()));
         }
         assert_eq!(result.len(), expected.len());
+
+        let transposed_example = transpose(&example_input);
+        let result_transposed = diagonals_r2l(&transposed_example);
+        for e in expected {
+            let reversed_e = e.chars().rev().collect::<String>();
+            assert!(result_transposed.contains(&reversed_e));
+        }
+        assert_eq!(result_transposed.len(), expected.len());
     }
 }
