@@ -1,6 +1,6 @@
 use crate::io_help;
 
-pub fn solution() -> i32 {
+pub fn solution_pt1() -> i32 {
     // https://adventofcode.com/2024/day/2
     count_ok_levels(io_help::read_lines_as_ints(" ", "./inputs/2").to_vec())
 }
@@ -51,12 +51,38 @@ fn check_level(level: &[i32]) -> bool {
     return ascending_or_descending && diff_check;
 }
 
+pub fn solution_pt2() -> i32 {
+    count_ok_levels_with_damper(io_help::read_lines_as_ints(" ", "./inputs/2").to_vec())
+}
+
+fn count_ok_levels_with_damper(levels: Vec<Vec<i32>>) -> i32 {
+    levels
+        .iter()
+        .map(|level| {
+            if check_level(level) {
+                1
+            } else {
+                let mut result_from_removing_any_single_level = 0;
+                for i in 0..level.len() {
+                    let mut removed = level.clone();
+                    removed.remove(i);
+                    if check_level(&removed) {
+                        result_from_removing_any_single_level = 1;
+                        break;
+                    }
+                }
+                result_from_removing_any_single_level
+            }
+        })
+        .sum::<i32>()
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
-    fn example_solution() {
+    fn example_solution_pt1() {
         let levels = [
             [7, 6, 4, 2, 1].to_vec(),
             [1, 2, 7, 8, 9].to_vec(),
@@ -69,5 +95,21 @@ mod test {
 
         let result = count_ok_levels(levels);
         assert!(result == 2);
+    }
+
+    #[test]
+    fn example_solution_pt2() {
+        let levels = [
+            [7, 6, 4, 2, 1].to_vec(),
+            [1, 2, 7, 8, 9].to_vec(),
+            [9, 7, 6, 2, 1].to_vec(),
+            [1, 3, 2, 4, 5].to_vec(),
+            [8, 6, 4, 4, 1].to_vec(),
+            [1, 3, 6, 7, 9].to_vec(),
+        ]
+        .to_vec();
+
+        let result = count_ok_levels_with_damper(levels);
+        assert!(result == 4);
     }
 }

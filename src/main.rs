@@ -3,13 +3,18 @@ mod aoc_2;
 mod aoc_3;
 mod io_help;
 
-// use crate::aoc_1::solution;
+use std::collections::BTreeMap;
 
 pub fn main() {
-    let solutions = [aoc_1::solution(), aoc_2::solution(), aoc_3::solution()];
-    for i in 0..solutions.len() {
-        let ip1 = i + 1;
-        let soln = solutions[i];
-        println!("AOC {ip1} Solution: {soln}");
+    let solutions = BTreeMap::from([
+        ("AOC #1 pt.1", aoc_1::solution_pt1()),
+        ("AOC #1 pt.2", aoc_1::solution_pt2()),
+        ("AOC #2 pt.1", aoc_2::solution_pt1()),
+        ("AOC #2 pt.2", aoc_2::solution_pt2()),
+        ("AOC #3 pt.1", aoc_3::solution_pt1()),
+        ("AOC #3 pt.2", aoc_3::solution_pt2()),
+    ]);
+    for (name, result) in solutions.iter() {
+        println!("{name} Solution: {result}");
     }
 }
