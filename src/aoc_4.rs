@@ -16,9 +16,11 @@ pub fn solution_pt1() -> i32 {
     let ROWS = lines.len();
     let COLS = lines[0].len();
 
-    let matrix: [[char; COLS]; ROWS] = utils::convert_to_char_matrix::<ROWS, COLS>(&lines);
+    let matrix = utils::convert_to_char_matrix(ROWS, COLS, &lines);
+    // let matrix: [[char; COLS]; ROWS] = utils::convert_to_char_matrix::<ROWS, COLS>(&lines);
 
-    count_terms("XMAS", &matrix);
+    count_terms(COLS, ROWS, "XMAS", matrix)
+    // count_terms("XMAS", &matrix)
 }
 
 type CharMatrix = Vec<Vec<char>>;
