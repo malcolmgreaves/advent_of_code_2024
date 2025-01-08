@@ -61,6 +61,8 @@ pub fn solution_pt2() -> i32 {
 
 #[cfg(test)]
 mod test {
+    use std::cmp::{max, min};
+
     use super::*;
 
     #[test]
@@ -86,5 +88,32 @@ mod test {
         println!("UNIMPLEMENTED");
         // let result = solve_inputs_conditionals(example_input.to_string());
         // assert!(result == 48);
+    }
+
+    #[test]
+    fn testing_diagonals() {
+        const N: usize = 6;
+        const M: usize = 4;
+        let example_input: [[char; M]; N] = [
+            ['a', 'b', 'c', 'd'],
+            ['e', 'f', 'g', 'h'],
+            ['i', 'j', 'k', 'l'],
+            ['m', 'n', 'o', 'p'],
+            ['q', 'r', 's', 't'],
+            ['u', 'v', 'w', 'x'],
+        ];
+        let res = (0..(N + M - 1))
+            .map(|d| {
+                let cur = (max(0, d - M + 1)..min(N, d + 1))
+                    .map(|x| {
+                        println!("x: {x} , d-x: {}", d - x);
+                        example_input[x][d - x]
+                    })
+                    .collect::<String>();
+                println!("---");
+                cur
+            })
+            .collect::<Vec<_>>();
+        println!("{res:#?}");
     }
 }

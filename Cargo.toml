@@ -6,6 +6,3 @@ rust-version = "1.83"
 
 [dependencies]
 regex = "1.11.1"
-ndarray = { version = "0.16.1", features = ["blas"] }
-blas-src = { version = "0.10", features = ["openblas"] }
-openblas-src = { version = "0.10", features = ["cblas", "system"] }
