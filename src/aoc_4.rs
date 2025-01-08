@@ -1,5 +1,6 @@
 use core::iter::Iterator;
-use std::collections::HashSet;
+
+use std::cmp::{max, min};
 
 use crate::io_help;
 
@@ -42,6 +43,23 @@ fn diagonals<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<Stri
     panic!("");
 }
 
+fn diagonals_r2l<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<String> {
+    let n = TryInto::<i32>::try_into(N).unwrap();
+    let m = TryInto::<i32>::try_into(L).unwrap();
+
+    (0..(n + m - 1))
+        .map(|d| {
+            (max(0, d - m + 1)..min(n, d + 1))
+                .map(|x| {
+                    // (x, d-x)
+                    lines[TryInto::<usize>::try_into(x).unwrap()]
+                        [TryInto::<usize>::try_into(d - x).unwrap()]
+                })
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>()
+}
+
 // fn format_matrix<const L:usize, const N:usize>(term: &str, lines: &[[char; L]; N]) -> [[char; L]; N] {
 //     let term_set = term.chars().collect::<HashSet<char>>();
 //     let mut lines = lines.clone();
@@ -62,10 +80,6 @@ pub fn solution_pt2() -> i32 {
 
 #[cfg(test)]
 mod test {
-    use std::cmp::{max, min};
-
-    use io_help::to_int;
-
     use super::*;
 
     #[test]
@@ -95,13 +109,7 @@ mod test {
 
     #[test]
     fn testing_diagonals() {
-        const n: usize = 6;
-        const m: usize = 4;
-
-        let N = TryInto::<i32>::try_into(n).unwrap();
-        let M = TryInto::<i32>::try_into(m).unwrap();
-
-        let example_input: [[char; m]; n] = [
+        let example_input = [
             ['a', 'b', 'c', 'd'],
             ['e', 'f', 'g', 'h'],
             ['i', 'j', 'k', 'l'],
@@ -109,21 +117,11 @@ mod test {
             ['q', 'r', 's', 't'],
             ['u', 'v', 'w', 'x'],
         ];
-
-        let res = (0..(N + M - 1))
-            .map(|d| {
-                let cur = (max(0, d - M + 1)..min(N, d + 1))
-                    .map(|x| {
-                        println!("x: {x} , d-x: {}", d - x);
-                        // (x, d-x)
-                        example_input[TryInto::<usize>::try_into(x).unwrap()]
-                            [TryInto::<usize>::try_into(d - x).unwrap()]
-                    })
-                    .collect::<String>();
-                println!("---");
-                cur
-            })
-            .collect::<Vec<_>>();
-        println!("{res:#?}");
+        let result = diagonals_r2l(&example_input);
+        let expected = ["a", "be", "cfi", "dgjm", "hknq", "loru", "psv", "tw", "x"];
+        for e in expected {
+            assert!(result.contains(&e.to_string()));
+        }
+        assert_eq!(result.len(), expected.len());
     }
 }
