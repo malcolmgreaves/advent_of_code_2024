@@ -1,6 +1,9 @@
 use core::iter::Iterator;
 
-use std::cmp::{max, min};
+use std::{
+    cmp::{max, min},
+    collections::HashSet,
+};
 
 use crate::{io_help, utils};
 
@@ -12,18 +15,44 @@ pub fn solution_pt1() -> i32 {
 }
 
 fn count_terms<const L: usize, const N: usize>(term: &str, lines: &[[char; L]; N]) -> i32 {
-    // take the matrix and get out each full-length
+    // (a) take the matrix and get out each full-length
     //  - horizontal
     //  - vertical
     //  - diagonal
-    // and also take the reverse of each
-    // take each of these (6 kinds in total) and break up into windows of term.len()
-    // check if each window equals term, if so, increment++
-    // return increment total
+    // (b) and also take the reverse of each
+    // (c) take each of these (6 kinds in total) and break up into windows of term.len()
+    // (d) check if each window equals term, if so, increment++
+    // (e) return increment total
 
-    let expanded_all_lines: Vec<&str> = Vec::new();
+    let h = horizontals(lines);
+    let v = verticals(lines);
+    let d = diagonals(lines);
 
-    panic!("");
+    let mut expanding_all_lines: HashSet<String> = HashSet::new();
+    // (a) each "normal" direction
+    expanding_all_lines.extend(h.clone());
+    expanding_all_lines.extend(v.clone());
+    expanding_all_lines.extend(d.clone());
+    // (b) each "reversed" direction
+    expanding_all_lines.extend(h.into_iter().map(utils::reverse_string));
+    expanding_all_lines.extend(v.into_iter().map(utils::reverse_string));
+    expanding_all_lines.extend(d.into_iter().map(utils::reverse_string));
+
+    let mut found = 0;
+    // (c, d, e) window, check, increment
+    expanding_all_lines.into_iter().for_each(|line| {
+        line.chars()
+            .collect::<Vec<_>>()
+            .windows(term.len())
+            .map(|x| x.into_iter().collect::<String>())
+            .for_each(|candidate| {
+                if candidate == term {
+                    found += 1;
+                }
+            })
+    });
+
+    found
 }
 
 fn horizontals<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<String> {
@@ -40,13 +69,19 @@ fn diagonals<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<Stri
     // take the (NxL) matrix and convert into lists of index pairs
     // each list corresponds to a full diagonal
     // then, take each list and reindex into `lines` to get the full String
-    let mut d1 = diagonals_r2l(lines);
+    let mut result = HashSet::new();
+
+    let d1 = diagonals_r2l(lines);
+    result.extend(d1);
+
     let transposed = utils::transpose(lines);
-    let mut d2 = diagonals_r2l(&transposed);
-    let mut result = Vec::new();
-    result.append(&mut d1);
-    result.append(&mut d2);
-    result
+    let d2 = diagonals_r2l(&transposed);
+    result.extend(d2);
+
+    // destructive: move each element **OUT OF** the hashset so we can construct a Vec<String<>
+    // note that .iter() will borrow each element, meaning we'd have Vec<&String>
+    // we don't need the hashset after this function, so we `move`
+    result.into_iter().collect::<Vec<_>>()
 }
 
 fn diagonals_r2l<const L: usize, const N: usize>(lines: &[[char; L]; N]) -> Vec<String> {
@@ -73,7 +108,6 @@ pub fn solution_pt2() -> i32 {
 
 #[cfg(test)]
 mod test {
-    use utils::transpose;
 
     use super::*;
 
@@ -120,11 +154,10 @@ mod test {
         }
         assert_eq!(result.len(), expected.len());
 
-        let transposed_example = transpose(&example_input);
+        let transposed_example = utils::transpose(&example_input);
         let result_transposed = diagonals_r2l(&transposed_example);
         for e in expected {
-            let reversed_e = e.chars().rev().collect::<String>();
-            assert!(result_transposed.contains(&reversed_e));
+            assert!(result_transposed.contains(&utils::reverse_string(e.to_string())));
         }
         assert_eq!(result_transposed.len(), expected.len());
     }

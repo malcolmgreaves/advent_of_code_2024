@@ -10,3 +10,7 @@ pub fn transpose<const R: usize, const C: usize, T: Copy + Default>(
     }
     result
 }
+
+pub fn reverse_string(x: String) -> String {
+    x.chars().rev().collect::<String>()
+}
