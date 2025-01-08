@@ -11,8 +11,13 @@ use crate::{io_help, utils};
 // https://adventofcode.com/2024/day/4
 
 pub fn solution_pt1() -> i32 {
-    // &io_help::read_lines("./inputs/4").collect::<Vec<String>>()
-    panic!("UNIMPLEMENTED");
+    let lines = io_help::read_lines("./inputs/4").collect::<Vec<String>>();
+    assert_ne!(lines.len(), 0);
+
+    let ROWS = lines.len();
+    let COLS = lines[0].len();
+
+    count_terms("XMAS", utils::convert_to_char_matrix::<ROWS, COLS>(&lines))
 }
 
 fn count_terms<const L: usize, const N: usize>(term: &str, lines: &[[char; L]; N]) -> i32 {
