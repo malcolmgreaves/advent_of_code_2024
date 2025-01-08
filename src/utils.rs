@@ -9,8 +9,10 @@ pub fn transpose<T: Copy + Default>(
     // ) -> [[T; R]; C] {
     // return the transpose of the matrix
     // let mut result: [[T; R]; C] = [[Default::default(); R]; C];
+    assert_eq!(m.len(), R);
     let mut result: Matrix<T> = vec![vec![Default::default(); R]; C];
     for i in 0..R {
+        assert_eq!(m[i].len(), C);
         for j in 0..C {
             result[j][i] = m[i][j];
         }

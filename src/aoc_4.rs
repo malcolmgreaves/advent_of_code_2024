@@ -176,7 +176,10 @@ mod test {
 
     #[test]
     fn testing_diagonals() {
-        let example_input = [
+        const ROWS: usize = 6;
+        const COLS: usize = 4;
+
+        let example_input: [[char; COLS]; ROWS] = [
             ['a', 'b', 'c', 'd'],
             ['e', 'f', 'g', 'h'],
             ['i', 'j', 'k', 'l'],
@@ -186,16 +189,19 @@ mod test {
         ];
         let expected = ["a", "be", "cfi", "dgjm", "hknq", "loru", "psv", "tw", "x"];
 
-        let result = diagonals_r2l(4, 6, &convert(example_input));
+        let result = diagonals_r2l(COLS, ROWS, &convert(example_input));
         // let result = diagonals_r2l(&example_input);
         for e in expected {
             assert!(result.contains(&e.to_string()));
         }
         assert_eq!(result.len(), expected.len());
 
-        let transposed_example = utils::transpose(4, 6, &convert(example_input));
+        let transposed_example = utils::transpose(ROWS, COLS, &convert(example_input));
         // let transposed_example = utils::transpose(&example_input);
-        let result_transposed = diagonals_r2l(6, 4, &transposed_example);
+
+        // println!("transposed example:\nrows: {} | cols: {}", transposed_example.len(), transposed_example[0].len());
+
+        let result_transposed = diagonals_r2l(ROWS, COLS, &transposed_example);
         // let result_transposed = diagonals_r2l(&transposed_example);
         for e in expected {
             assert!(result_transposed.contains(&utils::reverse_string(e.to_string())));
