@@ -3,7 +3,7 @@ pub type Matrix<T> = Vec<Vec<T>>;
 pub fn transpose<T: Copy + Default>(
     R: usize,
     C: usize,
-    m: Matrix<T>,
+    m: &Matrix<T>,
     // m: &[[T; C]; R],
 ) -> Matrix<T> {
     // ) -> [[T; R]; C] {

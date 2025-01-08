@@ -44,9 +44,9 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
     };
 
     let mut found = 0;
-    found += increment(horizontals(L, N, lines));
-    found += increment(verticals(L, N, lines));
-    found += increment(diagonals(L, N, lines));
+    found += increment(horizontals(L, N, &lines));
+    found += increment(verticals(L, N, &lines));
+    found += increment(diagonals(L, N, &lines));
     found
 }
 
@@ -67,7 +67,7 @@ fn count<'a>(term: &str, expanded: impl Iterator<Item = &'a String>) -> i32 {
     found
 }
 
-fn horizontals(L: usize, N: usize, lines: CharMatrix) -> Vec<String> {
+fn horizontals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
     assert_eq!(lines.len(), N);
     lines
         .iter()
@@ -78,7 +78,7 @@ fn horizontals(L: usize, N: usize, lines: CharMatrix) -> Vec<String> {
         .collect::<Vec<_>>()
 }
 
-fn verticals(L: usize, N: usize, lines: CharMatrix) -> Vec<String> {
+fn verticals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
     assert_eq!(lines.len(), N);
     (0..N)
         .map(|row| {
@@ -90,7 +90,7 @@ fn verticals(L: usize, N: usize, lines: CharMatrix) -> Vec<String> {
         .collect::<Vec<_>>()
 }
 
-fn diagonals(L: usize, N: usize, lines: CharMatrix) -> Vec<String> {
+fn diagonals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
     // take the (NxL) matrix and convert into lists of index pairs
     // each list corresponds to a full diagonal
     // then, take each list and reindex into `lines` to get the full String
@@ -99,7 +99,7 @@ fn diagonals(L: usize, N: usize, lines: CharMatrix) -> Vec<String> {
     let d1 = diagonals_r2l(L, N, lines);
     result.extend(d1);
 
-    let transposed = utils::transpose(L, N, lines);
+    let transposed = utils::transpose(L, N, &lines);
     let d2 = diagonals_r2l(L, N, &transposed);
     result.extend(d2);
 
@@ -109,7 +109,7 @@ fn diagonals(L: usize, N: usize, lines: CharMatrix) -> Vec<String> {
     result.into_iter().collect::<Vec<_>>()
 }
 
-fn diagonals_r2l(L: usize, N: usize, lines: CharMatrix) -> Vec<String> {
+fn diagonals_r2l(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
     assert_eq!(lines.len(), N);
 
     let n = TryInto::<i32>::try_into(N).unwrap();
@@ -139,6 +139,13 @@ mod test {
 
     use super::*;
 
+    fn convert<const R: usize, const C: usize>(example_input: [[char; C]; R]) -> CharMatrix {
+        example_input
+            .into_iter()
+            .map(|x| x.to_vec())
+            .collect::<Vec<_>>()
+    }
+
     #[test]
     fn example_solution_pt1() {
         let example_input = [
@@ -153,7 +160,8 @@ mod test {
             ['M', 'A', 'M', 'M', 'M', 'X', 'M', 'M', 'M', 'M'],
             ['M', 'X', 'M', 'X', 'A', 'X', 'M', 'A', 'S', 'X'],
         ];
-        let result = count_terms("XMAS", &example_input);
+        let result = count_terms(10, 10, "XMAS", convert(example_input));
+        // let result = count_terms("XMAS", &example_input);
         assert!(result == 18);
     }
 
@@ -176,14 +184,17 @@ mod test {
         ];
         let expected = ["a", "be", "cfi", "dgjm", "hknq", "loru", "psv", "tw", "x"];
 
-        let result = diagonals_r2l(&example_input);
+        let result = diagonals_r2l(4, 6, &convert(example_input));
+        // let result = diagonals_r2l(&example_input);
         for e in expected {
             assert!(result.contains(&e.to_string()));
         }
         assert_eq!(result.len(), expected.len());
 
-        let transposed_example = utils::transpose(&example_input);
-        let result_transposed = diagonals_r2l(&transposed_example);
+        let transposed_example = utils::transpose(4, 6, &convert(example_input));
+        // let transposed_example = utils::transpose(&example_input);
+        let result_transposed = diagonals_r2l(6, 4, &transposed_example);
+        // let result_transposed = diagonals_r2l(&transposed_example);
         for e in expected {
             assert!(result_transposed.contains(&utils::reverse_string(e.to_string())));
         }
