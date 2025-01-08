@@ -1,7 +1,8 @@
 use crate::io_help;
 
+// https://adventofcode.com/2024/day/2
+
 pub fn solution_pt1() -> i32 {
-    // https://adventofcode.com/2024/day/2
     count_ok_levels(io_help::read_lines_as_ints(" ", "./inputs/2").to_vec())
 }
 
