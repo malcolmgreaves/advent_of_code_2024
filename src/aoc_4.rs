@@ -64,6 +64,8 @@ pub fn solution_pt2() -> i32 {
 mod test {
     use std::cmp::{max, min};
 
+    use io_help::to_int;
+
     use super::*;
 
     #[test]
@@ -93,9 +95,13 @@ mod test {
 
     #[test]
     fn testing_diagonals() {
-        const N: usize = 6;
-        const M: usize = 4;
-        let example_input: [[char; M]; N] = [
+        const n: usize = 6;
+        const m: usize = 4;
+
+        let N = TryInto::<i32>::try_into(n).unwrap();
+        let M = TryInto::<i32>::try_into(m).unwrap();
+
+        let example_input: [[char; m]; n] = [
             ['a', 'b', 'c', 'd'],
             ['e', 'f', 'g', 'h'],
             ['i', 'j', 'k', 'l'],
@@ -103,12 +109,15 @@ mod test {
             ['q', 'r', 's', 't'],
             ['u', 'v', 'w', 'x'],
         ];
+
         let res = (0..(N + M - 1))
             .map(|d| {
                 let cur = (max(0, d - M + 1)..min(N, d + 1))
                     .map(|x| {
                         println!("x: {x} , d-x: {}", d - x);
-                        example_input[x][d - x]
+                        // (x, d-x)
+                        example_input[TryInto::<usize>::try_into(x).unwrap()]
+                            [TryInto::<usize>::try_into(d - x).unwrap()]
                     })
                     .collect::<String>();
                 println!("---");
