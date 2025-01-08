@@ -15,6 +15,34 @@ pub fn reverse_string(x: String) -> String {
     x.chars().rev().collect::<String>()
 }
 
+// pub fn abc() -> Box<[Box<[char]>]> {
+//     vec![
+//         vec!['a','b','c'].into_boxed_slice(),
+//         vec!['d','e','f'].into_boxed_slice(),
+//     ].into_boxed_slice()
+// }
+
+// macro_rules! box_array {
+//     ($val:expr ; $len:expr) => {{
+//         // Use a generic function so that the pointer cast remains type-safe
+//         fn vec_to_boxed_array<T>(vec: Vec<T>) -> Box<[T; $len]> {
+//             let boxed_slice = vec.into_boxed_slice();
+
+//             let ptr = ::std::boxed::Box::into_raw(boxed_slice) as *mut [T; $len];
+
+//             unsafe { Box::from_raw(ptr) }
+//         }
+
+//         vec_to_boxed_array(vec![$val; $len])
+//     }};
+// }
+
+// pub fn example(size: usize) -> Box<i32; size> {
+//     const X: usize = 10_000_000;
+//     let huge_heap_array = box_array![1; X];
+//     huge_heap_array
+// }
+
 pub fn convert_to_char_matrix<const ROWS: usize, const COLS: usize>(
     lines: &[String],
 ) -> [[char; COLS]; ROWS] {

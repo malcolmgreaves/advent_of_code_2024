@@ -17,7 +17,9 @@ pub fn solution_pt1() -> i32 {
     let ROWS = lines.len();
     let COLS = lines[0].len();
 
-    count_terms("XMAS", utils::convert_to_char_matrix::<ROWS, COLS>(&lines))
+    let matrix: [[char; COLS]; ROWS] = utils::convert_to_char_matrix::<ROWS, COLS>(&lines);
+
+    count_terms("XMAS", &matrix);
 }
 
 fn count_terms<const L: usize, const N: usize>(term: &str, lines: &[[char; L]; N]) -> i32 {
