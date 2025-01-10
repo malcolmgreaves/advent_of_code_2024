@@ -40,13 +40,32 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
         let _cols = expanded[0].len();
 
         let c1 = count(term, expanded.iter());
+
         let rev_expanded: Vec<String> = expanded
             .into_iter()
             .map(utils::reverse_string)
             .collect::<Vec<_>>();
         let c2 = count(term, rev_expanded.iter());
 
-        println!("{} x {} -> c1: {} , c2: {}", _rows, _cols, c1, c2);
+        // println!("{} x {} -> c1: {} , c2: {}", _rows, _cols, c1, c2);
+        c1 + c2
+    };
+
+    let increment_diagonals = || -> i32 {
+        let d1 = diagonals_r2l(L, N, &lines);
+        let c1 = count(term, d1.iter());
+
+        let _d2 = utils::char_matrix_to_lines(lines.clone());
+        let reversed_char_matrix = utils::convert_to_char_matrix(
+            N,
+            L,
+            &_d2.into_iter()
+                .map(|x| x.chars().rev().collect::<String>())
+                .collect::<Vec<_>>(),
+        );
+        let d2 = diagonals_r2l(L, N, &reversed_char_matrix);
+        let c2 = count(term, d2.iter());
+
         c1 + c2
     };
 
@@ -56,7 +75,8 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
     println!("[horizontals] found: {found}");
     found += increment(verticals(L, N, &lines));
     println!("[verticals]   found: {found}");
-    found += increment(diagonals(L, N, &lines));
+    // found += increment(diagonals(L, N, &lines));
+    found += increment_diagonals();
     println!("[diagonals]   found: {found}");
     found
 }
