@@ -9,10 +9,10 @@ pub fn transpose<T: Copy + Default>(
     // ) -> [[T; R]; C] {
     // return the transpose of the matrix
     // let mut result: [[T; R]; C] = [[Default::default(); R]; C];
-    assert_eq!(m.len(), R);
+    assert_eq!(m.len(), R, "T: matrix's rows != expected");
     let mut result: Matrix<T> = vec![vec![Default::default(); R]; C];
     for i in 0..R {
-        assert_eq!(m[i].len(), C);
+        assert_eq!(m[i].len(), C, "T: matrix's cols != expected");
         for j in 0..C {
             result[j][i] = m[i][j];
         }
@@ -53,7 +53,11 @@ pub fn reverse_string(x: String) -> String {
 // }
 
 pub fn convert_to_char_matrix(ROWS: usize, COLS: usize, lines: &[String]) -> Matrix<char> {
-    assert_eq!(lines.len(), ROWS);
+    assert_eq!(
+        lines.len(),
+        ROWS,
+        "C: number of strings != expected char array rows"
+    );
     let mut result = vec![vec![Default::default(); COLS]; ROWS];
 
     let mut line_iter = lines.iter();
@@ -79,7 +83,7 @@ pub fn convert_to_char_matrix(ROWS: usize, COLS: usize, lines: &[String]) -> Mat
 // }
 
 pub fn string_to_char_array(N: usize, s: &str) -> Vec<char> {
-    assert_eq!(s.len(), N);
+    assert_eq!(s.len(), N, "C: string length != expected char cols");
     s.chars().collect::<Vec<_>>()
 }
 // pub fn string_to_char_array<const N: usize>(s: &str) -> [char; N] {
@@ -87,3 +91,16 @@ pub fn string_to_char_array(N: usize, s: &str) -> Vec<char> {
 //     let mut chars = s.chars();
 //     [(); N].map(|_| chars.next().unwrap())
 // }
+
+pub fn char_array_to_lines<const R: usize, const C: usize>(chars: [[char; C]; R]) -> Vec<String> {
+    (0..R)
+        .map(|i| String::from_iter(chars[i]))
+        .collect::<Vec<_>>()
+}
+
+pub fn char_matrix_to_lines(m: Matrix<char>) -> Vec<String> {
+    let (C, R) = (m[0].len(), m.len());
+    (0..R)
+        .map(|i| m[i].to_owned().into_iter().collect::<String>())
+        .collect::<Vec<_>>()
+}

@@ -36,19 +36,28 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
     // (e) return increment total
 
     let increment = |expanded: Vec<String>| -> i32 {
+        let _rows = expanded.len();
+        let _cols = expanded[0].len();
+
         let c1 = count(term, expanded.iter());
         let rev_expanded: Vec<String> = expanded
             .into_iter()
             .map(utils::reverse_string)
             .collect::<Vec<_>>();
         let c2 = count(term, rev_expanded.iter());
+
+        println!("{} x {} -> c1: {} , c2: {}", _rows, _cols, c1, c2);
         c1 + c2
     };
 
     let mut found = 0;
+    println!("[start]       found: {found}");
     found += increment(horizontals(L, N, &lines));
+    println!("[horizontals] found: {found}");
     found += increment(verticals(L, N, &lines));
+    println!("[verticals]   found: {found}");
     found += increment(diagonals(L, N, &lines));
+    println!("[diagonals]   found: {found}");
     found
 }
 
@@ -70,26 +79,25 @@ fn count<'a>(term: &str, expanded: impl Iterator<Item = &'a String>) -> i32 {
 }
 
 fn horizontals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
-    assert_eq!(lines.len(), N);
+    assert_eq!(lines.len(), N, "H: char matrix rows != expected");
     lines
         .iter()
         .map(|line| {
-            assert_eq!(line.len(), L);
+            assert_eq!(line.len(), L, "H: char matrix cols != expected");
             line.iter().collect::<String>()
         })
         .collect::<Vec<_>>()
 }
 
 fn verticals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
-    assert_eq!(lines.len(), N);
-    (0..N)
-        .map(|row| {
-            String::from_iter((0..L).map(|col| {
-                assert_eq!(lines[row].len(), L);
-                lines[row][col]
-            }))
+    assert_eq!(lines.len(), N, "V: char matrix rows != expected");
+    (0..L)
+        .map(move |col| {
+            (0..N)
+                .map(move |row: usize| lines[row][col])
+                .collect::<String>()
         })
-        .collect::<Vec<_>>()
+        .collect::<Vec<String>>()
 }
 
 fn diagonals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
@@ -112,7 +120,8 @@ fn diagonals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
 }
 
 fn diagonals_r2l(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
-    assert_eq!(lines.len(), N);
+    assert_eq!(lines.len(), N, "D: char matrix rows != expected");
+    assert_eq!(lines[0].len(), L, "D: char matrix cols != expected");
 
     let n = TryInto::<i32>::try_into(N).unwrap();
     let m = TryInto::<i32>::try_into(L).unwrap();
@@ -122,7 +131,6 @@ fn diagonals_r2l(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
             (max(0, d - m + 1)..min(n, d + 1))
                 .map(|x| {
                     // (x, d-x)
-
                     lines[TryInto::<usize>::try_into(x).unwrap()]
                         [TryInto::<usize>::try_into(d - x).unwrap()]
                 })
@@ -173,6 +181,70 @@ mod test {
         println!("UNIMPLEMENTED");
         // let result = solve_inputs_conditionals(example_input.to_string());
         // assert!(result == 48);
+    }
+
+    fn square_xmas_once() -> [[char; 4]; 4] {
+        [
+            ['X', 'M', 'A', 'S'],
+            ['X', 'X', 'X', 'X'],
+            ['X', 'X', 'X', 'X'],
+            ['X', 'X', 'X', 'X'],
+        ]
+    }
+
+    #[test]
+    fn example_solution_small_repeats() {
+        let example_input = square_xmas_once();
+        let result = count_terms(
+            example_input[0].len(),
+            example_input.len(),
+            "XMAS",
+            convert(example_input),
+        );
+        assert!(result == 1, "result: {result} != 1");
+    }
+
+    #[test]
+    fn check_shapes_simple_example() {
+        let example_input = convert(square_xmas_once());
+        // println!("example:");
+        // for i in 0..example_input.len() {
+        //     println!("{:?}", example_input[i]);
+        // }
+        // println!("------------------------------");
+
+        // println!("HORIZONTAL:");
+        // for (index, h) in horizontals(4, 4, &example_input).iter().enumerate() {
+        //     println!("[{index}]: {h}", );
+        // }
+        // println!("--------------");
+        assert_eq!(
+            horizontals(4, 4, &example_input),
+            vec!["XMAS", "XXXX", "XXXX", "XXXX"],
+            "horizontals failed"
+        );
+
+        // println!("VERTICAL:");
+        // for (index, v) in verticals(4, 4, &example_input).iter().enumerate() {
+        //     println!("[{index}]: {v}", );
+        // }
+        // println!("--------------");
+        assert_eq!(
+            verticals(4, 4, &example_input),
+            vec!["XXXX", "MXXX", "AXXX", "SXXX"],
+            "verticals failed"
+        );
+
+        // println!("DIAGONTAL r2l:");
+        // for (index, d) in diagonals_r2l(4, 4, &example_input).iter().enumerate() {
+        //     println!("[{index}]: {d}", );
+        // }
+        // println!("--------------");
+        assert_eq!(
+            diagonals_r2l(4, 4, &example_input),
+            vec!["X", "MX", "AXX", "SXXX", "XXX", "XX", "X",],
+            "diagonals failed"
+        );
     }
 
     #[test]
