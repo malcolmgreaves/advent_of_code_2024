@@ -71,13 +71,20 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
 
     let mut found = 0;
     println!("[start]       found: {found}");
-    found += increment(horizontals(L, N, &lines));
-    println!("[horizontals] found: {found}");
-    found += increment(verticals(L, N, &lines));
-    println!("[verticals]   found: {found}");
-    // found += increment(diagonals(L, N, &lines));
-    found += increment_diagonals();
-    println!("[diagonals]   found: {found}");
+    
+    let h = increment(horizontals(L, N, &lines));
+    found += h;
+    println!("[horizontals] found: {found} (+{h})");
+
+
+    let v = increment(verticals(L, N, &lines));
+    found += v;
+    println!("[verticals]   found: {found} (+{v})");
+
+    let d = increment_diagonals();
+    found += d;
+    println!("[diagonals]   found: {found} (+{d})");
+
     found
 }
 
