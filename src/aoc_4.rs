@@ -198,6 +198,40 @@ pub fn solution_pt2() -> i32 {
     -1
 }
 
+pub fn window_2d<T: Default + Copy>(
+    shape: (usize, usize),
+    m: &utils::Matrix<T>,
+) -> Vec<utils::Matrix<T>> {
+    let (w_rows, w_cols) = shape;
+
+    let make_window = |top_left: (usize, usize)| -> Option<utils::Matrix<T>> {
+        let mut window = vec![vec![Default::default(); w_cols]; w_rows];
+        for i in 0..w_rows {
+            if top_left.0 + i >= m.len() {
+                return None;
+            }
+            for j in 0..w_cols {
+                if top_left.1 + j >= m[0].len() {
+                    return None;
+                }
+                window[i][j] = m[top_left.0 + i][top_left.1 + j];
+            }
+        }
+        Some(window)
+    };
+
+    let mut windows = Vec::new();
+    for i in 0..m.len() {
+        for j in 0..m[0].len() {
+            match make_window((i, j)) {
+                Some(window) => windows.push(window),
+                None => (),
+            }
+        }
+    }
+    windows
+}
+
 #[cfg(test)]
 mod test {
 
