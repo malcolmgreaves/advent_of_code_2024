@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{cmp::{max, min}, fmt::Debug};
 
 pub type Matrix<T> = Vec<Vec<T>>;
 
@@ -159,4 +159,22 @@ pub fn array_to_matrix<const R: usize, const C: usize, T: Default + Copy>(arr: [
 
 pub fn pretty_matrix<T: Debug>(m: &Matrix<T>) -> String {
     (0..m.len()).map(|i| format!("{:?}\n", m[i])).collect::<String>()
+}
+
+pub fn diagonal_coordinates(n: i32, m: i32) -> Vec<Vec<(usize, usize)>>{
+    (0..(n + m - 1))
+        .map(|d| {
+            // let right_of_diagonal = max(0, d - m + 1);
+            (max(0, d - m + 1)..min(n, d + 1))
+                .map(|x| {
+                    // (x, d-x)
+                    (x as usize, (d-x) as usize)
+                    // (
+                    //     TryInto::<usize>::try_into(x).unwrap(),
+                    //     TryInto::<usize>::try_into(d-x).unwrap(),
+                    // )
+                })
+                .collect::<Vec<(_,_)>>()
+        })
+        .collect::<Vec<_>>()
 }

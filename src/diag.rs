@@ -8,22 +8,7 @@ fn diag_incr(x: (i32, i32)) -> (i32, i32) {
     (x.0+1, x.1+1)
 }
 
-pub fn diagonal_coordinates(n: i32, m: i32) -> Vec<Vec<(usize, usize)>>{
-    (0..(n + m - 1))
-        .map(|d| {
-            // let right_of_diagonal = max(0, d - m + 1);
-            (max(0, d - m + 1)..min(n, d + 1))
-                .map(|x| {
-                    // (x, d-x)
-                    (
-                        TryInto::<usize>::try_into(x).unwrap(),
-                        TryInto::<usize>::try_into(d-x).unwrap(),
-                    )
-                })
-                .collect::<Vec<(_,_)>>()
-        })
-        .collect::<Vec<_>>()
-}
+
 
 
 
@@ -54,7 +39,7 @@ pub fn tryit() {
     // println!("original!\n{p_chars}");
     println!("original!\n{}", utils::pretty_matrix(&utils::array_to_matrix(chars)));
 
-    for diag in diagonal_coordinates(x.len() as i32,x[0].len() as i32) {
+    for diag in utils::diagonal_coordinates(x.len() as i32,x[0].len() as i32) {
         let dstr = diag.iter().map(|(i,j)| chars[*i][*j]).collect::<String>();
         // println!("diag: {dstr} --> {diag:?})");
         println!("diag: {dstr}");
@@ -79,7 +64,7 @@ pub fn tryit() {
     
      */
 
-    for diag in diagonal_coordinates(x.len() as i32,x[0].len() as i32) {
+    for diag in utils::diagonal_coordinates(x.len() as i32,x[0].len() as i32) {
         let dstr = diag.iter().map(|(i,j)| flipped_x[*i][*j]).collect::<String>();
         println!("flipped: {dstr}");
     }
