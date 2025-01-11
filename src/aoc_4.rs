@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::{
-    io_help,
+    diag, io_help,
     utils::{self, fliplr},
 };
 
@@ -193,9 +193,27 @@ fn diagonals_r2l(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
 }
 
 pub fn solution_pt2() -> i32 {
-    println!("UNIMPLEMENTED");
-    // io_help::read_lines("./inputs/4").collect::<String>()
-    -1
+    let lines = io_help::read_lines("./inputs/4").collect::<Vec<String>>();
+    assert_ne!(lines.len(), 0);
+    let ROWS = lines.len();
+    let COLS = lines[0].len();
+    let chars = utils::convert_to_char_matrix(ROWS, COLS, &lines);
+
+    count_mas_x(&chars)
+}
+
+pub fn count_mas_x(chars: &CharMatrix) -> i32 {
+    let windows = window_2d((3, 3), &chars);
+
+    let term = "MAS";
+
+    let mut count = 0;
+    for w in windows {
+        if check_window(term, &w) {
+            count += 1;
+        }
+    }
+    count
 }
 
 pub fn window_2d<T: Default + Copy>(
@@ -232,10 +250,82 @@ pub fn window_2d<T: Default + Copy>(
     windows
 }
 
+pub fn check_window(term: &str, window: &utils::Matrix<char>) -> bool {
+    assert_eq!(
+        term.len(),
+        window.len(),
+        "[height] window must equal term length!"
+    );
+    assert_eq!(
+        term.len(),
+        window[0].len(),
+        "[width] window must equal term length!"
+    );
+
+    let check_diag = |d: String| -> bool { term == d || term == utils::reverse_string(d) };
+
+    // written this way so that we short-circut and don't compute anti_diagonal
+    // keep style the same for regularity
+    check_diag({
+        let diagonal = (0..term.len()).map(|i| window[i][i]).collect::<String>();
+        diagonal
+    }) && check_diag({
+        let anti_diagonal = {
+            let end = term.len() - 1;
+            (0..term.len())
+                .map(|i| window[i][end - i])
+                .collect::<String>()
+        };
+        anti_diagonal
+    })
+}
+
 #[cfg(test)]
 mod test {
 
     use super::*;
+
+    #[test]
+    fn test_windows_single() {
+        let example: utils::Matrix<char> = vec![
+            vec!['M', '.', 'S'],
+            vec!['.', 'A', '.'],
+            vec!['M', '.', 'S'],
+        ];
+        let windows = window_2d((3, 3), &example);
+        assert_eq!(windows.len(), 1);
+        assert_eq!(windows[0], example);
+    }
+
+    #[test]
+    fn part_2() {
+        let example: utils::Matrix<char> = vec![
+            vec!['.', 'M', '.', 'S', '.', '.', '.', '.', '.', '.'],
+            vec!['.', '.', 'A', '.', '.', 'M', 'S', 'M', 'S', '.'],
+            vec!['.', 'M', '.', 'S', '.', 'M', 'A', 'A', '.', '.'],
+            vec!['.', '.', 'A', '.', 'A', 'S', 'M', 'S', 'M', '.'],
+            vec!['.', 'M', '.', 'S', '.', 'M', '.', '.', '.', '.'],
+            vec!['.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+            vec!['S', '.', 'S', '.', 'S', '.', 'S', '.', 'S', '.'],
+            vec!['.', 'A', '.', 'A', '.', 'A', '.', 'A', '.', '.'],
+            vec!['M', '.', 'M', '.', 'M', '.', 'M', '.', 'M', '.'],
+            vec!['.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+        ];
+
+        let windows = window_2d((3, 3), &example);
+
+        let term = "MAS";
+
+        let mut count = 0;
+        for w in windows {
+            if check_window(term, &w) {
+                println!("OK window!:\n{:?}", w);
+                count += 1;
+            }
+        }
+
+        assert_eq!(count, 9, "actual != expected");
+    }
 
     fn convert<const R: usize, const C: usize>(example_input: [[char; C]; R]) -> CharMatrix {
         example_input
