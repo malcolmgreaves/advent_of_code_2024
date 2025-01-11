@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use crate::io_help;
 
+// https://adventofcode.com/2024/day/1
+
 fn convert_to_int_lists(nums: Vec<Vec<i32>>) -> (Vec<i32>, Vec<i32>) {
     nums.into_iter()
         .map(|x| {
@@ -12,7 +14,6 @@ fn convert_to_int_lists(nums: Vec<Vec<i32>>) -> (Vec<i32>, Vec<i32>) {
 }
 
 pub fn solution_pt1() -> i32 {
-    // https://adventofcode.com/2024/day/1
     let (l1, l2) = convert_to_int_lists(io_help::read_lines_as_ints("   ", "./inputs/1"));
     sum_sorted_distances(&l1, &l2)
 }
@@ -47,7 +48,7 @@ fn similarity_score(list1: &[i32], list2: &[i32]) -> i32 {
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
 
     #[test]

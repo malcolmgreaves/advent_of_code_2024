@@ -5,8 +5,9 @@ use regex::Regex;
 
 use crate::io_help::{self, to_int};
 
+// https://adventofcode.com/2024/day/3
+
 pub fn solution_pt1() -> i32 {
-    // https://adventofcode.com/2024/day/3
     solve_inputs_mul(&io_help::read_lines("./inputs/3").collect::<Vec<String>>())
 }
 
