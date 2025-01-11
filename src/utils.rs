@@ -1,4 +1,7 @@
-use std::{cmp::{max, min}, fmt::Debug};
+use std::{
+    cmp::{max, min},
+    fmt::Debug,
+};
 
 pub type Matrix<T> = Vec<Vec<T>>;
 
@@ -22,18 +25,18 @@ pub fn transpose<T: Copy + Default>(
     result
 }
 
-pub fn fliplr<T:Copy + Default>(mat: &Matrix<T>) -> Matrix<T> {
+pub fn fliplr<T: Copy + Default>(mat: &Matrix<T>) -> Matrix<T> {
     if mat.len() == 0 {
         return Vec::new();
     }
     let rows = mat.len();
     let cols = mat[0].len();
-    
+
     let mut flipped = vec![vec![Default::default(); cols]; rows];
 
     for i in 0..rows {
         for j in 0..cols {
-            let access_j = cols-1-j;
+            let access_j = cols - 1 - j;
             flipped[i][j] = mat[i][access_j];
         }
     }
@@ -41,19 +44,17 @@ pub fn fliplr<T:Copy + Default>(mat: &Matrix<T>) -> Matrix<T> {
     flipped
 }
 
-
-
-pub fn flipud<T:Copy + Default>(mat: &Matrix<T>) -> Matrix<T> {
+pub fn flipud<T: Copy + Default>(mat: &Matrix<T>) -> Matrix<T> {
     if mat.len() == 0 {
         return Vec::new();
     }
     let rows = mat.len();
     let cols = mat[0].len();
-    
+
     let mut flipped = vec![vec![Default::default(); cols]; rows];
 
     for i in 0..rows {
-        let access_i = rows-1-i;
+        let access_i = rows - 1 - i;
         for j in 0..cols {
             flipped[i][j] = mat[access_i][j];
         }
@@ -147,7 +148,9 @@ pub fn char_matrix_to_lines(m: Matrix<char>) -> Vec<String> {
         .collect::<Vec<_>>()
 }
 
-pub fn array_to_matrix<const R: usize, const C: usize, T: Default + Copy>(arr: [[T; C]; R]) -> Matrix<T> {
+pub fn array_to_matrix<const R: usize, const C: usize, T: Default + Copy>(
+    arr: [[T; C]; R],
+) -> Matrix<T> {
     let mut mat = vec![vec![Default::default(); C]; R];
     for i in 0..R {
         for j in 0..C {
@@ -158,23 +161,25 @@ pub fn array_to_matrix<const R: usize, const C: usize, T: Default + Copy>(arr: [
 }
 
 pub fn pretty_matrix<T: Debug>(m: &Matrix<T>) -> String {
-    (0..m.len()).map(|i| format!("{:?}\n", m[i])).collect::<String>()
+    (0..m.len())
+        .map(|i| format!("{:?}\n", m[i]))
+        .collect::<String>()
 }
 
-pub fn diagonal_coordinates(n: i32, m: i32) -> Vec<Vec<(usize, usize)>>{
+pub fn diagonal_coordinates(n: i32, m: i32) -> Vec<Vec<(usize, usize)>> {
     (0..(n + m - 1))
         .map(|d| {
             // let right_of_diagonal = max(0, d - m + 1);
             (max(0, d - m + 1)..min(n, d + 1))
                 .map(|x| {
                     // (x, d-x)
-                    (x as usize, (d-x) as usize)
+                    (x as usize, (d - x) as usize)
                     // (
                     //     TryInto::<usize>::try_into(x).unwrap(),
                     //     TryInto::<usize>::try_into(d-x).unwrap(),
                     // )
                 })
-                .collect::<Vec<(_,_)>>()
+                .collect::<Vec<(_, _)>>()
         })
         .collect::<Vec<_>>()
 }

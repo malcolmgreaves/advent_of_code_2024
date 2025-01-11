@@ -5,7 +5,10 @@ use std::{
     collections::HashSet,
 };
 
-use crate::{io_help, utils};
+use crate::{
+    io_help,
+    utils::{self, fliplr},
+};
 
 // https://adventofcode.com/2024/day/4
 
@@ -51,29 +54,29 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
         c1 + c2
     };
 
-    let increment_diagonals = || -> i32 {
-        let d1 = diagonals_r2l(L, N, &lines);
-        for x in d1.iter() {
-            println!("diagonal (first): {x}")
-        }
-        let c1 = count(term, d1.iter());
+    // let increment_diagonals = || -> i32 {
+    //     let d1 = diagonals_r2l(L, N, &lines);
+    //     for x in d1.iter() {
+    //         println!("diagonal (first): {x}")
+    //     }
+    //     let c1 = count(term, d1.iter());
 
-        let _d2 = utils::char_matrix_to_lines(lines.clone());
-        let reversed_char_matrix = utils::convert_to_char_matrix(
-            N,
-            L,
-            &_d2.into_iter()
-                .map(|x| x.chars().rev().collect::<String>())
-                .collect::<Vec<_>>(),
-        );
-        let d2 = diagonals_r2l(L, N, &reversed_char_matrix);
-        for x in d2.iter() {
-            println!("diagonal (reversed): {x}")
-        }
-        let c2 = count(term, d2.iter());
+    //     let _d2 = utils::char_matrix_to_lines(lines.clone());
+    //     let reversed_char_matrix = utils::convert_to_char_matrix(
+    //         N,
+    //         L,
+    //         &_d2.into_iter()
+    //             .map(|x| x.chars().rev().collect::<String>())
+    //             .collect::<Vec<_>>(),
+    //     );
+    //     let d2 = diagonals_r2l(L, N, &reversed_char_matrix);
+    //     for x in d2.iter() {
+    //         println!("diagonal (reversed): {x}")
+    //     }
+    //     let c2 = count(term, d2.iter());
 
-        c1 + c2
-    };
+    //     c1 + c2
+    // };
 
     let mut found = 0;
     println!("[start]       found: {found}");
@@ -86,7 +89,8 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
     found += v;
     println!("[verticals]   found: {found} (+{v})");
 
-    let d = increment_diagonals();
+    // let d = increment_diagonals();
+    let d = increment(diagonals(L, N, &lines));
     found += d;
     println!("[diagonals]   found: {found} (+{d})");
 
@@ -133,6 +137,21 @@ fn verticals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
 }
 
 fn diagonals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
+    assert_eq!(lines.len(), N, "D: char matrix rows != expected");
+    assert_eq!(lines[0].len(), N, "D: char matrix rows != expected");
+    let access_diagonals_of = |m: &utils::Matrix<char>| -> Vec<String> {
+        utils::diagonal_coordinates(N as i32, L as i32)
+            .iter()
+            .map(|diag| diag.iter().map(|(i, j)| m[*i][*j]).collect::<String>())
+            .collect::<Vec<_>>()
+    };
+    let anti_diagonals = access_diagonals_of(lines);
+    let mut true_diagonals = access_diagonals_of(&utils::fliplr(lines));
+    true_diagonals.extend(anti_diagonals);
+    true_diagonals
+}
+
+fn og_diagonals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
     // take the (NxL) matrix and convert into lists of index pairs
     // each list corresponds to a full diagonal
     // then, take each list and reindex into `lines` to get the full String
@@ -247,7 +266,7 @@ mod test {
 
     d=1
 
-    
+
 
     (3,0)
     (2,0), (3,1)
