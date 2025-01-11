@@ -53,6 +53,9 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
 
     let increment_diagonals = || -> i32 {
         let d1 = diagonals_r2l(L, N, &lines);
+        for x in d1.iter() {
+            println!("diagonal (first): {x}")
+        }
         let c1 = count(term, d1.iter());
 
         let _d2 = utils::char_matrix_to_lines(lines.clone());
@@ -64,6 +67,9 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
                 .collect::<Vec<_>>(),
         );
         let d2 = diagonals_r2l(L, N, &reversed_char_matrix);
+        for x in d2.iter() {
+            println!("diagonal (reversed): {x}")
+        }
         let c2 = count(term, d2.iter());
 
         c1 + c2
@@ -154,6 +160,8 @@ fn diagonals_r2l(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
 
     (0..(n + m - 1))
         .map(|d| {
+            let right_of_diagonal = max(0, d - m + 1);
+
             (max(0, d - m + 1)..min(n, d + 1))
                 .map(|x| {
                     // (x, d-x)
@@ -199,7 +207,7 @@ mod test {
         ];
         let result = count_terms(10, 10, "XMAS", convert(example_input));
         // let result = count_terms("XMAS", &example_input);
-        assert!(result == 18);
+        assert_eq!(result, 18, "actual (left) | expected (right)");
     }
 
     #[test]
@@ -215,7 +223,45 @@ mod test {
             ['X', 'X', 'X', 'X'],
             ['X', 'X', 'X', 'X'],
             ['X', 'X', 'X', 'X'],
+            // ['X', 'X', 'X', 'X'],
         ]
+    }
+
+    /*
+
+    let x = [
+        [(0,0), (0,1), (0,2), (0,3)],
+        [(1,0), (1,1), (1,2), (1,3)],
+        [(2,0), (2,1), (2,2), (2,3)],
+        [(3,0), (3,1), (3,2), (3,3)],
+        [(4,0), (4,1), (4,2), (4,3)],
+    ]
+
+    R=5, C=4
+
+    d=0
+    x=d
+    while x < C;
+        
+        (0,0), (1,1), (2, 2), (3,3)
+
+    d=1
+
+    
+
+    (3,0)
+    (2,0), (3,1)
+
+
+    */
+
+    #[test]
+    fn sqaure_diagonal() {
+        let example_input = convert(square_xmas_once());
+        let d = diagonals_r2l(4, 4, &example_input);
+        for x in d {
+            println!("{x}");
+        }
     }
 
     #[test]

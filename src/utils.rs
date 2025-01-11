@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 pub type Matrix<T> = Vec<Vec<T>>;
 
 pub fn transpose<T: Copy + Default>(
@@ -18,6 +20,46 @@ pub fn transpose<T: Copy + Default>(
         }
     }
     result
+}
+
+pub fn fliplr<T:Copy + Default>(mat: &Matrix<T>) -> Matrix<T> {
+    if mat.len() == 0 {
+        return Vec::new();
+    }
+    let rows = mat.len();
+    let cols = mat[0].len();
+    
+    let mut flipped = vec![vec![Default::default(); cols]; rows];
+
+    for i in 0..rows {
+        for j in 0..cols {
+            let access_j = cols-1-j;
+            flipped[i][j] = mat[i][access_j];
+        }
+    }
+
+    flipped
+}
+
+
+
+pub fn flipud<T:Copy + Default>(mat: &Matrix<T>) -> Matrix<T> {
+    if mat.len() == 0 {
+        return Vec::new();
+    }
+    let rows = mat.len();
+    let cols = mat[0].len();
+    
+    let mut flipped = vec![vec![Default::default(); cols]; rows];
+
+    for i in 0..rows {
+        let access_i = rows-1-i;
+        for j in 0..cols {
+            flipped[i][j] = mat[access_i][j];
+        }
+    }
+
+    flipped
 }
 
 pub fn reverse_string(x: String) -> String {
@@ -103,4 +145,18 @@ pub fn char_matrix_to_lines(m: Matrix<char>) -> Vec<String> {
     (0..R)
         .map(|i| m[i].to_owned().into_iter().collect::<String>())
         .collect::<Vec<_>>()
+}
+
+pub fn array_to_matrix<const R: usize, const C: usize, T: Default + Copy>(arr: [[T; C]; R]) -> Matrix<T> {
+    let mut mat = vec![vec![Default::default(); C]; R];
+    for i in 0..R {
+        for j in 0..C {
+            mat[i][j] = arr[i][j];
+        }
+    }
+    mat
+}
+
+pub fn pretty_matrix<T: Debug>(m: &Matrix<T>) -> String {
+    (0..m.len()).map(|i| format!("{:?}\n", m[i])).collect::<String>()
 }
