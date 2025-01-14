@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 
 use regex::Regex;
 
-use crate::io_help::{self, to_int};
+use crate::io_help::{self, to_int32};
 
 // https://adventofcode.com/2024/day/3
 
@@ -150,7 +150,7 @@ fn regex_mul_groups(input_line: String) -> Vec<Indexed<MulGroup>> {
                         .replace('(', "")
                         .replace(')', "");
                     let bits = trimmed.split(",").map(|x| x.trim()).collect::<Vec<&str>>();
-                    let (left, right) = (to_int(bits[0]), to_int(bits[1]));
+                    let (left, right) = (to_int32(bits[0]), to_int32(bits[1]));
                     Indexed {
                         index: x.start(),
                         item: MulGroup { left, right },

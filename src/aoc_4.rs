@@ -79,20 +79,20 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
     // };
 
     let mut found = 0;
-    println!("[start]       found: {found}");
+    // println!("[start]       found: {found}");
 
     let h = increment(horizontals(L, N, &lines));
     found += h;
-    println!("[horizontals] found: {found} (+{h})");
+    // println!("[horizontals] found: {found} (+{h})");
 
     let v = increment(verticals(L, N, &lines));
     found += v;
-    println!("[verticals]   found: {found} (+{v})");
+    // println!("[verticals]   found: {found} (+{v})");
 
     // let d = increment_diagonals();
     let d = increment(diagonals(L, N, &lines));
     found += d;
-    println!("[diagonals]   found: {found} (+{d})");
+    // println!("[diagonals]   found: {found} (+{d})");
 
     found
 }
@@ -282,7 +282,6 @@ pub fn check_window(term: &str, window: &utils::Matrix<char>) -> bool {
 
 #[cfg(test)]
 mod test {
-
     use super::*;
 
     #[test]

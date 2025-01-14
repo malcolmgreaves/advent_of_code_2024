@@ -1,5 +1,6 @@
 use std::{
     cmp::{max, min},
+    error::Error,
     fmt::Debug,
 };
 
@@ -182,4 +183,19 @@ pub fn diagonal_coordinates(n: i32, m: i32) -> Vec<Vec<(usize, usize)>> {
                 .collect::<Vec<(_, _)>>()
         })
         .collect::<Vec<_>>()
+}
+
+pub type Res<T> = Result<T, Box<dyn Error>>;
+
+pub fn proc_elements_result<A, B>(process: fn(&A) -> Res<B>, elements: &[A]) -> Res<Vec<B>> {
+    let mut collected: Vec<B> = Vec::new();
+    for x in elements.iter() {
+        match process(x) {
+            Ok(result) => collected.push(result),
+            Err(error) => {
+                return Err(error);
+            }
+        }
+    }
+    Ok(collected)
 }
