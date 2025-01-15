@@ -4,7 +4,51 @@ use std::{
     fmt::Debug,
 };
 
+// heap-allocated a rectangular 2D array with runtime-determined size
 pub type Matrix<T> = Vec<Vec<T>>;
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct Coordinate {
+    pub row: usize,
+    pub col: usize,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum InvalidShape {
+    RowCount {
+        actual_rows: usize,
+    },
+    Coordinate {
+        row_index: usize,
+        actual_cols: usize,
+    },
+}
+
+pub fn is_square<T>(dimension: usize, mat: &Matrix<T>) -> Option<Vec<InvalidShape>> {
+    is_rectangular(dimension, dimension, mat)
+}
+
+pub fn is_rectangular<T>(rows: usize, cols: usize, mat: &Matrix<T>) -> Option<Vec<InvalidShape>> {
+    let mut invalids: Vec<InvalidShape> = Vec::new();
+    if mat.len() != rows {
+        invalids.push(InvalidShape::RowCount {
+            actual_rows: mat.len(),
+        });
+    }
+    for (i, row) in mat.iter().enumerate() {
+        if row.len() != cols {
+            invalids.push(InvalidShape::Coordinate {
+                row_index: i,
+                actual_cols: row.len(),
+            });
+        }
+    }
+    if invalids.len() == 0 {
+        None
+    } else {
+        Some(invalids)
+    }
+}
 
 pub fn transpose<T: Copy + Default>(
     R: usize,
