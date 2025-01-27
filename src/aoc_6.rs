@@ -84,13 +84,13 @@ fn assert_patrol_map_correctness(patrol_map: &PatrolMap) {
     }
 }
 
-pub fn solution_pt1() -> i32 {
+pub fn solution_pt1() -> u64 {
     let lines = io_help::read_lines("./inputs/6").collect::<Vec<String>>();
     let patrol_map = create_patrol_map(&lines);
-    trace_guards_and_count_visisted(&patrol_map) as i32
+    trace_guards_and_count_visisted(&patrol_map)
 }
 
-fn trace_guards_and_count_visisted(patrol_map: &PatrolMap) -> usize {
+fn trace_guards_and_count_visisted(patrol_map: &PatrolMap) -> u64 {
     assert_patrol_map_correctness(&patrol_map);
     let final_patrol_map = trace_guard_route(&patrol_map).unwrap();
     count_visted(&final_patrol_map)
@@ -346,11 +346,11 @@ fn is_obstructed(patrol_map: &PatrolMap, xy: &Coordinate) -> bool {
     }
 }
 
-fn count_visted(patrol_map: &PatrolMap) -> usize {
+fn count_visted(patrol_map: &PatrolMap) -> u64 {
     patrol_map
         .iter()
         .map(|row| {
-            row.iter().fold(0 as usize, |count, state| match state {
+            row.iter().fold(0 as u64, |count, state| match state {
                 State::Visited(_) => count + 1,
                 _ => count,
             })
@@ -377,17 +377,17 @@ fn count_visted(patrol_map: &PatrolMap) -> usize {
 // position is always determined as one (1) unit in the direction the guard is facing (this is what
 // causes the guard to rotate 90 degrees right).
 //
-pub fn solution_pt2() -> i32 {
+pub fn solution_pt2() -> u64 {
     let lines = io_help::read_lines("./inputs/6").collect::<Vec<String>>();
     let initial_patrol_map = create_patrol_map(&lines);
-    solve_n_places_to_put_obstruction_to_cause_loop(&initial_patrol_map) as i32
+    solve_n_places_to_put_obstruction_to_cause_loop(&initial_patrol_map)
 }
 
-fn solve_n_places_to_put_obstruction_to_cause_loop(patrol_map: &PatrolMap) -> usize {
+fn solve_n_places_to_put_obstruction_to_cause_loop(patrol_map: &PatrolMap) -> u64 {
     // let final_patrol_map = trace_guard_route(&patrol_map).unwrap();
     // let new_loop_causing_obstructions = positions_of_obstructions_to_add(&final_patrol_map);
     let new_loop_causing_obstructions = positions_of_obstructions_to_add(&patrol_map);
-    new_loop_causing_obstructions.len()
+    new_loop_causing_obstructions.len() as u64
 }
 
 // fn positions_of_obstructions_to_add(final_patrol_map: &PatrolMap) -> Vec<Coordinate> {

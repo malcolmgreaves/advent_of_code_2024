@@ -13,38 +13,42 @@ fn convert_to_int_lists(nums: Vec<Vec<i32>>) -> (Vec<i32>, Vec<i32>) {
         .unzip::<i32, i32, Vec<i32>, Vec<i32>>()
 }
 
-pub fn solution_pt1() -> i32 {
+pub fn solution_pt1() -> u64 {
     let (l1, l2) = convert_to_int_lists(io_help::read_lines_as_ints("   ", "./inputs/1"));
     sum_sorted_distances(&l1, &l2)
 }
 
-fn sum_sorted_distances(list1: &[i32], list2: &[i32]) -> i32 {
+fn sum_sorted_distances(list1: &[i32], list2: &[i32]) -> u64 {
     let mut list1 = list1.to_vec();
     list1.sort();
     let mut list2 = list2.to_vec();
     list2.sort();
-    list1
+    let s: i32 = list1
         .iter()
         .zip(list2.iter())
         .map(|(l1, l2)| if l1 < l2 { l2 - l1 } else { l1 - l2 })
-        .sum()
+        .sum();
+    assert!(s > 0);
+    s as u64
 }
 
-pub fn solution_pt2() -> i32 {
+pub fn solution_pt2() -> u64 {
     let (l1, l2) = convert_to_int_lists(io_help::read_lines_as_ints("   ", "./inputs/1"));
     similarity_score(&l1, &l2)
 }
 
-fn similarity_score(list1: &[i32], list2: &[i32]) -> i32 {
+fn similarity_score(list1: &[i32], list2: &[i32]) -> u64 {
     let l2_counts: HashMap<i32, i32> = list2.iter().fold(HashMap::new(), |mut accum, x| {
         accum.insert(*x, accum.get(x).unwrap_or(&0) + 1);
         accum
     });
 
-    list1
+    let s: i32 = list1
         .iter()
         .map(|x| x * l2_counts.get(x).unwrap_or(&0))
-        .sum()
+        .sum();
+    assert!(s > 0);
+    s as u64
 }
 
 #[cfg(test)]

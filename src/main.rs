@@ -4,14 +4,16 @@ mod aoc_3;
 mod aoc_4;
 mod aoc_5;
 mod aoc_6;
+mod aoc_7;
 mod diag;
 mod io_help;
+mod nums;
 mod utils;
 
 use std::collections::BTreeMap;
 
 pub fn main() {
-    let solutions = BTreeMap::from([
+    let solutions: BTreeMap<&str, u64> = BTreeMap::from([
         ("AOC #1 pt.1", aoc_1::solution_pt1()),
         ("AOC #1 pt.2", aoc_1::solution_pt2()),
         ("AOC #2 pt.1", aoc_2::solution_pt1()),
@@ -23,7 +25,9 @@ pub fn main() {
         ("AOC #5 pt.1", aoc_5::solution_pt1()),
         ("AOC #5 pt.2", aoc_5::solution_pt2()),
         ("AOC #6 pt.1", aoc_6::solution_pt1()),
-        ("AOC #6 pt.2", /*aoc_6::solution_pt2()*/ -1),
+        // ("AOC #6 pt.2", aoc_6::solution_pt2()),
+        ("AOC #7 pt.1", aoc_7::solution_pt1()),
+        ("AOC #7 pt.2", aoc_7::solution_pt2()),
     ]);
     for (name, result) in solutions.iter() {
         println!("{name} Solution: {result}");

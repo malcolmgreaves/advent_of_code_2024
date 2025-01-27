@@ -66,10 +66,10 @@ fn range_from(afters: HashSet<Page>) -> (usize, usize) {
     (*min_, *max_)
 }
 
-pub fn solution_pt1() -> i32 {
+pub fn solution_pt1() -> u64 {
     let lines = io_help::read_lines("./inputs/5").collect::<Vec<String>>();
     match create_print_rules_queue_from_input(&lines) {
-        Ok(print_queue_rules) => sum_of_middles_of_valid_print_queues(&print_queue_rules) as i32,
+        Ok(print_queue_rules) => sum_of_middles_of_valid_print_queues(&print_queue_rules),
         Err(error) => panic!("Could not create print queue rules from inputs/5 !! {error}"),
     }
 }
@@ -146,17 +146,14 @@ fn create_queue(queue: String) -> Res<Vec<Page>> {
     )
 }
 
-fn sum_of_middles_of_valid_print_queues(print_queue_rules: &PrintRulesQueue) -> usize {
+fn sum_of_middles_of_valid_print_queues(print_queue_rules: &PrintRulesQueue) -> u64 {
     sum_of_middles_of_valid_print_queues_(
         &construct_before_afters_map(&print_queue_rules.rules),
         &print_queue_rules.queue,
     )
 }
 
-fn sum_of_middles_of_valid_print_queues_(
-    prq: &WorkingPrintRules,
-    print_queue: &[PrintJob],
-) -> usize {
+fn sum_of_middles_of_valid_print_queues_(prq: &WorkingPrintRules, print_queue: &[PrintJob]) -> u64 {
     let valid_queues: Vec<&PrintJob> = {
         let mut valids: Vec<&PrintJob> = Vec::new();
         print_queue.iter().for_each(|seq: &PrintJob| {
@@ -168,7 +165,7 @@ fn sum_of_middles_of_valid_print_queues_(
     };
 
     let mids = middles_of(&valid_queues);
-    mids.iter().sum()
+    mids.iter().map(|x| *x as u64).sum()
 }
 
 fn check_is_valid_print_sequence(prq: &WorkingPrintRules, seq: &[Page]) -> bool {
@@ -207,17 +204,15 @@ fn middles_of(queue: &[&PrintJob]) -> Vec<Page> {
         .collect::<Vec<_>>()
 }
 
-pub fn solution_pt2() -> i32 {
+pub fn solution_pt2() -> u64 {
     let lines = io_help::read_lines("./inputs/5").collect::<Vec<String>>();
     match create_print_rules_queue_from_input(&lines) {
-        Ok(print_queue_rules) => {
-            sum_of_middles_on_only_invalid_fixed_queues(&print_queue_rules) as i32
-        }
+        Ok(print_queue_rules) => sum_of_middles_on_only_invalid_fixed_queues(&print_queue_rules),
         Err(error) => panic!("Could not create print queue rules from inputs/5 !! {error}"),
     }
 }
 
-fn sum_of_middles_on_only_invalid_fixed_queues(print_queue_rules: &PrintRulesQueue) -> usize {
+fn sum_of_middles_on_only_invalid_fixed_queues(print_queue_rules: &PrintRulesQueue) -> u64 {
     let prq = construct_before_afters_map(&print_queue_rules.rules);
     let fixed_print_queue = print_queue_rules
         .queue

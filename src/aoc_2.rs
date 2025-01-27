@@ -2,16 +2,16 @@ use crate::io_help;
 
 // https://adventofcode.com/2024/day/2
 
-pub fn solution_pt1() -> i32 {
+pub fn solution_pt1() -> u64 {
     count_ok_levels(io_help::read_lines_as_ints(" ", "./inputs/2").to_vec())
 }
 
-fn count_ok_levels(levels: Vec<Vec<i32>>) -> i32 {
+fn count_ok_levels(levels: Vec<Vec<i32>>) -> u64 {
     levels
         .iter()
         .map(|level| check_level(level))
         .map(|x| if x { 1 } else { 0 })
-        .sum::<i32>()
+        .sum()
 }
 
 fn check_level(level: &[i32]) -> bool {
@@ -52,11 +52,11 @@ fn check_level(level: &[i32]) -> bool {
     return ascending_or_descending && diff_check;
 }
 
-pub fn solution_pt2() -> i32 {
+pub fn solution_pt2() -> u64 {
     count_ok_levels_with_damper(io_help::read_lines_as_ints(" ", "./inputs/2").to_vec())
 }
 
-fn count_ok_levels_with_damper(levels: Vec<Vec<i32>>) -> i32 {
+fn count_ok_levels_with_damper(levels: Vec<Vec<i32>>) -> u64 {
     levels
         .iter()
         .map(|level| {
@@ -75,7 +75,11 @@ fn count_ok_levels_with_damper(levels: Vec<Vec<i32>>) -> i32 {
                 result_from_removing_any_single_level
             }
         })
-        .sum::<i32>()
+        .map(|x| {
+            assert!(x >= 0);
+            x as u64
+        })
+        .sum()
 }
 
 #[cfg(test)]

@@ -7,11 +7,11 @@ use crate::io_help::{self, to_int32};
 
 // https://adventofcode.com/2024/day/3
 
-pub fn solution_pt1() -> i32 {
+pub fn solution_pt1() -> u64 {
     solve_inputs_mul(&io_help::read_lines("./inputs/3").collect::<Vec<String>>())
 }
 
-pub fn solution_pt2() -> i32 {
+pub fn solution_pt2() -> u64 {
     // turn a string into a sequence of instructions
     // instructions are: mul(L,R), do, don't
     // then process as state machine
@@ -35,7 +35,7 @@ struct Indexed<T> {
     item: T,
 }
 
-fn solve_inputs_conditionals(input: String) -> i32 {
+fn solve_inputs_conditionals(input: String) -> u64 {
     sum_states(&process_into_states(&input))
 }
 
@@ -102,15 +102,16 @@ fn compare_indexed<'a, 'b, A, B>(x: &'a Indexed<A>, y: &'b Indexed<B>) -> Orderi
     }
 }
 
-fn sum_states(states: &[State]) -> i32 {
-    let mut sum = 0;
+fn sum_states(states: &[State]) -> u64 {
+    let mut sum: u64 = 0;
     let mut active = true;
     for s in states {
         match s {
             State::MulGroup { left, right } => {
                 if active {
                     let x = left * right;
-                    sum += x;
+                    assert!(x > 0);
+                    sum += (x as u64);
                 }
             }
             State::Do => {
@@ -124,15 +125,21 @@ fn sum_states(states: &[State]) -> i32 {
     sum
 }
 
-fn solve_inputs_mul(input_lines: &[String]) -> i32 {
+fn solve_inputs_mul(input_lines: &[String]) -> u64 {
     input_lines
         .iter()
         .map(|l| sum_mul_groups(regex_mul_groups(l.to_string()).iter().map(|x| &x.item)))
         .sum()
 }
 
-fn sum_mul_groups<'a>(mul_groups: impl Iterator<Item = &'a MulGroup>) -> i32 {
-    mul_groups.map(|x| x.multiply()).sum()
+fn sum_mul_groups<'a>(mul_groups: impl Iterator<Item = &'a MulGroup>) -> u64 {
+    mul_groups
+        .map(|x| {
+            let r = x.multiply();
+            assert!(r > 0);
+            r as u64
+        })
+        .sum()
 }
 
 fn regex_mul_groups(input_line: String) -> Vec<Indexed<MulGroup>> {

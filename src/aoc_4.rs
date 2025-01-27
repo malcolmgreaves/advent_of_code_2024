@@ -12,7 +12,7 @@ use crate::{
 
 // https://adventofcode.com/2024/day/4
 
-pub fn solution_pt1() -> i32 {
+pub fn solution_pt1() -> u64 {
     let lines = io_help::read_lines("./inputs/4").collect::<Vec<String>>();
     assert_ne!(lines.len(), 0);
 
@@ -28,7 +28,7 @@ pub fn solution_pt1() -> i32 {
 
 type CharMatrix = utils::Matrix<char>;
 
-fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
+fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> u64 {
     // (a) take the matrix and get out each full-length
     //  - horizontal
     //  - vertical
@@ -38,7 +38,7 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
     // (d) check if each window equals term, if so, increment++
     // (e) return increment total
 
-    let increment = |expanded: Vec<String>| -> i32 {
+    let increment = |expanded: Vec<String>| -> u64 {
         let _rows = expanded.len();
         let _cols = expanded[0].len();
 
@@ -54,7 +54,7 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
         c1 + c2
     };
 
-    // let increment_diagonals = || -> i32 {
+    // let increment_diagonals = || -> u64 {
     //     let d1 = diagonals_r2l(L, N, &lines);
     //     for x in d1.iter() {
     //         println!("diagonal (first): {x}")
@@ -97,7 +97,7 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> i32 {
     found
 }
 
-fn count<'a>(term: &str, expanded: impl Iterator<Item = &'a String>) -> i32 {
+fn count<'a>(term: &str, expanded: impl Iterator<Item = &'a String>) -> u64 {
     let mut found = 0;
     // (c, d, e) window, check, increment
     expanded.for_each(|line| {
@@ -192,7 +192,7 @@ fn diagonals_r2l(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
         .collect::<Vec<_>>()
 }
 
-pub fn solution_pt2() -> i32 {
+pub fn solution_pt2() -> u64 {
     let lines = io_help::read_lines("./inputs/4").collect::<Vec<String>>();
     assert_ne!(lines.len(), 0);
     let ROWS = lines.len();
@@ -202,7 +202,7 @@ pub fn solution_pt2() -> i32 {
     count_mas_x(&chars)
 }
 
-pub fn count_mas_x(chars: &CharMatrix) -> i32 {
+pub fn count_mas_x(chars: &CharMatrix) -> u64 {
     let windows = window_2d((3, 3), &chars);
 
     let term = "MAS";
