@@ -49,8 +49,29 @@ pub fn anitnode_location(
     }
 }
 
-pub fn distance(a: &Coordinate, b: &Coordinate) -> u64 {
-    todo!()
+pub fn distance(a: &Coordinate, b: &Coordinate) -> f64 {
+    // Calculate 2D distance between points: 𝑑=√[ (𝑥1−𝑥0)^2 + (𝑦1−𝑦0)^2 ]
+    // (x1-x0)^2
+    let row_d = difference(a.row, b.row).pow(2);
+    // (y1-y0)^2
+    let col_d = difference(a.col, b.col).pow(2);
+    // (𝑥1−𝑥0)^2 + (𝑦1−𝑦0)^2
+    let sum_d = (row_d + col_d) as f64;
+    // 𝑑=√[ (𝑥1−𝑥0)^2 + (𝑦1−𝑦0)^2 ]
+    sum_d.sqrt()
+}
+
+pub fn difference(a: usize, b: usize) -> u64 {
+    // lower -> higher OK
+    let a = a as u64;
+    let b = b as u64;
+    if a > b {
+        a - b
+    } else if b > a {
+        b - a
+    } else {
+        0
+    }
 }
 
 pub fn line_slope(src: &Coordinate, dst: &Coordinate) -> Slope {
@@ -73,7 +94,12 @@ fn coordinate_at(
     max_cols: usize,
     start: &Coordinate,
     direction: &Slope,
-    distance: u64,
+    distance: f64,
 ) -> Option<Coordinate> {
+    // https://math.stackexchange.com/a/175906
+    // Let 𝐯=(𝑥1,𝑦1)−(𝑥0,𝑦0). Normalize this to 𝐮=𝐯||𝐯||.
+    // The point along your line at a distance 𝑑 from (𝑥0,𝑦0) is then (𝑥0,𝑦0)+𝑑𝐮.
+    // If you want it in the direction of (𝑥1,𝑦1), or (𝑥0,𝑦0)−𝑑𝐮, if you want it in the opposite direction.
+
     todo!()
 }
