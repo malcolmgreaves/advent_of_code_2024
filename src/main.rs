@@ -5,6 +5,7 @@ mod aoc_4;
 mod aoc_5;
 mod aoc_6;
 mod aoc_7;
+mod aoc_8;
 mod diag;
 mod io_help;
 mod nums;
@@ -28,6 +29,8 @@ pub fn main() {
         // ("AOC #6 pt.2", aoc_6::solution_pt2()),
         ("AOC #7 pt.1", aoc_7::solution_pt1()),
         ("AOC #7 pt.2", aoc_7::solution_pt2()),
+        ("AOC #8 pt.1", aoc_8::solution_pt1()),
+        ("AOC #8 pt.2", aoc_8::solution_pt2()),
     ]);
     for (name, result) in solutions.iter() {
         println!("{name} Solution: {result}");
