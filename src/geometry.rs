@@ -8,13 +8,6 @@ pub struct Slope {
     run: i64,
 }
 
-impl Slope {
-    fn rise_over_run(&self) -> f64 {
-        // cast: we will loose precision
-        (self.rise as f64) / (self.run as f64)
-    }
-}
-
 pub enum AntinodeLocation {
     OutOfBounds,
     OneLocation(Coordinate),
@@ -32,8 +25,9 @@ pub fn anitnode_location(
 
     let coord_at = {
         let dist = distance(src, dst);
+        let distance_times_2 = dist * 2.0;
         move |start: &Coordinate, direction: &Slope| {
-            coordinate_at(max_rows, max_cols, start, direction, dist)
+            coordinate_at(max_rows, max_cols, start, direction, distance_times_2)
         }
     };
 
@@ -97,9 +91,35 @@ fn coordinate_at(
     distance: f64,
 ) -> Option<Coordinate> {
     // https://math.stackexchange.com/a/175906
-    // Let 𝐯=(𝑥1,𝑦1)−(𝑥0,𝑦0). Normalize this to 𝐮=𝐯||𝐯||.
+
+    let (x0, y0) = (
+        TryInto::<i64>::try_into(start.row).unwrap(),
+        TryInto::<i64>::try_into(start.col).unwrap(),
+    );
+    // (x1, y1) is ONE STEP on the line from START in DIRECTION
+    let (x1, y1) = (
+        TryInto::<i64>::try_into(start.row).unwrap() + direction.rise,
+        TryInto::<i64>::try_into(start.col).unwrap() + direction.run,
+    );
+
+    // Let 𝐯=(𝑥1,𝑦1)−(𝑥0,𝑦0). Normalize this to 𝐮=𝐯/||𝐯||.
+    let (u_x, u_y) = {
+        let norm_v = ((x1 - x0).abs() + (y1 - y0).abs()) as f64;
+        (((x1 - x0) as f64) / norm_v, ((y1 - y0) as f64) / norm_v)
+    };
     // The point along your line at a distance 𝑑 from (𝑥0,𝑦0) is then (𝑥0,𝑦0)+𝑑𝐮.
     // If you want it in the direction of (𝑥1,𝑦1), or (𝑥0,𝑦0)−𝑑𝐮, if you want it in the opposite direction.
+    let new_x = (start.row as f64) + distance * u_x;
+    let new_y = (start.col as f64) + distance * u_y;
 
-    todo!()
+    if new_x >= 0.0 && new_x < max_rows as f64 && new_y >= 0.0 && new_y < max_cols as f64 {
+        let row = new_x.clamp(0.0, (max_rows - 1) as f64).round() as usize;
+        let col = new_y.clamp(0.0, (max_cols - 1) as f64).round() as usize;
+        assert!(row < max_rows, "new_x: {new_x} | new_y: {new_y}");
+        assert!(col < max_cols, "new_x: {new_x} | new_y: {new_y}");
+        Some(Coordinate { row, col })
+    } else {
+        // out of bounds!
+        None
+    }
 }
