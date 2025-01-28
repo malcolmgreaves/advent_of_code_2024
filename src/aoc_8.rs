@@ -47,6 +47,17 @@ fn n_unique_antinodes(signals: &SignalMat) -> u64 {
     // but only when one of the antennas is twice as far away as the other. This means that for any pair of antennas with
     // the same frequency, there are two antinodes, one on either side of them.
     todo!()
+    // dictionary: antenna type (char) -> locations ([]Coordinate)
+    // for each key:
+    //      for each pair of locations -> a,b:
+    //          loc = antinode_location(a,b)
+    //          signals[loc] += antinode(key antenna type)
+    // n = 0
+    // for x in signals:
+    //      for y in x:
+    //          if y is antinode:
+    //              n += 1
+    // return n
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
