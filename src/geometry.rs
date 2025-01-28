@@ -8,18 +8,18 @@ pub struct Slope {
     run: i64,
 }
 
-pub enum AntinodeLocation {
+pub enum AntinodeLoc {
     OutOfBounds,
     OneLocation(Coordinate),
     TwoLocations(Coordinate, Coordinate),
 }
 
-pub fn anitnode_location(
+pub fn antinode_location(
     max_rows: usize,
     max_cols: usize,
     src: &Coordinate,
     dst: &Coordinate,
-) -> AntinodeLocation {
+) -> AntinodeLoc {
     // 2x distance from antenna on line
     // so take each (src) and (dst) and find 2x distance on line
 
@@ -36,10 +36,10 @@ pub fn anitnode_location(
     let antinode_for_dst = coord_at(dst, &line_slope(dst, src));
 
     match (antinode_for_src, antinode_for_dst) {
-        (Some(s), Some(d)) => AntinodeLocation::TwoLocations(s, d),
-        (Some(s), None) => AntinodeLocation::OneLocation(s),
-        (None, Some(d)) => AntinodeLocation::OneLocation(d),
-        (None, None) => AntinodeLocation::OutOfBounds,
+        (Some(s), Some(d)) => AntinodeLoc::TwoLocations(s, d),
+        (Some(s), None) => AntinodeLoc::OneLocation(s),
+        (None, Some(d)) => AntinodeLoc::OneLocation(d),
+        (None, None) => AntinodeLoc::OutOfBounds,
     }
 }
 

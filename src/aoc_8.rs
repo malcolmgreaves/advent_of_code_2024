@@ -86,6 +86,7 @@ mod test {
 
     lazy_static! {
         static ref EXAMPLE_INPUT: SignalMat = vec![
+            // ............
             vec![
                 vec![State::Nothing],
                 vec![State::Nothing],
@@ -100,6 +101,7 @@ mod test {
                 vec![State::Nothing],
                 vec![State::Nothing]
             ],
+            // ........0...
             vec![
                 vec![State::Nothing],
                 vec![State::Nothing],
@@ -114,6 +116,7 @@ mod test {
                 vec![State::Nothing],
                 vec![State::Nothing]
             ],
+            // .....0......
             vec![
                 vec![State::Nothing],
                 vec![State::Nothing],
@@ -128,9 +131,51 @@ mod test {
                 vec![State::Nothing],
                 vec![State::Nothing]
             ],
-            vec![],
-            vec![],
-            vec![],
+            vec![
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Antenna('0')],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+            ],
+            // ....0.......
+            vec![
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Antenna('0')],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing]
+            ],
+            // ......A.....
+            vec![
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Antenna('A')],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing]
+            ],
+            // ............
             vec![
                 vec![State::Nothing],
                 vec![State::Nothing],
@@ -145,6 +190,7 @@ mod test {
                 vec![State::Nothing],
                 vec![State::Nothing]
             ],
+            // ............
             vec![
                 vec![State::Nothing],
                 vec![State::Nothing],
@@ -159,8 +205,37 @@ mod test {
                 vec![State::Nothing],
                 vec![State::Nothing]
             ],
-            vec![],
-            vec![],
+            // ........A...
+            vec![
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Antenna('A')],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing]
+            ],
+            // .........A..
+            vec![
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Nothing],
+                vec![State::Antenna('A')],
+                vec![State::Nothing],
+                vec![State::Nothing]
+            ],
+            // ............
             vec![
                 vec![State::Nothing],
                 vec![State::Nothing],
@@ -175,6 +250,7 @@ mod test {
                 vec![State::Nothing],
                 vec![State::Nothing]
             ],
+            // ............
             vec![
                 vec![State::Nothing],
                 vec![State::Nothing],
