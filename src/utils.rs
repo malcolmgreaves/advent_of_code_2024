@@ -24,7 +24,7 @@ pub enum InvalidShape {
     },
 }
 
-pub fn is_square<T>(dimension: usize, mat: &Matrix<T>) -> Option<Vec<InvalidShape>> {
+pub fn _is_square<T>(dimension: usize, mat: &Matrix<T>) -> Option<Vec<InvalidShape>> {
     is_rectangular(dimension, dimension, mat)
 }
 
@@ -51,19 +51,19 @@ pub fn is_rectangular<T>(rows: usize, cols: usize, mat: &Matrix<T>) -> Option<Ve
 }
 
 pub fn transpose<T: Copy + Default>(
-    R: usize,
-    C: usize,
+    max_rows: usize,
+    max_cols: usize,
     m: &Matrix<T>,
     // m: &[[T; C]; R],
 ) -> Matrix<T> {
     // ) -> [[T; R]; C] {
     // return the transpose of the matrix
     // let mut result: [[T; R]; C] = [[Default::default(); R]; C];
-    assert_eq!(m.len(), R, "T: matrix's rows != expected");
-    let mut result: Matrix<T> = vec![vec![Default::default(); R]; C];
-    for i in 0..R {
-        assert_eq!(m[i].len(), C, "T: matrix's cols != expected");
-        for j in 0..C {
+    assert_eq!(m.len(), max_rows, "T: matrix's rows != expected");
+    let mut result: Matrix<T> = vec![vec![Default::default(); max_rows]; max_cols];
+    for i in 0..max_rows {
+        assert_eq!(m[i].len(), max_cols, "T: matrix's cols != expected");
+        for j in 0..max_cols {
             result[j][i] = m[i][j];
         }
     }
@@ -89,7 +89,7 @@ pub fn fliplr<T: Copy + Default>(mat: &Matrix<T>) -> Matrix<T> {
     flipped
 }
 
-pub fn flipud<T: Copy + Default>(mat: &Matrix<T>) -> Matrix<T> {
+pub fn _flipud<T: Copy + Default>(mat: &Matrix<T>) -> Matrix<T> {
     if mat.len() == 0 {
         return Vec::new();
     }
@@ -140,19 +140,19 @@ pub fn reverse_string(x: String) -> String {
 //     huge_heap_array
 // }
 
-pub fn convert_to_char_matrix(ROWS: usize, COLS: usize, lines: &[String]) -> Matrix<char> {
+pub fn convert_to_char_matrix(max_rows: usize, max_cols: usize, lines: &[String]) -> Matrix<char> {
     assert_eq!(
         lines.len(),
-        ROWS,
+        max_rows,
         "C: number of strings != expected char array rows"
     );
-    let mut result = vec![vec![Default::default(); COLS]; ROWS];
+    let mut result = vec![vec![Default::default(); max_cols]; max_rows];
 
     let mut line_iter = lines.iter();
 
-    for i in 0..ROWS {
+    for i in 0..max_rows {
         let x = line_iter.next().unwrap();
-        let y = string_to_char_array(COLS, x.as_str());
+        let y = string_to_char_array(max_cols, x.as_str());
         result[i] = y
     }
     result
@@ -170,8 +170,8 @@ pub fn convert_to_char_matrix(ROWS: usize, COLS: usize, lines: &[String]) -> Mat
 //     })
 // }
 
-pub fn string_to_char_array(N: usize, s: &str) -> Vec<char> {
-    assert_eq!(s.len(), N, "C: string length != expected char cols");
+pub fn string_to_char_array(max_rows: usize, s: &str) -> Vec<char> {
+    assert_eq!(s.len(), max_rows, "C: string length != expected char cols");
     s.chars().collect::<Vec<_>>()
 }
 // pub fn string_to_char_array<const N: usize>(s: &str) -> [char; N] {
@@ -180,20 +180,20 @@ pub fn string_to_char_array(N: usize, s: &str) -> Vec<char> {
 //     [(); N].map(|_| chars.next().unwrap())
 // }
 
-pub fn char_array_to_lines<const R: usize, const C: usize>(chars: [[char; C]; R]) -> Vec<String> {
+pub fn _char_array_to_lines<const R: usize, const C: usize>(chars: [[char; C]; R]) -> Vec<String> {
     (0..R)
         .map(|i| String::from_iter(chars[i]))
         .collect::<Vec<_>>()
 }
 
-pub fn char_matrix_to_lines(m: Matrix<char>) -> Vec<String> {
-    let (C, R) = (m[0].len(), m.len());
-    (0..R)
+pub fn _char_matrix_to_lines(m: Matrix<char>) -> Vec<String> {
+    let (_, max_rows) = (m[0].len(), m.len());
+    (0..max_rows)
         .map(|i| m[i].to_owned().into_iter().collect::<String>())
         .collect::<Vec<_>>()
 }
 
-pub fn array_to_matrix<const R: usize, const C: usize, T: Default + Copy>(
+pub fn _array_to_matrix<const R: usize, const C: usize, T: Default + Copy>(
     arr: [[T; C]; R],
 ) -> Matrix<T> {
     let mut mat = vec![vec![Default::default(); C]; R];
@@ -205,7 +205,7 @@ pub fn array_to_matrix<const R: usize, const C: usize, T: Default + Copy>(
     mat
 }
 
-pub fn pretty_matrix<T: Debug>(m: &Matrix<T>) -> String {
+pub fn _pretty_matrix<T: Debug>(m: &Matrix<T>) -> String {
     (0..m.len())
         .map(|i| format!("{:?}\n", m[i]))
         .collect::<String>()
@@ -242,4 +242,77 @@ pub fn proc_elements_result<A, B>(process: fn(&A) -> Res<B>, elements: &[A]) -> 
         }
     }
     Ok(collected)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn try_flip_diagonal_coordinates() {
+        let chars = [
+            ['X', 'M', 'A', 'S'],
+            ['S', 'X', 'M', 'A'],
+            ['A', 'S', 'X', 'M'],
+            ['M', 'A', 'S', 'X'],
+            // ['X', 'M', 'A', 'S'],
+        ];
+
+        let x = [
+            [(0, 0), (0, 1), (0, 2), (0, 3)],
+            [(1, 0), (1, 1), (1, 2), (1, 3)],
+            [(2, 0), (2, 1), (2, 2), (2, 3)],
+            [(3, 0), (3, 1), (3, 2), (3, 3)],
+            // [(4,0), (4,1), (4,2), (4,3)],
+        ];
+
+        // let p_chars = (0..chars.len()).map(|i| {
+        //     format!("{:?}\n", chars[i])
+        // }).collect::<String>();
+        // println!("original!\n{p_chars}");
+        println!("original!\n{}", _pretty_matrix(&_array_to_matrix(chars)));
+
+        for diag in diagonal_coordinates(x.len() as i32, x[0].len() as i32) {
+            let dstr = diag.iter().map(|(i, j)| chars[*i][*j]).collect::<String>();
+            // println!("diag: {dstr} --> {diag:?})");
+            println!("diag: {dstr}");
+        }
+
+        let flipped_x = fliplr(&_array_to_matrix(chars));
+        // println!("flipped!!\n{flipped_x:?}");
+        println!("flipped!!\n{}", _pretty_matrix(&flipped_x));
+
+        let expected_flipped = [
+            ['S', 'A', 'M', 'X'],
+            ['A', 'M', 'X', 'S'],
+            ['M', 'X', 'S', 'A'],
+            ['X', 'S', 'A', 'M'],
+            // ['S', 'A', 'M', 'X']
+        ];
+
+        assert_eq!(flipped_x, _array_to_matrix(expected_flipped));
+        /*
+
+        */
+
+        for diag in diagonal_coordinates(x.len() as i32, x[0].len() as i32) {
+            let dstr = diag
+                .iter()
+                .map(|(i, j)| flipped_x[*i][*j])
+                .collect::<String>();
+            println!("flipped: {dstr}");
+        }
+
+        // let R = x.len();
+        // assert_eq!(R, 5);
+        // let C = x[0].len();
+        // assert_eq!(C, 4);
+
+        // for col_offset in 0..C {
+        //     for d in 0..R {
+        //         let x = (d, col_offset);
+
+        //     }
+        // }
+    }
 }

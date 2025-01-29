@@ -1,14 +1,8 @@
 use core::iter::Iterator;
 
-use std::{
-    cmp::{max, min},
-    collections::HashSet,
-};
+use std::cmp::{max, min};
 
-use crate::{
-    diag, io_help,
-    utils::{self, fliplr},
-};
+use crate::{io_help, utils};
 
 // https://adventofcode.com/2024/day/4
 
@@ -16,19 +10,19 @@ pub fn solution_pt1() -> u64 {
     let lines = io_help::read_lines("./inputs/4").collect::<Vec<String>>();
     assert_ne!(lines.len(), 0);
 
-    let ROWS = lines.len();
-    let COLS = lines[0].len();
+    let max_rows = lines.len();
+    let max_cols = lines[0].len();
 
-    let matrix = utils::convert_to_char_matrix(ROWS, COLS, &lines);
+    let matrix = utils::convert_to_char_matrix(max_rows, max_cols, &lines);
     // let matrix: [[char; COLS]; ROWS] = utils::convert_to_char_matrix::<ROWS, COLS>(&lines);
 
-    count_terms(COLS, ROWS, "XMAS", matrix)
+    count_terms(max_cols, max_rows, "XMAS", matrix)
     // count_terms("XMAS", &matrix)
 }
 
 type CharMatrix = utils::Matrix<char>;
 
-fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> u64 {
+fn count_terms(max_cols: usize, max_rows: usize, term: &str, lines: CharMatrix) -> u64 {
     // (a) take the matrix and get out each full-length
     //  - horizontal
     //  - vertical
@@ -81,16 +75,16 @@ fn count_terms(L: usize, N: usize, term: &str, lines: CharMatrix) -> u64 {
     let mut found = 0;
     // println!("[start]       found: {found}");
 
-    let h = increment(horizontals(L, N, &lines));
+    let h = increment(horizontals(max_cols, max_rows, &lines));
     found += h;
     // println!("[horizontals] found: {found} (+{h})");
 
-    let v = increment(verticals(L, N, &lines));
+    let v = increment(verticals(max_cols, max_rows, &lines));
     found += v;
     // println!("[verticals]   found: {found} (+{v})");
 
     // let d = increment_diagonals();
-    let d = increment(diagonals(L, N, &lines));
+    let d = increment(diagonals(max_cols, max_rows, &lines));
     found += d;
     // println!("[diagonals]   found: {found} (+{d})");
 
@@ -114,33 +108,33 @@ fn count<'a>(term: &str, expanded: impl Iterator<Item = &'a String>) -> u64 {
     found
 }
 
-fn horizontals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
-    assert_eq!(lines.len(), N, "H: char matrix rows != expected");
+fn horizontals(max_cols: usize, max_rows: usize, lines: &CharMatrix) -> Vec<String> {
+    assert_eq!(lines.len(), max_rows, "H: char matrix rows != expected");
     lines
         .iter()
         .map(|line| {
-            assert_eq!(line.len(), L, "H: char matrix cols != expected");
+            assert_eq!(line.len(), max_cols, "H: char matrix cols != expected");
             line.iter().collect::<String>()
         })
         .collect::<Vec<_>>()
 }
 
-fn verticals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
-    assert_eq!(lines.len(), N, "V: char matrix rows != expected");
-    (0..L)
+fn verticals(max_cols: usize, max_rows: usize, lines: &CharMatrix) -> Vec<String> {
+    assert_eq!(lines.len(), max_rows, "V: char matrix rows != expected");
+    (0..max_cols)
         .map(move |col| {
-            (0..N)
+            (0..max_rows)
                 .map(move |row: usize| lines[row][col])
                 .collect::<String>()
         })
         .collect::<Vec<String>>()
 }
 
-fn diagonals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
-    assert_eq!(lines.len(), N, "D: char matrix rows != expected");
-    assert_eq!(lines[0].len(), N, "D: char matrix rows != expected");
+fn diagonals(max_cols: usize, max_rows: usize, lines: &CharMatrix) -> Vec<String> {
+    assert_eq!(lines.len(), max_rows, "D: char matrix rows != expected");
+    assert_eq!(lines[0].len(), max_rows, "D: char matrix rows != expected");
     let access_diagonals_of = |m: &utils::Matrix<char>| -> Vec<String> {
-        utils::diagonal_coordinates(N as i32, L as i32)
+        utils::diagonal_coordinates(max_rows as i32, max_cols as i32)
             .iter()
             .map(|diag| diag.iter().map(|(i, j)| m[*i][*j]).collect::<String>())
             .collect::<Vec<_>>()
@@ -151,36 +145,16 @@ fn diagonals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
     true_diagonals
 }
 
-fn og_diagonals(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
-    // take the (NxL) matrix and convert into lists of index pairs
-    // each list corresponds to a full diagonal
-    // then, take each list and reindex into `lines` to get the full String
-    let mut result = HashSet::new();
+fn diagonals_r2l(max_cols: usize, max_rows: usize, lines: &CharMatrix) -> Vec<String> {
+    assert_eq!(lines.len(), max_rows, "D: char matrix rows != expected");
+    assert_eq!(lines[0].len(), max_cols, "D: char matrix cols != expected");
 
-    let d1 = diagonals_r2l(L, N, lines);
-    result.extend(d1);
-
-    let transposed = utils::transpose(L, N, &lines);
-    let d2 = diagonals_r2l(L, N, &transposed);
-    result.extend(d2);
-
-    // destructive: move each element **OUT OF** the hashset so we can construct a Vec<String<>
-    // note that .iter() will borrow each element, meaning we'd have Vec<&String>
-    // we don't need the hashset after this function, so we `move`
-    result.into_iter().collect::<Vec<_>>()
-}
-
-fn diagonals_r2l(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
-    assert_eq!(lines.len(), N, "D: char matrix rows != expected");
-    assert_eq!(lines[0].len(), L, "D: char matrix cols != expected");
-
-    let n = TryInto::<i32>::try_into(N).unwrap();
-    let m = TryInto::<i32>::try_into(L).unwrap();
+    let n = TryInto::<i32>::try_into(max_rows).unwrap();
+    let m = TryInto::<i32>::try_into(max_cols).unwrap();
 
     (0..(n + m - 1))
         .map(|d| {
-            let right_of_diagonal = max(0, d - m + 1);
-
+            // let right_of_diagonal = max(0, d - m + 1);
             (max(0, d - m + 1)..min(n, d + 1))
                 .map(|x| {
                     // (x, d-x)
@@ -195,9 +169,9 @@ fn diagonals_r2l(L: usize, N: usize, lines: &CharMatrix) -> Vec<String> {
 pub fn solution_pt2() -> u64 {
     let lines = io_help::read_lines("./inputs/4").collect::<Vec<String>>();
     assert_ne!(lines.len(), 0);
-    let ROWS = lines.len();
-    let COLS = lines[0].len();
-    let chars = utils::convert_to_char_matrix(ROWS, COLS, &lines);
+    let max_rows = lines.len();
+    let max_cols = lines[0].len();
+    let chars = utils::convert_to_char_matrix(max_rows, max_cols, &lines);
 
     count_mas_x(&chars)
 }

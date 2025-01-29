@@ -50,22 +50,6 @@ struct WorkingPrintRules {
     before_afters: HashMap<Page, HashSet<Page>>,
 }
 
-impl WorkingPrintRules {
-    fn valid(&self, before: Page, after: Page) -> bool {
-        match self.before_afters.get(&before) {
-            Some(afters) => panic!("unimplemented, afters: {afters:?}"),
-            None => false,
-        }
-    }
-}
-
-fn range_from(afters: HashSet<Page>) -> (usize, usize) {
-    assert_ne!(afters.len(), 0, "Cannot provide empty set for range!");
-    let min_ = afters.iter().min().unwrap();
-    let max_ = afters.iter().max().unwrap();
-    (*min_, *max_)
-}
-
 pub fn solution_pt1() -> u64 {
     let lines = io_help::read_lines("./inputs/5").collect::<Vec<String>>();
     match create_print_rules_queue_from_input(&lines) {

@@ -474,5 +474,4 @@ mod test {
         let acutal = total_ternary_calibration_result(op_eqns);
         assert_eq!(acutal, 11387);
     }
-    
 }

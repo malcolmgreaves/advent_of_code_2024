@@ -98,7 +98,7 @@ fn trace_guards_and_count_visisted(patrol_map: &PatrolMap) -> u64 {
 
 fn trace_guard_route(patrol_map: &PatrolMap) -> Option<PatrolMap> {
     let mut final_patrol = patrol_map.clone();
-    // while exists_at_least_one_guard(&final_patrol) {
+    // while _exists_at_least_one_guard(&final_patrol) {
     //     step_guard_positions(&mut final_patrol);
     // }
     let mut cycle_visisted = vec![vec![0; patrol_map[0].len()]; patrol_map.len()];
@@ -113,7 +113,7 @@ fn trace_guard_route(patrol_map: &PatrolMap) -> Option<PatrolMap> {
     }
 }
 
-fn exists_at_least_one_guard(patrol_map: &PatrolMap) -> bool {
+fn _exists_at_least_one_guard(patrol_map: &PatrolMap) -> bool {
     for row in patrol_map {
         for position in row {
             match position {
@@ -170,7 +170,6 @@ fn step_guard_positions(
     // guards.iter().for_each(|guard_coord|  {
     for guard_coord in guards.iter() {
         let g = &patrol_map[guard_coord.row][guard_coord.col];
-        let mut new_direction_for_visisted: Option<Direction> = None;
         match g {
             State::Guard(direction) => {
                 // NOTE: Does not consider case where a guard starts being obstructed in all 4 directions.
@@ -191,7 +190,11 @@ fn step_guard_positions(
                     return StepResult::CycleDetected;
                 }
 
-                match guard_step(patrol_map, &guard_coord, direction) {
+                let new_direction_for_visisted: Direction = match guard_step(
+                    patrol_map,
+                    &guard_coord,
+                    direction,
+                ) {
                     Some((new_guard_position, new_direction)) => {
                         patrol_map[new_guard_position.row][new_guard_position.col] =
                             State::Guard(new_direction.clone());
@@ -201,17 +204,17 @@ fn step_guard_positions(
                             panic!("Unexpected! At least two guards moved to the same location! This is unsuported! New location that is a violation: {new_guard_position:?}");
                         }
                         new_guard_positions.insert(new_guard_position);
-                        new_direction_for_visisted = Some(new_direction);
+                        new_direction
                     }
                     None => {
                         // guard fell off the patrol map!
-                        new_direction_for_visisted = Some(direction.clone());
+                        direction.clone()
                     }
-                }
+                };
 
                 // Always update the guard's previous position to be visisted!
                 patrol_map[guard_coord.row][guard_coord.col] =
-                    State::Visited(new_direction_for_visisted);
+                    State::Visited(Some(new_direction_for_visisted));
                 cycle_visisted[guard_coord.row][guard_coord.col] += 1;
             }
             _ => panic!("Expecting guard at ({guard_coord:?}) but found {g:?}"),
@@ -398,10 +401,10 @@ fn positions_of_obstructions_to_add(patrol_map: &PatrolMap) -> Vec<Coordinate> {
     //         cycle => good!
     //         no_cycle => bad!
     match trace_guard_route(&patrol_map) {
-        Some(final_patrol_map) => all_visisted(&final_patrol_map)
+        Some(final_patrol_map) => _all_visisted(&final_patrol_map)
             .iter()
             .flat_map(|x| {
-                // let mut border_attempts = bordering(patrol_map.len(), patrol_map[0].len(), x)
+                // let mut border_attempts = _bordering(patrol_map.len(), patrol_map[0].len(), x)
                 //     .into_iter()
                 //     .flat_map(|b| {
                 //         cycle_causing_obstruction(patrol_map, &final_patrol_map, &b, true)
@@ -421,7 +424,7 @@ fn positions_of_obstructions_to_add(patrol_map: &PatrolMap) -> Vec<Coordinate> {
     }
 }
 
-fn bordering(max_rows: usize, max_cols: usize, x: &Coordinate) -> Vec<Coordinate> {
+fn _bordering(max_rows: usize, max_cols: usize, x: &Coordinate) -> Vec<Coordinate> {
     //    ________________
     //    | lt | tt | rt |
     //    | ll | xx | rr |
@@ -499,7 +502,7 @@ fn cycle_causing_obstruction(
             obstructed_patrol_map[coord.row][coord.col] = State::Obstruction;
             // println!("\ttrying {coord:?} as obstruction (from: {visisted:?}) | before: {before:?}, after: {:?}", obstructed_patrol_map[coord.row][coord.col]);
             // if coord.row == 7 && coord.col == 7 {
-            //     print_patrol_map(patrol_map);
+            //     _print_patrol_map(patrol_map);
             // }
             match trace_guard_route(&obstructed_patrol_map) {
                 Some(_) => None,
@@ -513,7 +516,7 @@ fn cycle_causing_obstruction(
     }
 }
 
-fn print_patrol_map(patrol_map: &PatrolMap) {
+fn _print_patrol_map(patrol_map: &PatrolMap) {
     for row in patrol_map.iter() {
         for col in row.iter() {
             let x = match col {
@@ -643,7 +646,7 @@ fn some_obstruction_in(patrol_map: &PatrolMap, from: &Coordinate, dir: Direction
     }
 }
 
-fn positions_of_obstructions_to_add_rect(final_patrol_map: &PatrolMap) -> Vec<Coordinate> {
+fn _positions_of_obstructions_to_add_rect(final_patrol_map: &PatrolMap) -> Vec<Coordinate> {
     // each resulting coordinate DOES NOT have an obstruction,
     // but if it did, it would cause a guard path to result in a cycle (rectangle)
 
@@ -659,13 +662,13 @@ fn positions_of_obstructions_to_add_rect(final_patrol_map: &PatrolMap) -> Vec<Co
     // make sure that the returned coordinate is where the obstruction SHOULD go
     // check if it would be out-of-bounds too!
 
-    rectangular_guard_paths(final_patrol_map)
+    _rectangular_guard_paths(final_patrol_map)
         .iter()
         .flat_map(|rect_path| {
             // println!("rectangle path candidate: {rect_path:?}");
-            let x = check_suitable_obstruction_placement(final_patrol_map, rect_path);
+            let x = _check_suitable_obstruction_placement(final_patrol_map, rect_path);
             match x {
-                Some(ref y) => {
+                Some(ref _y) => {
                     /*
                     expected:
                         (6,3)
@@ -688,9 +691,9 @@ fn positions_of_obstructions_to_add_rect(final_patrol_map: &PatrolMap) -> Vec<Co
         .collect()
 }
 
-fn check_suitable_obstruction_placement(
+fn _check_suitable_obstruction_placement(
     patrol_map: &PatrolMap,
-    rect: &Rectangle,
+    rect: &_Rectangle,
 ) -> Option<Coordinate> {
     // for each, take the other 3 and check:
     //  - does the taken one have UNVISISTED in the spot?
@@ -717,59 +720,59 @@ fn check_suitable_obstruction_placement(
             }
         };
 
-    if rect.bottom_left() == (Coordinate { row: 8, col: 4 })
+    if rect._bottom_left() == (Coordinate { row: 8, col: 4 })
         && rect.top_left == (Coordinate { row: 1, col: 4 })
         && rect.bottom_right == (Coordinate { row: 8, col: 6 })
     {
         println!(
             "\n\nrectangle is:  [TL] {:?}   [TR] {:?}   [BL]: {:?}   [BR]: {:?}!\n\n",
             rect.top_left,
-            rect.top_right(),
-            rect.bottom_left(),
+            rect._top_right(),
+            rect._bottom_left(),
             rect.bottom_right
         );
     }
 
     // top-left needs one?
     let obs_tl = match check_in_bounds_and_has_obstruction_or_unvisisted(
-        rect.obstruction_top_left(),
+        rect._obstruction_top_left(),
     ) {
         Some(c) => c,
         None => {
-            println!("\tFAIL: top-left can't have obstruction / is out of bounds! top-left: {:?} -> obstruction: {:?}, matrix size: {} x {}", rect.top_left, rect.obstruction_top_left(), patrol_map.len(), patrol_map[0].len());
+            println!("\tFAIL: top-left can't have obstruction / is out of bounds! top-left: {:?} -> obstruction: {:?}, matrix size: {} x {}", rect.top_left, rect._obstruction_top_left(), patrol_map.len(), patrol_map[0].len());
             return None;
         }
     };
 
     // top-right needs one?
     let obs_tr = match check_in_bounds_and_has_obstruction_or_unvisisted(
-        rect.obstruction_top_right(patrol_map),
+        rect._obstruction_top_right(patrol_map),
     ) {
         Some(c) => c,
         None => {
-            println!("\tFAIL: top-right can't have obstruction / is out of bounds! top-right: {:?} -> obstruction: {:?}, matrix size: {} x {}", rect.top_right(),rect.obstruction_top_right(patrol_map), patrol_map.len(), patrol_map[0].len());
+            println!("\tFAIL: top-right can't have obstruction / is out of bounds! top-right: {:?} -> obstruction: {:?}, matrix size: {} x {}", rect._top_right(),rect._obstruction_top_right(patrol_map), patrol_map.len(), patrol_map[0].len());
             return None;
         }
     };
 
     // bottom-right needs one?
     let obs_br = match check_in_bounds_and_has_obstruction_or_unvisisted(
-        rect.obstruction_bottom_right(patrol_map),
+        rect._obstruction_bottom_right(patrol_map),
     ) {
         Some(c) => c,
         None => {
-            println!("\tFAIL: bottom-right can't have obstruction / is out of bounds! | bottom-right: {:?} -> obstruction: {:?}, matrix size: {} x {}", rect.bottom_right, rect.obstruction_bottom_right(patrol_map), patrol_map.len(), patrol_map[0].len());
+            println!("\tFAIL: bottom-right can't have obstruction / is out of bounds! | bottom-right: {:?} -> obstruction: {:?}, matrix size: {} x {}", rect.bottom_right, rect._obstruction_bottom_right(patrol_map), patrol_map.len(), patrol_map[0].len());
             return None;
         }
     };
 
     // bottom-left needs one?
     let obs_bl = match check_in_bounds_and_has_obstruction_or_unvisisted(
-        rect.obstruction_bottom_left(),
+        rect._obstruction_bottom_left(),
     ) {
         Some(c) => c,
         None => {
-            println!("\tFAIL: bottom-left can't have obstruction / is out of bounds! bottom-left: {:?} -> obstruction: {:?}, matrix size: {} x {}", rect.bottom_left(), rect.obstruction_bottom_left(), patrol_map.len(), patrol_map[0].len());
+            println!("\tFAIL: bottom-left can't have obstruction / is out of bounds! bottom-left: {:?} -> obstruction: {:?}, matrix size: {} x {}", rect._bottom_left(), rect._obstruction_bottom_left(), patrol_map.len(), patrol_map[0].len());
             return None;
         }
     };
@@ -791,13 +794,13 @@ fn check_suitable_obstruction_placement(
     ];
     let all_attempts = [
         // top-left can add obstruction?
-        attempt(patrol_map, &obs_tl, &obs_tr, &obs_br, &obs_bl),
+        _attempt(patrol_map, &obs_tl, &obs_tr, &obs_br, &obs_bl),
         // top-right can add obstruction?
-        attempt(patrol_map, &obs_tr, &obs_br, &obs_bl, &obs_tl),
+        _attempt(patrol_map, &obs_tr, &obs_br, &obs_bl, &obs_tl),
         // bottom-right can add obstruction?
-        attempt(patrol_map, &obs_br, &obs_bl, &obs_tl, &obs_tr),
+        _attempt(patrol_map, &obs_br, &obs_bl, &obs_tl, &obs_tr),
         // bottom-left can add obstruction?
-        attempt(patrol_map, &obs_bl, &obs_tl, &obs_tr, &obs_br),
+        _attempt(patrol_map, &obs_bl, &obs_tl, &obs_tr, &obs_br),
     ];
 
     if rect.top_left == (Coordinate { row: 8, col: 4 }) {
@@ -823,7 +826,7 @@ fn check_suitable_obstruction_placement(
     coordinate_that_can_have_an_obstruction
 }
 
-fn attempt(
+fn _attempt(
     patrol_map: &PatrolMap,
     taken: &Coordinate,
     other_1: &Coordinate,
@@ -860,27 +863,27 @@ fn attempt(
 }
 
 #[derive(Hash, PartialEq, Eq, Debug)]
-struct Rectangle {
+struct _Rectangle {
     top_left: Coordinate,
     bottom_right: Coordinate,
 }
 
-impl Rectangle {
-    fn top_right(&self) -> Coordinate {
+impl _Rectangle {
+    fn _top_right(&self) -> Coordinate {
         Coordinate {
             row: self.top_left.row,
             col: self.bottom_right.col,
         }
     }
 
-    fn bottom_left(&self) -> Coordinate {
+    fn _bottom_left(&self) -> Coordinate {
         Coordinate {
             row: self.bottom_right.row,
             col: self.top_left.col,
         }
     }
 
-    fn obstruction_top_left(&self) -> Option<Coordinate> {
+    fn _obstruction_top_left(&self) -> Option<Coordinate> {
         let mut v = self.top_left.clone();
         if v.row > 0 {
             v.row -= 1;
@@ -890,8 +893,8 @@ impl Rectangle {
         }
     }
 
-    fn obstruction_top_right(&self, patrol_map: &PatrolMap) -> Option<Coordinate> {
-        let mut v = self.top_right();
+    fn _obstruction_top_right(&self, patrol_map: &PatrolMap) -> Option<Coordinate> {
+        let mut v = self._top_right();
         v.col += 1;
         if v.col < patrol_map[0].len() {
             Some(v)
@@ -900,8 +903,8 @@ impl Rectangle {
         }
     }
 
-    fn obstruction_bottom_left(&self) -> Option<Coordinate> {
-        let mut v: Coordinate = self.bottom_left();
+    fn _obstruction_bottom_left(&self) -> Option<Coordinate> {
+        let mut v: Coordinate = self._bottom_left();
         if v.col > 0 {
             v.col -= 1;
             Some(v)
@@ -910,7 +913,7 @@ impl Rectangle {
         }
     }
 
-    fn obstruction_bottom_right(&self, patrol_map: &PatrolMap) -> Option<Coordinate> {
+    fn _obstruction_bottom_right(&self, patrol_map: &PatrolMap) -> Option<Coordinate> {
         let mut v = self.bottom_right.clone();
         v.row += 1;
         if v.row < patrol_map.len() {
@@ -921,7 +924,7 @@ impl Rectangle {
     }
 }
 
-fn all_visisted(patrol_map: &PatrolMap) -> Vec<Coordinate> {
+fn _all_visisted(patrol_map: &PatrolMap) -> Vec<Coordinate> {
     let mut visisted = filter_patrol_map_by_state(patrol_map, |st| match st {
         State::Visited(_) => true,
         _ => false,
@@ -955,15 +958,15 @@ fn all_visisted(patrol_map: &PatrolMap) -> Vec<Coordinate> {
     visisted
 }
 
-fn rectangular_guard_paths(final_patrol_map: &PatrolMap) -> Vec<Rectangle> {
-    let visisted = all_visisted(final_patrol_map);
+fn _rectangular_guard_paths(final_patrol_map: &PatrolMap) -> Vec<_Rectangle> {
+    let visisted = _all_visisted(final_patrol_map);
 
     let all_cands = visisted
         .iter()
         .flat_map(|top_left| {
-            let top_right_cands = scan_right(final_patrol_map, top_left);
-            let bottom_left_cands = scan_down(final_patrol_map, top_left);
-            let completed_boxes = boxes_from(
+            let top_right_cands = _scan_right(final_patrol_map, top_left);
+            let bottom_left_cands = _scan_down(final_patrol_map, top_left);
+            let completed_boxes = _boxes_from(
                 final_patrol_map,
                 top_left,
                 &top_right_cands,
@@ -974,7 +977,7 @@ fn rectangular_guard_paths(final_patrol_map: &PatrolMap) -> Vec<Rectangle> {
             // });
             completed_boxes
         })
-        .collect::<HashSet<Rectangle>>();
+        .collect::<HashSet<_Rectangle>>();
 
     let hashset_len = all_cands.len();
     let final_boxes: Vec<_> = all_cands.into_iter().collect();
@@ -1014,10 +1017,10 @@ fn filter_patrol_map_by_state(
 //         })
 //         .collect()
 // }
-fn scan_right(patrol_map: &PatrolMap, v: &Coordinate) -> Vec<Coordinate> {
+fn _scan_right(patrol_map: &PatrolMap, v: &Coordinate) -> Vec<Coordinate> {
     let mut idx_col = v.col + 1;
     let mut coords = Vec::new();
-    while idx_col < patrol_map[0].len() && is_visisted(&patrol_map[v.row][idx_col]) {
+    while idx_col < patrol_map[0].len() && _is_visisted(&patrol_map[v.row][idx_col]) {
         coords.push(Coordinate {
             row: v.row,
             col: idx_col,
@@ -1027,7 +1030,7 @@ fn scan_right(patrol_map: &PatrolMap, v: &Coordinate) -> Vec<Coordinate> {
     coords
 }
 
-fn is_visisted(x: &State) -> bool {
+fn _is_visisted(x: &State) -> bool {
     mem::discriminant(x) == mem::discriminant(&State::Visited(None))
 }
 
@@ -1042,10 +1045,10 @@ fn is_visisted(x: &State) -> bool {
 //         })
 //         .collect()
 // }
-fn scan_down(patrol_map: &PatrolMap, v: &Coordinate) -> Vec<Coordinate> {
+fn _scan_down(patrol_map: &PatrolMap, v: &Coordinate) -> Vec<Coordinate> {
     let mut idx_row = v.row + 1;
     let mut coords = Vec::new();
-    while idx_row < patrol_map.len() && is_visisted(&patrol_map[idx_row][v.col]) {
+    while idx_row < patrol_map.len() && _is_visisted(&patrol_map[idx_row][v.col]) {
         coords.push(Coordinate {
             row: idx_row,
             col: v.col,
@@ -1078,12 +1081,12 @@ fn scan_down(patrol_map: &PatrolMap, v: &Coordinate) -> Vec<Coordinate> {
 //         })
 //         .collect()
 // }
-fn boxes_from(
+fn _boxes_from(
     patrol_map: &PatrolMap,
     top_left: &Coordinate,
     tr_cands: &[Coordinate],
     bl_cands: &[Coordinate],
-) -> Vec<Rectangle> {
+) -> Vec<_Rectangle> {
     // complete the box! => find a bottom-right candidate!
     tr_cands
         .iter()
@@ -1096,7 +1099,7 @@ fn boxes_from(
                 // yes => true , no => false
 
                 match patrol_map[row][col] {
-                    State::Visited(_) => Some(Rectangle {
+                    State::Visited(_) => Some(_Rectangle {
                         top_left: top_left.clone(),
                         bottom_right: Coordinate { row, col },
                     }),
@@ -1293,6 +1296,16 @@ mod test {
         let lines = read_lines_in_memory(EXAMPLE_INPUT_STR).collect::<Vec<_>>();
         let actual = solve_n_places_to_put_obstruction_to_cause_loop(&create_patrol_map(&lines));
         assert_eq!(actual, 6, "actual != expected");
+    }
+
+    #[test]
+    fn panic_pt2() {
+        let x = true;
+        if x {
+            println!("NEED TO FIX pt2 !!!");
+        } else {
+            solution_pt2();
+        }
     }
 
     #[test]

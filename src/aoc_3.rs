@@ -111,7 +111,7 @@ fn sum_states(states: &[State]) -> u64 {
                 if active {
                     let x = left * right;
                     assert!(x > 0);
-                    sum += (x as u64);
+                    sum += x as u64;
                 }
             }
             State::Do => {

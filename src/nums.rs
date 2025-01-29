@@ -48,8 +48,7 @@ pub fn binary_representation(max_len: usize, x: usize) -> BinaryNumber {
 pub fn binary_enumeration(max_len: usize) -> Vec<BinaryNumber> {
     let maximum = 2_u32.pow(max_len as u32);
     (0..maximum)
-        .enumerate()
-        .map(|(i, x)| binary_representation(max_len, x as usize))
+        .map(|x| binary_representation(max_len, x as usize))
         .collect()
 }
 
@@ -110,8 +109,7 @@ pub fn ternary_representation(max_len: usize, x: usize) -> TernaryNumber {
 pub fn ternary_enumeration(max_len: usize) -> Vec<TernaryNumber> {
     let maximum = 3_u32.pow(max_len as u32);
     (0..maximum)
-        .enumerate()
-        .map(|(i, x)| ternary_representation(max_len, x as usize))
+        .map(|x| ternary_representation(max_len, x as usize))
         .collect()
 }
 
