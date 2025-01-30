@@ -14,7 +14,17 @@ mod utils;
 
 use std::collections::BTreeMap;
 
+
+fn foobar(x: fn() -> u64) {
+    println!("before");
+    println!("after: {}", x());
+}
+
 pub fn main() {
+
+    foobar(aoc_1::solution_pt1);
+
+
     let solutions: BTreeMap<&str, u64> = BTreeMap::from([
         ("AOC #1 pt.1", aoc_1::solution_pt1()),
         ("AOC #1 pt.2", aoc_1::solution_pt2()),
