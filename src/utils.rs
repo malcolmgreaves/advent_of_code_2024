@@ -1,7 +1,7 @@
 use std::{
     cmp::{max, min},
     error::Error,
-    fmt::Debug,
+    fmt::{Debug, Display},
 };
 
 // heap-allocated a rectangular 2D array with runtime-determined size
@@ -12,6 +12,18 @@ pub struct Coordinate {
     pub row: usize,
     pub col: usize,
 }
+
+impl Display for Coordinate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({},{})", self.row, self.col)
+    }
+}
+
+// impl Ord for Coordinate {
+//     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+//         self.row < other.row
+//     }
+// }
 
 #[derive(Debug, PartialEq)]
 pub enum InvalidShape {
