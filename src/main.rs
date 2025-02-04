@@ -54,8 +54,28 @@
 // }
 
 use std::thread;
-use crossbeam_channel::unbounded;
+use std::time::Duration;
+use crossbeam_channel::{select, unbounded};
+
 
 pub fn main () {
 
+    let (s1, r1) = unbounded();
+    let (s2, r2) = unbounded();
+    
+    thread::spawn(move || s1.send(10).unwrap());
+    thread::spawn(move || s2.send(20).unwrap());
+    
+    // At most one of these two receive operations will be executed.
+    select! {
+        recv(r1) -> msg => {
+            println!("{msg:?}");
+            assert_eq!(msg, Ok(10))
+        },
+        recv(r2) -> msg => {
+            println!("{msg:?}");
+            assert_eq!(msg, Ok(20));
+        },
+        default(Duration::from_micros(25)) => println!("timed out"),
+    }
 }
