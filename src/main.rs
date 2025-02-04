@@ -14,7 +14,6 @@
 
 // use std::collections::BTreeMap;
 
-
 // fn foobar(x: fn() -> u64) {
 //     println!("before");
 //     println!("after: {}", x());
@@ -27,8 +26,6 @@
 // pub fn main() {
 
 //     foobar(aoc_1::solution_pt1);
-
-
 
 //     let solutions: BTreeMap<&str, u64> = BTreeMap::from([
 //         ("AOC #1 pt.1", aoc_1::solution_pt1()),
@@ -53,29 +50,18 @@
 //     }
 // }
 
-use std::thread;
-use std::time::Duration;
-use crossbeam_channel::{select, unbounded};
+use crossbeam_channel::{after, select, tick};
+use std::time::{Duration, Instant};
 
+pub fn main() {
+    let start = Instant::now();
+    let ticker = tick(Duration::from_millis(50));
+    let timeout = after(Duration::from_secs(1));
 
-pub fn main () {
-
-    let (s1, r1) = unbounded();
-    let (s2, r2) = unbounded();
-    
-    thread::spawn(move || s1.send(10).unwrap());
-    thread::spawn(move || s2.send(20).unwrap());
-    
-    // At most one of these two receive operations will be executed.
-    select! {
-        recv(r1) -> msg => {
-            println!("{msg:?}");
-            assert_eq!(msg, Ok(10))
-        },
-        recv(r2) -> msg => {
-            println!("{msg:?}");
-            assert_eq!(msg, Ok(20));
-        },
-        default(Duration::from_micros(25)) => println!("timed out"),
+    loop {
+        select! {
+            recv(ticker) -> _ => println!("elapsed: {:?}", start.elapsed()),
+            recv(timeout) -> _ => break,
+        }
     }
 }
