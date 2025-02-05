@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::hash::Hash;
 
+#[allow(dead_code)]
 pub enum CheckSameElements<T> {
     Equal,
     ActualMissing(Vec<T>),
@@ -8,6 +9,7 @@ pub enum CheckSameElements<T> {
     ActualProblems { missing: Vec<T>, extra: Vec<T> },
 }
 
+#[allow(dead_code)]
 pub fn check_same_elements<T: Hash + Clone + Eq>(
     actual: &[T],
     expected: &[T],

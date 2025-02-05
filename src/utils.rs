@@ -62,6 +62,7 @@ pub fn is_rectangular<T>(rows: usize, cols: usize, mat: &Matrix<T>) -> Option<Ve
     }
 }
 
+#[allow(dead_code)]
 pub fn transpose<T: Copy + Default>(
     max_rows: usize,
     max_cols: usize,

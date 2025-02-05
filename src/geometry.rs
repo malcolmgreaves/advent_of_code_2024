@@ -54,6 +54,7 @@ pub fn antinode_location(
     }
 }
 
+#[allow(dead_code)]
 pub fn distance_l1(a: &Coordinate, b: &Coordinate) -> u64 {
     // Calculate 2D distance between points: 𝑑=|𝑥1−𝑥0| + |𝑦1−𝑦0|
     let row_d = difference(a.row, b.row);
@@ -61,6 +62,7 @@ pub fn distance_l1(a: &Coordinate, b: &Coordinate) -> u64 {
     row_d + col_d
 }
 
+#[allow(dead_code)]
 pub fn distance_l2(a: &Coordinate, b: &Coordinate) -> f64 {
     // Calculate 2D distance between points: 𝑑=√[ (𝑥1−𝑥0)^2 + (𝑦1−𝑦0)^2 ]
     // (x1-x0)^2
@@ -133,6 +135,7 @@ fn coordinate_at_l1(
     }
 }
 
+#[allow(dead_code)]
 fn coordinate_at_l2(
     max_rows: usize,
     max_cols: usize,
@@ -181,6 +184,7 @@ fn coordinate_at_l2(
     }
 }
 
+#[allow(dead_code)]
 fn custom_round(maximum: usize, x: f64) -> Option<usize> {
     if x < 0.0 {
         None

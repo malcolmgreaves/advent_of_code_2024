@@ -380,12 +380,14 @@ fn count_visted(patrol_map: &PatrolMap) -> u64 {
 // position is always determined as one (1) unit in the direction the guard is facing (this is what
 // causes the guard to rotate 90 degrees right).
 //
+#[allow(dead_code)]
 pub fn solution_pt2() -> u64 {
     let lines = io_help::read_lines("./inputs/6").collect::<Vec<String>>();
     let initial_patrol_map = create_patrol_map(&lines);
     solve_n_places_to_put_obstruction_to_cause_loop(&initial_patrol_map)
 }
 
+#[allow(dead_code)]
 fn solve_n_places_to_put_obstruction_to_cause_loop(patrol_map: &PatrolMap) -> u64 {
     // let final_patrol_map = trace_guard_route(&patrol_map).unwrap();
     // let new_loop_causing_obstructions = positions_of_obstructions_to_add(&final_patrol_map);
@@ -393,6 +395,7 @@ fn solve_n_places_to_put_obstruction_to_cause_loop(patrol_map: &PatrolMap) -> u6
     new_loop_causing_obstructions.len() as u64
 }
 
+#[allow(dead_code)]
 // fn positions_of_obstructions_to_add(final_patrol_map: &PatrolMap) -> Vec<Coordinate> {
 fn positions_of_obstructions_to_add(patrol_map: &PatrolMap) -> Vec<Coordinate> {
     // for each VISISTED, x

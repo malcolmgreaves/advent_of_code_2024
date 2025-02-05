@@ -6,6 +6,7 @@ pub enum Binary {
 
 pub type BinaryNumber = Vec<Binary>;
 
+#[allow(dead_code)]
 pub fn binary_to_string(binrep: BinaryNumber) -> String {
     binrep
         .iter()
@@ -61,6 +62,7 @@ pub enum Ternary {
 
 pub type TernaryNumber = Vec<Ternary>;
 
+#[allow(dead_code)]
 pub fn ternary_to_string(ternrep: TernaryNumber) -> String {
     ternrep
         .iter()

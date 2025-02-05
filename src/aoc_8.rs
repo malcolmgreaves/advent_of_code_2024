@@ -65,10 +65,13 @@ fn n_unique_antinodes(signals: &SignalMat) -> u64 {
 }
 
 fn count_unique_antinode_locations(full_signals: &FullSignalMat) -> u64 {
-    full_signals.iter().enumerate().fold(0, |c, (i, row)| {
-        row.iter().enumerate().fold(c, |count, (j, states)| {
+    full_signals.iter().enumerate().fold(0, |c, (_i, row)| {
+        row.iter().enumerate().fold(c, |count, (_j, states)| {
             let at_least_one_antinode_here = states.iter().any(|state| match state {
-                State::Antinote { antenna, ant_loc } => {
+                State::Antinote {
+                    antenna: _,
+                    ant_loc: _,
+                } => {
                     // println!(
                     //     "[{}] ({i},{j}) has antinode for {antenna} @ ({},{})",
                     //     count + 1,

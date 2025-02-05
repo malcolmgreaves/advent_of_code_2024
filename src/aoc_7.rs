@@ -53,6 +53,7 @@ enum Operator {
     Cat, // 2
 }
 
+#[allow(dead_code)]
 fn display_equation(equation: &Equation) -> String {
     let str_elements: Vec<String> = equation
         .iter()

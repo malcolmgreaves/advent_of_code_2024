@@ -26,6 +26,7 @@ pub fn to_int32(s: &str) -> i32 {
         .expect(format!("Could not convert to i32! Original: '{s}'").as_str())
 }
 
+#[allow(dead_code)]
 pub fn read_lines_in_memory<'a>(file_contents: &'a str) -> impl Iterator<Item = String> + use<'a> {
     let reader = BufReader::new(file_contents.as_bytes());
     reader

@@ -145,6 +145,7 @@ fn diagonals(max_cols: usize, max_rows: usize, lines: &CharMatrix) -> Vec<String
     true_diagonals
 }
 
+#[allow(dead_code)]
 fn diagonals_r2l(max_cols: usize, max_rows: usize, lines: &CharMatrix) -> Vec<String> {
     assert_eq!(lines.len(), max_rows, "D: char matrix rows != expected");
     assert_eq!(lines[0].len(), max_cols, "D: char matrix cols != expected");
