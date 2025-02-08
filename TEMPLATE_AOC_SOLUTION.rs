@@ -35,7 +35,7 @@ mod test {
     }
 
     #[test]
-    fn construct() {
+    fn construction() {
         panic!();
     }
 
