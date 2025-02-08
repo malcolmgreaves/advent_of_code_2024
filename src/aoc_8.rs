@@ -645,7 +645,7 @@ mod test {
                 .flat_map(|(i, row)| {
                     row.iter().enumerate().flat_map(move |(j, states)| {
                         states.iter().flat_map(move |s| match s {
-                            State::Antinote {antenna, ant_loc} => {
+                            State::Antinote { antenna, ant_loc } => {
                                 if i == 1 && j == 3 {
                                     println!(
                                         "DEBUG ({i},{j}): source antenna: {antenna} @ {ant_loc}"

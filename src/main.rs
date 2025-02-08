@@ -6,6 +6,7 @@ mod aoc_5;
 mod aoc_6;
 mod aoc_7;
 mod aoc_8;
+mod aoc_9;
 mod geometry;
 mod io_help;
 mod nums;
@@ -145,6 +146,8 @@ pub fn main() {
         Aoc::new(7, 2, aoc_7::solution_pt2),
         Aoc::new(8, 1, aoc_8::solution_pt1),
         Aoc::new(8, 2, aoc_8::solution_pt2),
+        Aoc::new(9, 1, aoc_9::solution_pt1),
+        Aoc::new(9, 2, aoc_9::solution_pt2),
     ];
 
     let args = Args::parse();
