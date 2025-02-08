@@ -14,6 +14,7 @@ mod nums;
 mod set_ops;
 mod utils;
 
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
 use std::fmt::Display;
@@ -58,7 +59,7 @@ struct Args {
 
 type PosInt = usize;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord)]
 struct Aoc {
     problem: PosInt,
     part: PosInt,
@@ -85,6 +86,20 @@ impl Aoc {
     }
 }
 
+impl PartialOrd for Aoc {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match self.problem.partial_cmp(&other.problem) {
+            Some(Ordering::Equal) => {}
+            ord => return ord,
+        }
+        match self.part.partial_cmp(&other.part) {
+            Some(Ordering::Equal) => {}
+            ord => return ord,
+        }
+        Some(Ordering::Equal)
+    }
+}
+
 impl Display for Aoc {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.stringify())
@@ -92,13 +107,13 @@ impl Display for Aoc {
 }
 
 struct FutureResults<T> {
-    r: Receiver<(String, T)>,
+    r: Receiver<(Aoc, T)>,
     n_expected: usize,
 }
 
 // impl <T: 'static> FutureResults<T> {
 impl<T> FutureResults<T> {
-    fn collect(self) -> BTreeMap<String, T> {
+    fn collect(self) -> BTreeMap<Aoc, T> {
         self.r.iter().take(self.n_expected).collect()
     }
 
@@ -109,16 +124,16 @@ impl<T> FutureResults<T> {
 }
 
 fn concurrently_run(problems: &[Aoc]) -> FutureResults<u64> {
-    let (s, r) = channel::<(String, u64)>();
+    let (s, r) = channel::<(Aoc, u64)>();
     let tx = Arc::new(Mutex::new(s));
 
     problems.iter().for_each(|aoc| {
         let tx = tx.clone();
-        let name = format!("{}", aoc);
         let f = aoc.func;
+        let aoc = aoc.clone();
         thread::spawn(move || {
             let result = f();
-            tx.lock().unwrap().send((name, result)).unwrap(); //.expect(format!("Could not compute result for: {name}!").as_str());
+            tx.lock().unwrap().send((aoc, result)).unwrap(); //.expect(format!("Could not compute result for: {name}!").as_str());
         });
     });
 
