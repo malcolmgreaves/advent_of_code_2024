@@ -3,15 +3,14 @@ use crate::io_help;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub fn solution_pt1() -> u64 {
-    let lines = io_help::read_lines("./inputs/10").collect::<Vec<String>>();
+    let lines = io_help::read_lines("./inputs/???").collect::<Vec<String>>();
     panic!();
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub fn solution_pt2() -> u64 {
-    let lines = io_help::read_lines("./inputs/10").collect::<Vec<String>>();
+    let lines = io_help::read_lines("./inputs/???").collect::<Vec<String>>();
     panic!();
 }
 
@@ -31,7 +30,7 @@ mod test {
     "};
 
     lazy_static! {
-        static ref EXAMPLE_EXPECTED = None
+        static ref EXAMPLE_EXPECTED: Option<u8> = None;
     }
 
     #[test]
@@ -49,4 +48,3 @@ mod test {
         panic!();
     }
 }
-
