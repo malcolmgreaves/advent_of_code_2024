@@ -64,27 +64,29 @@ fn determine_regions(garden: &Garden) -> Vec<Region> {
 
         for row in 0..garden.len() {
             for col in 0..garden[0].len() {
-                match region_builder[row][col] {
-                    State::Island { c } | State::Building { c } => {
-                        match neighborhood(&region_builder, row, col) {
-                            Some(available) => {
-                                unfinished_business = true;
-                                region_builder[row][col] = State::Building { c };
-                                for Coordinate {
-                                    row: neighbor_row,
-                                    col: neighbor_col,
-                                } in available
-                                {
-                                    region_builder[neighbor_row][neighbor_col] =
-                                        State::Building { c };
-                                }
-                            }
-                            None => {
-                                region_builder[row][col] = State::Finished { c };
-                            }
+                let (c, is_island) = match region_builder[row][col] {
+                    State::Building { c } => (c, false),
+                    State::Island { c } => (c, true),
+                    State::Finished { .. } => continue,
+                };
+
+                match neighborhood(&region_builder, row, col) {
+                    Some(available) => {
+                        unfinished_business = true;
+                        if is_island {
+                            region_builder[row][col] = State::Building { c };
+                        }
+                        for Coordinate {
+                            row: neighbor_row,
+                            col: neighbor_col,
+                        } in available
+                        {
+                            region_builder[neighbor_row][neighbor_col] = State::Building { c };
                         }
                     }
-                    State::Finished { .. } => (),
+                    None => {
+                        region_builder[row][col] = State::Finished { c };
+                    }
                 }
             }
         }
@@ -93,6 +95,18 @@ fn determine_regions(garden: &Garden) -> Vec<Region> {
 }
 
 fn neighborhood(region_builder: &Matrix<State>, row: usize, col: usize) -> Option<Vec<Coordinate>> {
+    let character_at = |row: usize, col: usize| -> Option<char> {
+        match region_builder[row][col] {
+            State::Island { c } | State::Building { c } => Some(c),
+            State::Finished { .. } => None,
+        }
+    };
+
+    let char_at_center = match character_at(row, col) {
+        Some(c) => c,
+        None => return None,
+    };
+
     /*
                   (row-1, col)
                  ---------------
@@ -120,18 +134,12 @@ fn neighborhood(region_builder: &Matrix<State>, row: usize, col: usize) -> Optio
         return None;
     }
 
-    let char_at_center = match region_builder[row][col] {
-        State::Island { c } => c,
-        State::Building { c } => c,
-        State::Finished { c } => c,
-    };
-
     let neighbor_positions = neighbor_positions
         .into_iter()
         .filter(
-            |coordinate| match region_builder[coordinate.row][coordinate.col] {
-                State::Island { c } | State::Building { c } => c == char_at_center,
-                State::Finished { c: _ } => false,
+            |coordinate| match character_at(coordinate.row, coordinate.col) {
+                Some(char_coordinate) => char_coordinate == char_at_center,
+                None => false,
             },
         )
         .collect::<Vec<_>>();
