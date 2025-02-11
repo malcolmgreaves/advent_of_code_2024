@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::{
     io_help,
@@ -100,6 +100,105 @@ fn determine_regions(garden: &Garden) -> Vec<Region> {
     let groups: Matrix<Final> = Vec::with_capacity(garden.len());
 
     panic!()
+}
+
+/// Neighbors: up, below, left, and right of (row, col) while still being in-bounds.
+fn immediate_neighbors(region_builder: &Matrix<State>, row: usize, col: usize) -> Vec<Coordinate> {
+    /*
+                  (row-1, col)
+                 ---------------
+    (row, col-1)| (row,  col) |  (row, col+1)
+                 ---------------
+                  (row+1, col)
+    */
+    vec![
+        (sub_row(row), Some(col)),
+        (Some(row), sub_col(col)),
+        (Some(row), add_col(region_builder, col)),
+        (add_row(region_builder, row), Some(col)),
+    ]
+    .iter()
+    .flat_map(|x| match x {
+        (Some(new_row), Some(new_col)) => Some(Coordinate {
+            row: *new_row,
+            col: *new_col,
+        }),
+        _ => None,
+    })
+    .collect::<Vec<_>>()
+}
+
+/// The entire contigious neighborhood from (row,col) that are all in-bounds and have the same character.
+fn expanded_neighborhood(
+    region_builder: &Matrix<State>,
+    row: usize,
+    col: usize,
+) -> Option<Vec<Coordinate>> {
+    let character_at = |row: usize, col: usize| -> Option<char> {
+        match region_builder[row][col] {
+            State::Island(c) | State::Building(c) => Some(c),
+            State::Finished(_) => None,
+        }
+    };
+
+    let char_at_center = match character_at(row, col) {
+        Some(c) => c,
+        None => return None,
+    };
+
+    let mut neighborhood = HashSet::<Coordinate>::new();
+    neighborhood.extend(immediate_neighbors(region_builder, row, col));
+    if neighborhood.len() == 0 {
+        return None;
+    }
+
+    let mut inserted_once = true;
+    while inserted_once {
+        inserted_once = false;
+        let current_neighbors = neighborhood.iter().map(|x| x.clone()).collect::<Vec<_>>();
+        current_neighbors.into_iter().for_each(|n| {
+            for neigh in immediate_neighbors(region_builder, n.row, n.col) {
+                if !neighborhood.contains(&neigh) {
+                    inserted_once = true;
+                    neighborhood.insert(neigh);
+                }
+            }
+        });
+    }
+
+    let neighbor_positions = vec![
+        (sub_row(row), Some(col)),
+        (Some(row), sub_col(col)),
+        (Some(row), add_col(region_builder, col)),
+        (add_row(region_builder, row), Some(col)),
+    ]
+    .iter()
+    .flat_map(|x| match x {
+        (Some(new_row), Some(new_col)) => Some(Coordinate {
+            row: *new_row,
+            col: *new_col,
+        }),
+        _ => None,
+    })
+    .collect::<Vec<_>>();
+
+    if neighbor_positions.len() == 0 {
+        return None;
+    }
+
+    let neighbor_positions = neighbor_positions
+        .into_iter()
+        .filter(
+            |coordinate| match character_at(coordinate.row, coordinate.col) {
+                Some(char_coordinate) => char_coordinate == char_at_center,
+                None => false,
+            },
+        )
+        .collect::<Vec<_>>();
+    if neighbor_positions.len() == 0 {
+        return None;
+    }
+    Some(neighbor_positions)
 }
 
 fn neighborhood(region_builder: &Matrix<State>, row: usize, col: usize) -> Option<Vec<Coordinate>> {
