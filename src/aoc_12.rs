@@ -1,11 +1,15 @@
-use crate::{io_help, utils::Matrix};
+use crate::{
+    io_help,
+    utils::{Coordinate, Matrix},
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub fn solution_pt1() -> u64 {
     let lines = io_help::read_lines("./inputs/12").collect::<Vec<String>>();
     let garden = construct(&lines);
-    panic!();
+    let regions = determine_regions(&garden);
+    cost(&regions)
 }
 
 pub fn solution_pt2() -> u64 {
@@ -20,6 +24,28 @@ type Garden = Matrix<char>;
 
 fn construct(lines: &[String]) -> Garden {
     lines.iter().map(|l| l.chars().collect()).collect()
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Region {
+    letter: char,
+    area: u64,
+    perimiter: u64,
+    members: Vec<Coordinate>,
+}
+
+impl Region {
+    fn price(&self) -> u64 {
+        self.area * self.perimiter
+    }
+}
+
+fn determine_regions(garden: &Garden) -> Vec<Region> {
+    panic!();
+}
+
+fn cost(regions: &[Region]) -> u64 {
+    regions.iter().fold(0, |s, r| s + r.price())
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
