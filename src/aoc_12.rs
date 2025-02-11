@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     io_help,
     utils::{Coordinate, Matrix},
@@ -23,6 +25,7 @@ pub fn solution_pt2() -> u64 {
 type Garden = Matrix<char>;
 
 fn construct(lines: &[String]) -> Garden {
+    assert_ne!(lines.len(), 0);
     lines.iter().map(|l| l.chars().collect()).collect()
 }
 
@@ -41,7 +44,79 @@ impl Region {
 }
 
 fn determine_regions(garden: &Garden) -> Vec<Region> {
-    panic!();
+    assert_ne!(garden.len(), 0);
+
+    /*
+
+       enum State {
+           Island(char),
+           Building(char),
+           Finished(char),
+       }
+
+
+       region_builder = copy(garden, |c| State::Island{c} )
+
+       let mut unfinished_business = true;
+
+       while unfinished_buinsess {
+           unfinished_business = false;
+
+           for row in 0..garden.len() {
+               for col in 0..garden[0].len() {
+
+                   match region_builder[row][col] {
+
+                       State::Island(c) => {
+                           let available_neighborhood = neighborhood(&garden, &region_builder, row, col);
+                           if available_neighborhood.len() == 0 {
+                               region_builder[row][col] = State::Finished(c);
+                           } else {
+                               unfinished_business = true;
+                               region_builder[row][col] = State::Building(c);
+                               for (neighbor_row, neighbor_col) in available_neighborhood {
+                                   region_builder[neighbor_row][neighbor_col] = State::Building(c);
+                               }
+                           }
+                       },
+
+                       State::Building(c) => {
+                           let available_neighborhood = neighborhood(&garden, &region_builder, row, col);
+                           if available_neighborhood.len() == 0 {
+                               region_builder[row][col] = State::Finished(c);
+                           } else {
+                               unfinished_business = true;
+                               for (neighbor_row, neighbor_col) in available_neighborhood {
+                                   region_builder[neighbor_row][neighbor_col] = State::Building(c);
+                               }
+                           }
+
+                       },
+
+                       _ => (),
+                   }
+               }
+           }
+       }
+
+
+    */
+
+    let mut region_builder = HashMap::<char, Vec<Coordinate>>::new();
+    // initialize
+    garden.iter().enumerate().for_each(|(row, r)| {
+        r.iter().enumerate().for_each(|(col, c)| {
+            let coordinate = Coordinate { row, col };
+            match region_builder.get_mut(c) {
+                Some(members) => members.push(coordinate),
+                None => {
+                    region_builder.insert(*c, vec![coordinate]);
+                }
+            }
+        })
+    });
+
+    panic!()
 }
 
 fn cost(regions: &[Region]) -> u64 {
