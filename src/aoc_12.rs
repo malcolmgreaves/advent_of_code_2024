@@ -45,9 +45,14 @@ impl Region {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum State {
-    Island { c: char },
-    Building { c: char },
-    Finished { c: char },
+    Island(char),
+    Building(char),
+    Finished(char),
+}
+
+enum Final {
+    Edge(char),
+    Interior(char),
 }
 
 fn determine_regions(garden: &Garden) -> Vec<Region> {
@@ -55,7 +60,7 @@ fn determine_regions(garden: &Garden) -> Vec<Region> {
 
     let mut region_builder: Matrix<State> = garden
         .iter()
-        .map(|r| r.iter().map(|c| State::Island { c: *c }).collect())
+        .map(|r| r.iter().map(|c| State::Island(*c)).collect())
         .collect();
 
     let mut unfinished_business = true;
@@ -65,40 +70,43 @@ fn determine_regions(garden: &Garden) -> Vec<Region> {
         for row in 0..garden.len() {
             for col in 0..garden[0].len() {
                 let (c, is_island) = match region_builder[row][col] {
-                    State::Building { c } => (c, false),
-                    State::Island { c } => (c, true),
-                    State::Finished { .. } => continue,
+                    State::Building(c) => (c, false),
+                    State::Island(c) => (c, true),
+                    State::Finished(_) => continue,
                 };
 
                 match neighborhood(&region_builder, row, col) {
                     Some(available) => {
                         unfinished_business = true;
                         if is_island {
-                            region_builder[row][col] = State::Building { c };
+                            region_builder[row][col] = State::Building(c);
                         }
                         for Coordinate {
                             row: neighbor_row,
                             col: neighbor_col,
                         } in available
                         {
-                            region_builder[neighbor_row][neighbor_col] = State::Building { c };
+                            region_builder[neighbor_row][neighbor_col] = State::Building(c);
                         }
                     }
                     None => {
-                        region_builder[row][col] = State::Finished { c };
+                        region_builder[row][col] = State::Finished(c);
                     }
                 }
             }
         }
     }
+
+    let groups: Matrix<Final> = Vec::with_capacity(garden.len());
+
     panic!()
 }
 
 fn neighborhood(region_builder: &Matrix<State>, row: usize, col: usize) -> Option<Vec<Coordinate>> {
     let character_at = |row: usize, col: usize| -> Option<char> {
         match region_builder[row][col] {
-            State::Island { c } | State::Building { c } => Some(c),
-            State::Finished { .. } => None,
+            State::Island(c) | State::Building(c) => Some(c),
+            State::Finished(_) => None,
         }
     };
 
