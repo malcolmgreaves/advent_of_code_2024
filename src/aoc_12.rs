@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     io_help,
-    utils::{Coordinate, Matrix},
+    utils::{add_col, add_row, sub_col, sub_row, Coordinate, Matrix},
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,80 +43,102 @@ impl Region {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+enum State {
+    Island { c: char },
+    Building { c: char },
+    Finished { c: char },
+}
+
 fn determine_regions(garden: &Garden) -> Vec<Region> {
     assert_ne!(garden.len(), 0);
 
-    /*
+    let mut region_builder: Matrix<State> = garden
+        .iter()
+        .map(|r| r.iter().map(|c| State::Island { c: *c }).collect())
+        .collect();
 
-       enum State {
-           Island(char),
-           Building(char),
-           Finished(char),
-       }
+    let mut unfinished_business = true;
+    while unfinished_business {
+        unfinished_business = false;
 
-
-       region_builder = copy(garden, |c| State::Island{c} )
-
-       let mut unfinished_business = true;
-
-       while unfinished_buinsess {
-           unfinished_business = false;
-
-           for row in 0..garden.len() {
-               for col in 0..garden[0].len() {
-
-                   match region_builder[row][col] {
-
-                       State::Island(c) => {
-                           let available_neighborhood = neighborhood(&garden, &region_builder, row, col);
-                           if available_neighborhood.len() == 0 {
-                               region_builder[row][col] = State::Finished(c);
-                           } else {
-                               unfinished_business = true;
-                               region_builder[row][col] = State::Building(c);
-                               for (neighbor_row, neighbor_col) in available_neighborhood {
-                                   region_builder[neighbor_row][neighbor_col] = State::Building(c);
-                               }
-                           }
-                       },
-
-                       State::Building(c) => {
-                           let available_neighborhood = neighborhood(&garden, &region_builder, row, col);
-                           if available_neighborhood.len() == 0 {
-                               region_builder[row][col] = State::Finished(c);
-                           } else {
-                               unfinished_business = true;
-                               for (neighbor_row, neighbor_col) in available_neighborhood {
-                                   region_builder[neighbor_row][neighbor_col] = State::Building(c);
-                               }
-                           }
-
-                       },
-
-                       _ => (),
-                   }
-               }
-           }
-       }
-
-
-    */
-
-    let mut region_builder = HashMap::<char, Vec<Coordinate>>::new();
-    // initialize
-    garden.iter().enumerate().for_each(|(row, r)| {
-        r.iter().enumerate().for_each(|(col, c)| {
-            let coordinate = Coordinate { row, col };
-            match region_builder.get_mut(c) {
-                Some(members) => members.push(coordinate),
-                None => {
-                    region_builder.insert(*c, vec![coordinate]);
+        for row in 0..garden.len() {
+            for col in 0..garden[0].len() {
+                match region_builder[row][col] {
+                    State::Island { c } | State::Building { c } => {
+                        match neighborhood(&region_builder, row, col) {
+                            Some(available) => {
+                                unfinished_business = true;
+                                region_builder[row][col] = State::Building { c };
+                                for Coordinate {
+                                    row: neighbor_row,
+                                    col: neighbor_col,
+                                } in available
+                                {
+                                    region_builder[neighbor_row][neighbor_col] =
+                                        State::Building { c };
+                                }
+                            }
+                            None => {
+                                region_builder[row][col] = State::Finished { c };
+                            }
+                        }
+                    }
+                    State::Finished { .. } => (),
                 }
             }
-        })
-    });
-
+        }
+    }
     panic!()
+}
+
+fn neighborhood(region_builder: &Matrix<State>, row: usize, col: usize) -> Option<Vec<Coordinate>> {
+    /*
+                  (row-1, col)
+                 ---------------
+    (row, col-1)| (row,  col) |  (row, col+1)
+                 ---------------
+                  (row+1, col)
+      */
+    let neighbor_positions = vec![
+        (sub_row(row), Some(col)),
+        (Some(row), sub_col(col)),
+        (Some(row), add_col(region_builder, col)),
+        (add_row(region_builder, row), Some(col)),
+    ]
+    .iter()
+    .flat_map(|x| match x {
+        (Some(new_row), Some(new_col)) => Some(Coordinate {
+            row: *new_row,
+            col: *new_col,
+        }),
+        _ => None,
+    })
+    .collect::<Vec<_>>();
+
+    if neighbor_positions.len() == 0 {
+        return None;
+    }
+
+    let char_at_center = match region_builder[row][col] {
+        State::Island { c } => c,
+        State::Building { c } => c,
+        State::Finished { c } => c,
+    };
+
+    let neighbor_positions = neighbor_positions
+        .into_iter()
+        .filter(
+            |coordinate| match region_builder[coordinate.row][coordinate.col] {
+                State::Island { c } | State::Building { c } => c == char_at_center,
+                State::Finished { c: _ } => false,
+            },
+        )
+        .collect::<Vec<_>>();
+    if neighbor_positions.len() == 0 {
+        return None;
+    }
+    Some(neighbor_positions)
 }
 
 fn cost(regions: &[Region]) -> u64 {

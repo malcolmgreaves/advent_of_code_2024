@@ -7,6 +7,41 @@ use std::{
 // heap-allocated a rectangular 2D array with runtime-determined size
 pub type Matrix<T> = Vec<Vec<T>>;
 
+pub fn sub_row(x: usize) -> Option<usize> {
+    if x > 0 {
+        Some(x - 1)
+    } else {
+        None
+    }
+}
+
+pub fn add_row<T>(m: &Matrix<T>, x: usize) -> Option<usize> {
+    if x + 1 < m.len() {
+        Some(x + 1)
+    } else {
+        None
+    }
+}
+
+pub fn sub_col(x: usize) -> Option<usize> {
+    if x > 0 {
+        Some(x - 1)
+    } else {
+        None
+    }
+}
+
+pub fn add_col<T>(m: &Matrix<T>, x: usize) -> Option<usize> {
+    if m.len() == 0 {
+        return None;
+    }
+    if x + 1 < m[0].len() {
+        Some(x + 1)
+    } else {
+        None
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Coordinate {
     pub row: usize,
