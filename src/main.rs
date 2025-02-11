@@ -1,6 +1,7 @@
 mod aoc_1;
 mod aoc_10;
 mod aoc_11;
+mod aoc_12;
 mod aoc_2;
 mod aoc_3;
 mod aoc_4;
@@ -169,6 +170,8 @@ pub fn main() {
         Aoc::new(10, 2, aoc_10::solution_pt2),
         Aoc::new(11, 1, aoc_11::solution_pt1),
         Aoc::new(11, 2, aoc_11::solution_pt2),
+        Aoc::new(12, 1, aoc_12::solution_pt1),
+        Aoc::new(12, 2, aoc_12::solution_pt2),
     ];
 
     let args = Args::parse();
