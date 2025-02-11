@@ -50,6 +50,16 @@ enum State {
     Finished(char),
 }
 
+impl State {
+    fn character(&self) -> char {
+        match self {
+            Self::Island(c) => *c,
+            Self::Building(c) => *c,
+            Self::Finished(c) => *c,
+        }
+    }
+}
+
 enum Final {
     Edge(char),
     Interior(char),
@@ -75,18 +85,18 @@ fn determine_regions(garden: &Garden) -> Vec<Region> {
                     State::Finished(_) => continue,
                 };
 
-                match neighborhood(&region_builder, row, col) {
+                match expanded_neighborhood(&region_builder, row, col) {
                     Some(available) => {
                         unfinished_business = true;
                         if is_island {
                             region_builder[row][col] = State::Building(c);
                         }
                         for Coordinate {
-                            row: neighbor_row,
-                            col: neighbor_col,
+                            row: neigh_row,
+                            col: neigh_col,
                         } in available
                         {
-                            region_builder[neighbor_row][neighbor_col] = State::Building(c);
+                            region_builder[neigh_row][neigh_col] = State::Building(c);
                         }
                     }
                     None => {
@@ -104,6 +114,7 @@ fn determine_regions(garden: &Garden) -> Vec<Region> {
 
 /// Neighbors: up, below, left, and right of (row, col) while still being in-bounds.
 fn immediate_neighbors(region_builder: &Matrix<State>, row: usize, col: usize) -> Vec<Coordinate> {
+    let center_character = region_builder[row][col].character();
     /*
                   (row-1, col)
                  ---------------
@@ -111,7 +122,9 @@ fn immediate_neighbors(region_builder: &Matrix<State>, row: usize, col: usize) -
                  ---------------
                   (row+1, col)
     */
+
     vec![
+        // these {sub,add}_{row,col} functions ensure we're in-bounds
         (sub_row(row), Some(col)),
         (Some(row), sub_col(col)),
         (Some(row), add_col(region_builder, col)),
@@ -119,10 +132,17 @@ fn immediate_neighbors(region_builder: &Matrix<State>, row: usize, col: usize) -
     ]
     .iter()
     .flat_map(|x| match x {
-        (Some(new_row), Some(new_col)) => Some(Coordinate {
-            row: *new_row,
-            col: *new_col,
-        }),
+        (Some(new_row), Some(new_col)) => {
+            // this character check ensures we're only considering compatible positions
+            if region_builder[*new_row][*new_col].character() == center_character {
+                Some(Coordinate {
+                    row: *new_row,
+                    col: *new_col,
+                })
+            } else {
+                None
+            }
+        }
         _ => None,
     })
     .collect::<Vec<_>>()
@@ -134,18 +154,6 @@ fn expanded_neighborhood(
     row: usize,
     col: usize,
 ) -> Option<Vec<Coordinate>> {
-    let character_at = |row: usize, col: usize| -> Option<char> {
-        match region_builder[row][col] {
-            State::Island(c) | State::Building(c) => Some(c),
-            State::Finished(_) => None,
-        }
-    };
-
-    let char_at_center = match character_at(row, col) {
-        Some(c) => c,
-        None => return None,
-    };
-
     let mut neighborhood = HashSet::<Coordinate>::new();
     neighborhood.extend(immediate_neighbors(region_builder, row, col));
     if neighborhood.len() == 0 {
@@ -166,39 +174,7 @@ fn expanded_neighborhood(
         });
     }
 
-    let neighbor_positions = vec![
-        (sub_row(row), Some(col)),
-        (Some(row), sub_col(col)),
-        (Some(row), add_col(region_builder, col)),
-        (add_row(region_builder, row), Some(col)),
-    ]
-    .iter()
-    .flat_map(|x| match x {
-        (Some(new_row), Some(new_col)) => Some(Coordinate {
-            row: *new_row,
-            col: *new_col,
-        }),
-        _ => None,
-    })
-    .collect::<Vec<_>>();
-
-    if neighbor_positions.len() == 0 {
-        return None;
-    }
-
-    let neighbor_positions = neighbor_positions
-        .into_iter()
-        .filter(
-            |coordinate| match character_at(coordinate.row, coordinate.col) {
-                Some(char_coordinate) => char_coordinate == char_at_center,
-                None => false,
-            },
-        )
-        .collect::<Vec<_>>();
-    if neighbor_positions.len() == 0 {
-        return None;
-    }
-    Some(neighbor_positions)
+    Some(neighborhood.into_iter().collect())
 }
 
 fn neighborhood(region_builder: &Matrix<State>, row: usize, col: usize) -> Option<Vec<Coordinate>> {
