@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use crate::{
     io_help,
@@ -34,25 +34,73 @@ fn cost_sides_region(garden: &Garden, region: &Region) -> u64 {
 }
 
 fn count_sides(garden: &Garden, region: &Region) -> u64 {
-    let membership: Matrix<bool> = {
-        let in_region = region.members.iter().collect::<HashSet<_>>();
-        garden
-            .iter()
-            .enumerate()
-            .map(|(row, r)| {
-                r.iter()
-                    .enumerate()
-                    .map(|(col, _)| in_region.contains(&Coordinate { row, col }))
-                    .collect()
-            })
-            .collect()
+    // let membership: Matrix<bool> = {
+    //     let in_region = region.members.iter().collect::<HashSet<_>>();
+    //     garden
+    //         .iter()
+    //         .enumerate()
+    //         .map(|(row, r)| {
+    //             r.iter()
+    //                 .enumerate()
+    //                 .map(|(col, _)| in_region.contains(&Coordinate { row, col }))
+    //                 .collect()
+    //         })
+    //         .collect()
+    // };
+
+    /*
+
+    to get sides:
+
+    get all pairs such that they are exactly 1 distance apart in up/down or left/right
+
+
+     */
+
+    let exterior = {
+        let mut e = trace_perimiter(garden, &region.members);
+        e.sort();
+        e
     };
+
+    let create_2coords = |row_view: bool| -> HashMap<usize, Vec<&Coordinate>> {
+        let mut m = HashMap::<usize, Vec<&Coordinate>>::new();
+        exterior.iter().for_each(|c| {
+            let v = if row_view { c.row } else { c.col };
+            match m.get_mut(&v) {
+                Some(existing) => existing.push(c),
+                None => {
+                    m.insert(v, vec![c]);
+                }
+            }
+        });
+        m
+    };
+
+    let perform_merge_split = |row_view: bool, coords: &[&Coordinate]| -> Vec<Vec<&Coordinate>> {
+        panic!();
+    };
+
+    let create_final = |row_view: bool| -> HashMap<usize, Vec<Vec<&Coordinate>>> {
+        create_2coords(row_view)
+            .iter()
+            .map(|(v, coords)| (*v, perform_merge_split(row_view, coords)))
+            .collect::<HashMap<_, _>>()
+    };
+
+    let row2finals = create_final(true);
+    let col2finals = create_final(false);
+
+    // for Coordinate{row,col} in exterior {
+    //     let neighbors = immediate_neighbors(&garden, row, col);
+
+    // }
 }
 
-fn exterior(garden: &Garden, region: &Region) -> Vec<Coordinate> {
-    let mut e = trace_perimiter(garden, &region.members);
-    e.sort();
-    e
+impl HasCharacter for char {
+    fn character(&self) -> char {
+        *self
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,7 +143,7 @@ enum State {
     Finished(char),
 }
 
-impl State {
+impl HasCharacter for State {
     fn character(&self) -> char {
         match self {
             Self::Building(c) | Self::Finished(c) => *c,
@@ -147,8 +195,16 @@ fn determine_regions(garden: &Garden) -> Vec<Region> {
     regions
 }
 
+trait HasCharacter {
+    fn character(&self) -> char;
+}
+
 /// Neighbors: up, below, left, and right of (row, col) while still being in-bounds.
-fn immediate_neighbors(region_builder: &Matrix<State>, row: usize, col: usize) -> Vec<Coordinate> {
+fn immediate_neighbors<T: HasCharacter>(
+    region_builder: &Matrix<T>,
+    row: usize,
+    col: usize,
+) -> Vec<Coordinate> {
     let center_character = region_builder[row][col].character();
 
     cardinal_neighbors(region_builder, row, col)
