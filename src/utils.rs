@@ -1,11 +1,33 @@
 use std::{
     cmp::{max, min},
+    collections::HashSet,
     error::Error,
     fmt::{Debug, Display},
 };
 
 // heap-allocated a rectangular 2D array with runtime-determined size
 pub type Matrix<T> = Vec<Vec<T>>;
+
+pub fn cardinal_neighbors<T>(
+    mat: &Matrix<T>,
+    row: usize,
+    col: usize,
+) -> Vec<(Option<usize>, Option<usize>)> {
+    /*
+                  (row-1, col)
+                 ---------------
+    (row, col-1)| (row,  col) |  (row, col+1)
+                 ---------------
+                  (row+1, col)
+    */
+    vec![
+        // these {sub,add}_{row,col} functions ensure we're in-bounds
+        (sub_row(row), Some(col)),
+        (Some(row), sub_col(col)),
+        (Some(row), add_col(mat, col)),
+        (add_row(mat, row), Some(col)),
+    ]
+}
 
 pub fn sub_row(x: usize) -> Option<usize> {
     if x > 0 {
@@ -42,10 +64,46 @@ pub fn add_col<T>(m: &Matrix<T>, x: usize) -> Option<usize> {
     }
 }
 
+pub fn exterior_perimiter<T>(mat: &Matrix<T>, members: &[Coordinate]) -> u64 {
+    // create set: (row,col) => in members?
+    let membership = members.iter().collect::<HashSet<&Coordinate>>();
+    // for each one
+    //      ask if each of its immediate neighbors is in members
+    //      for each of these 4, increment perimiter iff it's not also in members
+    members
+        .iter()
+        .fold(0, |perimiter, Coordinate { row, col }| {
+            cardinal_neighbors(mat, *row, *col)
+                .iter()
+                .fold(perimiter, |p, x| match x {
+                    // only count the side (r,c) as part of the perimiter
+                    //      (1) if it is in-bounds and (r,c) is *not* in members
+                    //      (2) it is out of bounds
+                    (Some(r), Some(c)) => {
+                        if !membership.contains(&Coordinate::new(*r, *c)) {
+                            // (1) not in members -> borders another region!
+                            p + 1
+                        } else {
+                            // it is already in members, so this is an interior side!
+                            p
+                        }
+                    }
+                    // (2) out of bounds => this side borders the edge
+                    _ => p + 1,
+                })
+        })
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Coordinate {
     pub row: usize,
     pub col: usize,
+}
+
+impl Coordinate {
+    pub fn new(row: usize, col: usize) -> Self {
+        Self { row, col }
+    }
 }
 
 impl Display for Coordinate {
