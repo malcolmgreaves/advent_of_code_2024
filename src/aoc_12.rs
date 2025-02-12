@@ -95,6 +95,8 @@ fn determine_regions(garden: &Garden) -> Vec<Region> {
                     }
                     FloodFill::Solo => {
                         region_builder[row][col] = State::Finished(val);
+                        let region = Region::new(&garden, val, vec![Coordinate{row,col}]);
+                        regions.push(region)
                     }
                     FloodFill::Prefilled => {
                         // we have already included this position in a previously obtained FloodFill::New(..) result
@@ -309,6 +311,22 @@ mod test {
         let actual = construct(&into_lines(EXAMPLE_INPUT_STR_LG));
         let expected: &Garden = &EXAMPLE_LG;
         assert_eq!(actual, *expected);
+    }
+
+    #[test]
+    fn regions_2p() {
+        let garden: &Garden = &EXAMPLE_2P;
+        let regions = determine_regions(garden);
+        let expecting_x_region = ('X', 1_u64, 4_u64);
+        let expecting_o_region = ('O', 21_u64, 36_u64);
+        for r in regions {
+            println!("REGION: '{}': area={} perimiter={} # members: {}", r.letter, r.area, r.perimiter, r.members.len());
+            let cap = (r.letter, r.area, r.perimiter);
+            assert!(
+                cap == expecting_x_region || cap == expecting_o_region,
+                "expecting {cap:?} to be either {expecting_x_region:?} or {expecting_o_region:?}",
+            )
+        }
     }
 
     #[test]
