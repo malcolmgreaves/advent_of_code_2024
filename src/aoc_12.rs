@@ -547,7 +547,7 @@ mod test {
     #[test]
     fn sides() {
         count_sides_test(
-            &EXAMPLE_2P,
+            &EXAMPLE_SM,
             vec![('A', 4), ('B', 4), ('C', 8), ('D', 4), ('E', 4)],
         );
         // count_sides_test(&EXAMPLE_SM);
