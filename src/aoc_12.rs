@@ -63,41 +63,41 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
         e
     };
 
-    let create_2coords = |row_view: bool| -> HashMap<usize, Vec<&Coordinate>> {
-        let mut m = HashMap::<usize, Vec<&Coordinate>>::new();
+    let create_2coords = |row_view: bool| -> HashMap<usize, Vec<Coordinate>> {
+        let mut m = HashMap::<usize, Vec<Coordinate>>::new();
         exterior.iter().for_each(|c| {
             let v = if row_view { c.row } else { c.col };
             match m.get_mut(&v) {
-                Some(existing) => existing.push(c),
+                Some(existing) => existing.push(c.clone()),
                 None => {
-                    m.insert(v, vec![c]);
+                    m.insert(v, vec![c.clone()]);
                 }
             }
         });
         m
     };
 
-    let perform_merge_split = |row_view: bool, coords: &[&Coordinate]| -> Vec<Vec<&Coordinate>> {
+    let perform_merge_split = |row_view: bool, coords: &[Coordinate]| -> Vec<Vec<Coordinate>> {
         if coords.len() == 0 {
             panic!("Cannot handle empty coordinates list!");
         }
         if coords.len() == 1 {
-            return vec![vec![*coords.first().unwrap()]];
+            return vec![vec![coords[0].clone()]];
         }
 
         let coords = {
             let mut cs = coords.to_vec();
             let cmp = if row_view {
-                |a: &&Coordinate, b: &&Coordinate| a.row.cmp(&b.row)
+                |a: &Coordinate, b: &Coordinate| a.row.cmp(&b.row)
             } else {
-                |a: &&Coordinate, b: &&Coordinate| a.col.cmp(&b.col)
+                |a: &Coordinate, b: &Coordinate| a.col.cmp(&b.col)
             };
             cs.sort_by(cmp);
             cs
         };
 
         let mut new = Vec::new();
-        let mut current = vec![coords[0]];
+        let mut current = vec![coords[0].clone()];
 
         for c in &coords[1..coords.len()] {
             match current.last() {
@@ -108,10 +108,10 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                         (x.col, c.col)
                     };
                     if a.abs_diff(b) == 1 {
-                        current.push(c);
+                        current.push(c.clone());
                     } else {
                         new.push(current);
-                        current = vec![c];
+                        current = vec![c.clone()];
                     }
                 }
                 None => panic!(),
@@ -122,7 +122,7 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
         new
     };
 
-    let create_final = |row_view: bool| -> HashMap<usize, Vec<Vec<&Coordinate>>> {
+    let create_final = |row_view: bool| -> HashMap<usize, Vec<Vec<Coordinate>>> {
         create_2coords(row_view)
             .iter()
             .map(|(v, coords)| (*v, perform_merge_split(row_view, coords)))
@@ -132,7 +132,7 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     let row2finals = create_final(true);
     let col2finals = create_final(false);
 
-    let sum_sides = |finals: &HashMap<_, Vec<Vec<&Coordinate>>>| -> u64 {
+    let sum_sides = |finals: &HashMap<_, Vec<Vec<Coordinate>>>| -> u64 {
         finals.iter().fold(0, |s, (_, groups)| {
             // each element of groups is a side
             s + (groups.len() as u64)
