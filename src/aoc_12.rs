@@ -76,7 +76,7 @@ fn determine_regions(garden: &Garden) -> Vec<Region> {
         .map(|r| r.iter().map(|c| State::Building(*c)).collect())
         .collect();
 
-    let mut collected_proto_regions = Vec::new();
+    let mut regions = Vec::new();
 
     let mut unfinished_business = true;
     while unfinished_business {
@@ -91,18 +91,23 @@ fn determine_regions(garden: &Garden) -> Vec<Region> {
                             region_builder[*r][*c] = State::Finished(val);
                         }
                         let region = Region::new(&garden, val, available);
-                        collected_proto_regions.push(region);
+                        regions.push(region);
                     }
                     FloodFill::Solo => {
                         region_builder[row][col] = State::Finished(val);
                     }
-                    FloodFill::Prefilled => continue,
+                    FloodFill::Prefilled => {
+                        // we have already included this position in a previously obtained FloodFill::New(..) result
+                        // we kept track of this by marking this visisted position with a State::Finished
+                        // when we call expanded_neighborhood(..) on a Finished, we get this Prefilled
+                        continue;
+                    }
                 }
             }
         }
     }
 
-    panic!()
+    regions
 }
 
 /// Neighbors: up, below, left, and right of (row, col) while still being in-bounds.
