@@ -409,7 +409,7 @@ mod test {
 
     #[test]
     fn pt1_soln_example() {
-        panic!();
+        assert_eq!(solution_pt1(), 1473620);
     }
 
     #[test]
