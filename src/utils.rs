@@ -1,5 +1,5 @@
 use std::{
-    cmp::{max, min},
+    cmp::{max, min, Ordering},
     collections::HashSet,
     error::Error,
     fmt::{Debug, Display},
@@ -94,7 +94,35 @@ pub fn exterior_perimiter<T>(mat: &Matrix<T>, members: &[Coordinate]) -> u64 {
         })
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub fn trace_perimiter<T>(mat: &Matrix<T>, members: &[Coordinate]) -> Vec<Coordinate> {
+    // create set: (row,col) => in members?
+    let membership = members.iter().collect::<HashSet<&Coordinate>>();
+    // for each one
+    //      ask if each of its immediate neighbors is in members
+    //      for each of these 4, increment perimiter iff it's not also in members
+    members
+        .iter()
+        .filter(|coordinate| {
+            cardinal_neighbors(mat, coordinate.row, coordinate.col)
+                .iter()
+                .any(|x| match x {
+                    // only count the side (r,c) as part of the perimiter
+                    //      (1) if it is in-bounds and (r,c) is *not* in members
+                    //      (2) it is out of bounds
+                    (Some(r), Some(c)) => {
+                        // (1) not in members -> borders another region!
+                        !membership.contains(&Coordinate::new(*r, *c))
+                        // it is already in members, so this is an interior side!
+                    }
+                    // (2) out of bounds => this side borders the edge
+                    _ => true,
+                })
+        })
+        .map(|c| c.clone())
+        .collect()
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, PartialOrd)]
 pub struct Coordinate {
     pub row: usize,
     pub col: usize,
@@ -112,11 +140,14 @@ impl Display for Coordinate {
     }
 }
 
-// impl Ord for Coordinate {
-//     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-//         self.row < other.row
-//     }
-// }
+impl Ord for Coordinate {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.row.cmp(&other.row) {
+            Ordering::Equal => self.col.cmp(&other.col),
+            order => order,
+        }
+    }
+}
 
 #[derive(Debug, PartialEq)]
 pub enum InvalidShape {

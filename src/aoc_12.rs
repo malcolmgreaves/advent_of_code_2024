@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::{
     io_help,
-    utils::{cardinal_neighbors, exterior_perimiter, Coordinate, Matrix},
+    utils::{cardinal_neighbors, exterior_perimiter, trace_perimiter, Coordinate, Matrix},
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -17,7 +17,42 @@ pub fn solution_pt1() -> u64 {
 pub fn solution_pt2() -> u64 {
     let lines = io_help::read_lines("./inputs/12").collect::<Vec<String>>();
     let garden = construct(&lines);
-    panic!("Unimplemented! Garden:\n{:?}", garden);
+    let regions = determine_regions(&garden);
+    cost_sides(&garden, &regions)
+}
+
+fn cost_sides(garden: &Garden, regions: &[Region]) -> u64 {
+    regions
+        .iter()
+        .fold(0, |s, region| s + cost_sides_region(garden, &region))
+}
+
+fn cost_sides_region(garden: &Garden, region: &Region) -> u64 {
+    let n_sides = count_sides(&garden, &region);
+    let price = n_sides * region.area;
+    price
+}
+
+fn count_sides(garden: &Garden, region: &Region) -> u64 {
+    let membership: Matrix<bool> = {
+        let in_region = region.members.iter().collect::<HashSet<_>>();
+        garden
+            .iter()
+            .enumerate()
+            .map(|(row, r)| {
+                r.iter()
+                    .enumerate()
+                    .map(|(col, _)| in_region.contains(&Coordinate { row, col }))
+                    .collect()
+            })
+            .collect()
+    };
+}
+
+fn exterior(garden: &Garden, region: &Region) -> Vec<Coordinate> {
+    let mut e = trace_perimiter(garden, &region.members);
+    e.sort();
+    e
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
