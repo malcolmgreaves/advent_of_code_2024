@@ -468,6 +468,24 @@ mod test {
         );
     }
 
+    fn regions_test(garden: &Garden, expected_region_info: Vec<(char, u64, u64)>) {
+        for r in determine_regions(garden) {
+            println!(
+                "REGION: '{}': area={} perimiter={} # members: {}",
+                r.letter,
+                r.area,
+                r.perimiter,
+                r.members.len()
+            );
+            let cap = (r.letter, r.area, r.perimiter);
+            assert!(
+                expected_region_info.iter().any(|expected| cap == *expected),
+                "expecting {cap:?} to be one of {}: {expected_region_info:?}",
+                expected_region_info.len(),
+            )
+        }
+    }
+
     #[test]
     fn price() {
         price_test(
@@ -496,15 +514,14 @@ mod test {
         );
     }
 
-    fn price_test(garden: &Garden, expected_prices: Vec<(char, u64)>) {
-        let compare =
-            |(a_char, a_price): &(char, u64), (b_char, b_price): &(char, u64)| -> Ordering {
-                match a_char.cmp(&b_char) {
-                    Ordering::Equal => a_price.cmp(&b_price),
-                    other => other,
-                }
-            };
+    fn compare((a_char, a_price): &(char, u64), (b_char, b_price): &(char, u64)) -> Ordering {
+        match a_char.cmp(&b_char) {
+            Ordering::Equal => a_price.cmp(&b_price),
+            other => other,
+        }
+    }
 
+    fn price_test(garden: &Garden, expected_prices: Vec<(char, u64)>) {
         let expected_prices = {
             let mut e = expected_prices.clone();
             e.sort_by(compare);
@@ -527,22 +544,35 @@ mod test {
         assert_eq!(actual_cost, expected_cost);
     }
 
-    fn regions_test(garden: &Garden, expected_region_info: Vec<(char, u64, u64)>) {
-        for r in determine_regions(garden) {
-            println!(
-                "REGION: '{}': area={} perimiter={} # members: {}",
-                r.letter,
-                r.area,
-                r.perimiter,
-                r.members.len()
-            );
-            let cap = (r.letter, r.area, r.perimiter);
-            assert!(
-                expected_region_info.iter().any(|expected| cap == *expected),
-                "expecting {cap:?} to be one of {}: {expected_region_info:?}",
-                expected_region_info.len(),
-            )
-        }
+    #[test]
+    fn sides() {
+        count_sides_test(
+            &EXAMPLE_2P,
+            vec![('A', 4), ('B', 4), ('C', 8), ('D', 4), ('E', 4)],
+        );
+        // count_sides_test(&EXAMPLE_SM);
+        // count_sides_test(&EXAMPLE_LG);
+    }
+
+    fn count_sides_test(garden: &Garden, expected: Vec<(char, u64)>) {
+        let regions = determine_regions(garden);
+
+        let actual_region_sides = {
+            let mut actual = regions
+                .iter()
+                .map(|region| (region.letter, count_sides(garden, &region)))
+                .collect::<Vec<_>>();
+            actual.sort_by(compare);
+            actual
+        };
+
+        let expected = {
+            let mut e = expected.clone();
+            e.sort_by(compare);
+            e
+        };
+
+        assert_eq!(actual_region_sides, expected);
     }
 
     #[test]
