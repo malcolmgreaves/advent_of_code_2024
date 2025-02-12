@@ -231,7 +231,7 @@ fn cost(regions: &[Region]) -> u64 {
 #[cfg(test)]
 mod test {
 
-    use std::collections::HashMap;
+    use std::{cmp::Ordering, collections::HashMap};
 
     use indoc::indoc;
     use lazy_static::lazy_static;
@@ -302,12 +302,12 @@ mod test {
 
     #[test]
     fn construction() {
-        let actual = construct(&into_lines(EXAMPLE_INPUT_STR_SM));
-        let expected: &Garden = &EXAMPLE_SM;
-        assert_eq!(actual, *expected);
-        //
         let actual = construct(&into_lines(EXAMPLE_INPUT_STR_2P));
         let expected: &Garden = &EXAMPLE_2P;
+        assert_eq!(actual, *expected);
+        //
+        let actual = construct(&into_lines(EXAMPLE_INPUT_STR_SM));
+        let expected: &Garden = &EXAMPLE_SM;
         assert_eq!(actual, *expected);
         //
         let actual = construct(&into_lines(EXAMPLE_INPUT_STR_LG));
@@ -318,7 +318,6 @@ mod test {
     #[test]
     fn regions() {
         regions_test(&EXAMPLE_2P, vec![('X', 1, 4), ('O', 21, 36)]);
-
         regions_test(
             &EXAMPLE_SM,
             vec![
@@ -335,9 +334,12 @@ mod test {
     fn price() {
         price_test(
             &EXAMPLE_2P,
+            vec![('X', 4), ('X', 4), ('X', 4), ('X', 4), ('O', 756)],
+        );
+        price_test(
+            &EXAMPLE_SM,
             vec![('A', 40), ('B', 32), ('C', 40), ('D', 4), ('E', 24)],
         );
-        price_test(&EXAMPLE_SM, vec![('X', 4), ('O', 756)]);
         price_test(
             &EXAMPLE_LG,
             vec![
@@ -357,17 +359,33 @@ mod test {
     }
 
     fn price_test(garden: &Garden, expected_prices: Vec<(char, u64)>) {
+        let compare =
+            |(a_char, a_price): &(char, u64), (b_char, b_price): &(char, u64)| -> Ordering {
+                match a_char.cmp(&b_char) {
+                    Ordering::Equal => a_price.cmp(&b_price),
+                    other => other,
+                }
+            };
+
+        let expected_prices = {
+            let mut e = expected_prices.clone();
+            e.sort_by(compare);
+            e
+        };
         let expected_cost = expected_prices.iter().fold(0, |s, (_, p)| s + *p);
-        let region_char_to_price = expected_prices.into_iter().collect::<HashMap<char, u64>>();
 
         let regions = determine_regions(garden);
+        let actual_region_prices = {
+            let mut r: Vec<(char, u64)> = determine_regions(garden)
+                .iter()
+                .map(|r| (r.letter, r.price()))
+                .collect();
+            r.sort_by(compare);
+            r
+        };
         let actual_cost = cost(&regions);
-        regions.iter().for_each(|r| {
-            match region_char_to_price.get(&r.letter) {
-                Some(cost) => assert_eq!(r.price(), *cost, "region {r:?}: actual price != expected"),
-                None => panic!("determine_regions found {r:?} but it is not in expected region prices: {region_char_to_price:?}"),
-            }
-        });
+
+        assert_eq!(actual_region_prices, expected_prices);
         assert_eq!(actual_cost, expected_cost);
     }
 
