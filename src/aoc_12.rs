@@ -329,30 +329,31 @@ mod test {
                 ('E', 3, 8),
             ],
         );
-
-        /*
-        A region of R plants with price 12 * 18 = 216.
-        A region of I plants with price 4 * 8 = 32.
-        A region of C plants with price 14 * 28 = 392.
-        A region of F plants with price 10 * 18 = 180.
-        A region of V plants with price 13 * 20 = 260.
-        A region of J plants with price 11 * 20 = 220.
-        A region of C plants with price 1 * 4 = 4.
-        A region of E plants with price 13 * 18 = 234.
-        A region of I plants with price 14 * 22 = 308.
-        A region of M plants with price 5 * 12 = 60.
-        A region of S plants with price 3 * 8 = 24.
-         */
     }
 
     #[test]
     fn price() {
-        // In the first example, region A has price 4 * 10 = 40, region B has price 4 * 8 = 32,
-        // region C has price 4 * 10 = 40, region D has price 1 * 4 = 4,
-        // and region E has price 3 * 8 = 24. So, the total price for the first example is 140.
-        price_test(&EXAMPLE_2P, vec![]);
-        price_test(&EXAMPLE_SM, vec![]);
-        price_test(&EXAMPLE_LG, vec![]);
+        price_test(
+            &EXAMPLE_2P,
+            vec![('A', 40), ('B', 32), ('C', 40), ('D', 4), ('E', 24)],
+        );
+        price_test(&EXAMPLE_SM, vec![('X', 4), ('O', 756)]);
+        price_test(
+            &EXAMPLE_LG,
+            vec![
+                ('R', 216),
+                ('I', 32),
+                ('C', 392),
+                ('F', 180),
+                ('V', 260),
+                ('J', 220),
+                ('C', 4),
+                ('E', 234),
+                ('I', 308),
+                ('M', 60),
+                ('S', 24),
+            ],
+        );
     }
 
     fn price_test(garden: &Garden, expected_prices: Vec<(char, u64)>) {
