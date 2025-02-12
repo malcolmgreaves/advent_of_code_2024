@@ -78,7 +78,48 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     };
 
     let perform_merge_split = |row_view: bool, coords: &[&Coordinate]| -> Vec<Vec<&Coordinate>> {
-        panic!();
+        if coords.len() == 0 {
+            panic!("Cannot handle empty coordinates list!");
+        }
+        if coords.len() == 1 {
+            return vec![vec![*coords.first().unwrap()]];
+        }
+
+        let coords = {
+            let mut cs = coords.to_vec();
+            let cmp = if row_view {
+                |a: &&Coordinate, b: &&Coordinate| a.row.cmp(&b.row)
+            } else {
+                |a: &&Coordinate, b: &&Coordinate| a.col.cmp(&b.col)
+            };
+            cs.sort_by(cmp);
+            cs
+        };
+
+        let mut new = Vec::new();
+        let mut current = vec![coords[0]];
+
+        for c in &coords[1..coords.len()] {
+            match current.last() {
+                Some(x) => {
+                    let (a, b) = if row_view {
+                        (x.row, c.row)
+                    } else {
+                        (x.col, c.col)
+                    };
+                    if a.abs_diff(b) == 1 {
+                        current.push(c);
+                    } else {
+                        new.push(current);
+                        current = vec![c];
+                    }
+                }
+                None => panic!(),
+            }
+        }
+
+        new.push(current);
+        new
     };
 
     let create_final = |row_view: bool| -> HashMap<usize, Vec<Vec<&Coordinate>>> {
@@ -91,10 +132,16 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     let row2finals = create_final(true);
     let col2finals = create_final(false);
 
-    // for Coordinate{row,col} in exterior {
-    //     let neighbors = immediate_neighbors(&garden, row, col);
+    let sum_sides = |finals: &HashMap<_, Vec<Vec<&Coordinate>>>| -> u64 {
+        finals.iter().fold(0, |s, (_, groups)| {
+            // each element of groups is a side
+            s + (groups.len() as u64)
+        })
+    };
 
-    // }
+    let horizontal_sides = sum_sides(&row2finals);
+    let vertical_sides = sum_sides(&col2finals);
+    horizontal_sides + vertical_sides
 }
 
 impl HasCharacter for char {
