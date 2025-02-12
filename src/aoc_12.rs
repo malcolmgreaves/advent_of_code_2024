@@ -95,7 +95,7 @@ fn determine_regions(garden: &Garden) -> Vec<Region> {
                     }
                     FloodFill::Solo => {
                         region_builder[row][col] = State::Finished(val);
-                        let region = Region::new(&garden, val, vec![Coordinate{row,col}]);
+                        let region = Region::new(&garden, val, vec![Coordinate { row, col }]);
                         regions.push(region)
                     }
                     FloodFill::Prefilled => {
@@ -231,6 +231,8 @@ fn cost(regions: &[Region]) -> u64 {
 #[cfg(test)]
 mod test {
 
+    use std::collections::HashMap;
+
     use indoc::indoc;
     use lazy_static::lazy_static;
 
@@ -314,17 +316,74 @@ mod test {
     }
 
     #[test]
-    fn regions_2p() {
-        let garden: &Garden = &EXAMPLE_2P;
+    fn regions() {
+        regions_test(&EXAMPLE_2P, vec![('X', 1, 4), ('O', 21, 36)]);
+
+        regions_test(
+            &EXAMPLE_SM,
+            vec![
+                ('A', 4, 10),
+                ('B', 4, 8),
+                ('C', 4, 10),
+                ('D', 1, 4),
+                ('E', 3, 8),
+            ],
+        );
+
+        /*
+        A region of R plants with price 12 * 18 = 216.
+        A region of I plants with price 4 * 8 = 32.
+        A region of C plants with price 14 * 28 = 392.
+        A region of F plants with price 10 * 18 = 180.
+        A region of V plants with price 13 * 20 = 260.
+        A region of J plants with price 11 * 20 = 220.
+        A region of C plants with price 1 * 4 = 4.
+        A region of E plants with price 13 * 18 = 234.
+        A region of I plants with price 14 * 22 = 308.
+        A region of M plants with price 5 * 12 = 60.
+        A region of S plants with price 3 * 8 = 24.
+         */
+    }
+
+    #[test]
+    fn price() {
+        // In the first example, region A has price 4 * 10 = 40, region B has price 4 * 8 = 32,
+        // region C has price 4 * 10 = 40, region D has price 1 * 4 = 4,
+        // and region E has price 3 * 8 = 24. So, the total price for the first example is 140.
+        price_test(&EXAMPLE_2P, vec![]);
+        price_test(&EXAMPLE_SM, vec![]);
+        price_test(&EXAMPLE_LG, vec![]);
+    }
+
+    fn price_test(garden: &Garden, expected_prices: Vec<(char, u64)>) {
+        let expected_cost = expected_prices.iter().fold(0, |s, (_, p)| s + *p);
+        let region_char_to_price = expected_prices.into_iter().collect::<HashMap<char, u64>>();
+
         let regions = determine_regions(garden);
-        let expecting_x_region = ('X', 1_u64, 4_u64);
-        let expecting_o_region = ('O', 21_u64, 36_u64);
-        for r in regions {
-            println!("REGION: '{}': area={} perimiter={} # members: {}", r.letter, r.area, r.perimiter, r.members.len());
+        let actual_cost = cost(&regions);
+        regions.iter().for_each(|r| {
+            match region_char_to_price.get(&r.letter) {
+                Some(cost) => assert_eq!(r.price(), *cost, "region {r:?}: actual price != expected"),
+                None => panic!("determine_regions found {r:?} but it is not in expected region prices: {region_char_to_price:?}"),
+            }
+        });
+        assert_eq!(actual_cost, expected_cost);
+    }
+
+    fn regions_test(garden: &Garden, expected_region_info: Vec<(char, u64, u64)>) {
+        for r in determine_regions(garden) {
+            println!(
+                "REGION: '{}': area={} perimiter={} # members: {}",
+                r.letter,
+                r.area,
+                r.perimiter,
+                r.members.len()
+            );
             let cap = (r.letter, r.area, r.perimiter);
             assert!(
-                cap == expecting_x_region || cap == expecting_o_region,
-                "expecting {cap:?} to be either {expecting_x_region:?} or {expecting_o_region:?}",
+                expected_region_info.iter().any(|expected| cap == *expected),
+                "expecting {cap:?} to be one of {}: {expected_region_info:?}",
+                expected_region_info.len(),
             )
         }
     }
