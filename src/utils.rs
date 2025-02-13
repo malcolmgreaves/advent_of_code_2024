@@ -149,6 +149,24 @@ impl Ord for Coordinate {
     }
 }
 
+pub struct VecCoords<'a>(pub &'a Vec<Coordinate>);
+
+impl Display for VecCoords<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[")?;
+        match self.0.len() {
+            0 => (),
+            _ => {
+                write!(f, "{}", &self.0[0])?;
+                for x in self.0[1..self.0.len()].iter() {
+                    write!(f, ",{x}")?;
+                }
+            }
+        }
+        write!(f, "]")
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum InvalidShape {
     RowCount {

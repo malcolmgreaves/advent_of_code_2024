@@ -2,7 +2,9 @@ use std::collections::{HashMap, HashSet};
 
 use crate::{
     io_help,
-    utils::{cardinal_neighbors, exterior_perimiter, trace_perimiter, Coordinate, Matrix},
+    utils::{
+        cardinal_neighbors, exterior_perimiter, trace_perimiter, Coordinate, Matrix, VecCoords,
+    },
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,28 +36,7 @@ fn cost_sides_region(garden: &Garden, region: &Region) -> u64 {
 }
 
 fn count_sides(garden: &Garden, region: &Region) -> u64 {
-    // let membership: Matrix<bool> = {
-    //     let in_region = region.members.iter().collect::<HashSet<_>>();
-    //     garden
-    //         .iter()
-    //         .enumerate()
-    //         .map(|(row, r)| {
-    //             r.iter()
-    //                 .enumerate()
-    //                 .map(|(col, _)| in_region.contains(&Coordinate { row, col }))
-    //                 .collect()
-    //         })
-    //         .collect()
-    // };
-
-    /*
-
-    to get sides:
-
-    get all pairs such that they are exactly 1 distance apart in up/down or left/right
-
-
-     */
+    let debug = region.letter == 'A';
 
     let exterior = {
         let mut e = trace_perimiter(garden, &region.members);
@@ -63,6 +44,11 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
         e
     };
 
+    println!("{}'s exterior: {exterior:?}", region.letter);
+    // if debug {
+    // }
+
+    // (row or column index) => all coordinates of the EXTERIOR that are in that (row/colum)
     let create_2coords = |row_view: bool| -> HashMap<usize, Vec<Coordinate>> {
         let mut m = HashMap::<usize, Vec<Coordinate>>::new();
         exterior.iter().for_each(|c| {
@@ -77,6 +63,7 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
         m
     };
 
+    // (row or column index, exterior coordinates on the same row/col) => input partitioned into groups of contigious coordinates
     let perform_merge_split = |row_view: bool, coords: &[Coordinate]| -> Vec<Vec<Coordinate>> {
         if coords.len() == 0 {
             panic!("Cannot handle empty coordinates list!");
@@ -96,20 +83,26 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
             cs
         };
 
+        println!("sorted coordinates: {}", VecCoords(&coords));
+
         let mut new = Vec::new();
         let mut current = vec![coords[0].clone()];
 
         for c in &coords[1..coords.len()] {
             match current.last() {
                 Some(x) => {
-                    let (a, b) = if row_view {
+                    let (last_cur_group, inspecting) = if row_view {
                         (x.row, c.row)
                     } else {
                         (x.col, c.col)
                     };
-                    if a.abs_diff(b) == 1 {
+                    if last_cur_group.abs_diff(inspecting) == 1 {
+                        println!(
+                            "\t[row?:{row_view}] {last_cur_group:?} is next to {inspecting:?}"
+                        );
                         current.push(c.clone());
                     } else {
+                        println!("\t[row?:{row_view}] {last_cur_group:?} is NOT next to {inspecting:?} -- distance: {}", last_cur_group.abs_diff(inspecting));
                         new.push(current);
                         current = vec![c.clone()];
                     }
@@ -122,10 +115,17 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
         new
     };
 
+    // (row or column) => index -> groups of contigious exterior coordinates in that (row/col)
     let create_final = |row_view: bool| -> HashMap<usize, Vec<Vec<Coordinate>>> {
         create_2coords(row_view)
             .iter()
-            .map(|(v, coords)| (*v, perform_merge_split(row_view, coords)))
+            .map(|(v, coords)| {
+                println!(
+                    "row_view: {row_view} @ index: {v}: coords={}",
+                    VecCoords(&coords)
+                );
+                (*v, perform_merge_split(row_view, coords))
+            })
             .collect::<HashMap<_, _>>()
     };
 
