@@ -134,7 +134,8 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
         count_correction(&mut final_counts, j, n_overlap);
     }
 
-    panic!("**UNIMPLEMENTED**")
+    
+    final_counts.iter().fold(0, |s, (_, ))
 }
 
 // fn count_sides(garden: &Garden, region: &Region) -> u64 {
