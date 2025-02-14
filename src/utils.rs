@@ -1,9 +1,24 @@
 use std::{
     cmp::{max, min, Ordering},
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     error::Error,
     fmt::{Debug, Display},
+    hash::Hash,
 };
+
+pub fn group_by<K, V>(key: fn(&V) -> K, values: Vec<V>) -> HashMap<K, Vec<V>>
+where
+    K: Hash + Eq,
+{
+    values.into_iter().fold(HashMap::new(), |mut m, v| {
+        let v_key = key(&v);
+        match m.get_mut(&v_key) {
+            Some(existing) => _ = existing.push(v),
+            None => _ = m.insert(v_key, vec![v]),
+        };
+        m
+    })
+}
 
 // heap-allocated a rectangular 2D array with runtime-determined size
 pub type Matrix<T> = Vec<Vec<T>>;

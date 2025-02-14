@@ -2,7 +2,10 @@ use std::collections::{HashMap, HashSet};
 
 use crate::{
     io_help,
-    utils::{cardinal_neighbors, exterior_perimiter, trace_perimiter, Coordinate, Coords, Matrix},
+    utils::{
+        cardinal_neighbors, exterior_perimiter, group_by, trace_perimiter, Coordinate, Coords,
+        Matrix,
+    },
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +68,20 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                 - or another region
 
      */
+
+    // let group_by_row: HashMap<usize, Vec<Coordinate>> = exterior
+    //     .into_iter()
+    //     .fold(
+    //         HashMap::new(),
+    //         |mut m, e| {
+    //             match m.get_mut(&e.row) {
+    //                 Some(existing) => _ = existing.push(e),
+    //                 None => _ = m.insert(e.row, vec![e]),
+    //             };
+    //             m
+    //     });
+
+    let group_by_row = group_by(|e| e.row, exterior);
 
     panic!("**UNIMPLEMENTED**")
 }
