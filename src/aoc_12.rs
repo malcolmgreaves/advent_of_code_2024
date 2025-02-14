@@ -48,6 +48,10 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     // if debug {
     // }
 
+    if exterior.len() == 1 {
+        return 4;
+    }
+
     // (row or column index) => all coordinates of the EXTERIOR that are in that (row/colum)
     let create_2coords = |row_view: bool| -> HashMap<usize, Vec<Coordinate>> {
         let mut m = HashMap::<usize, Vec<Coordinate>>::new();
@@ -135,6 +139,7 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     let sum_sides = |finals: &HashMap<_, Vec<Vec<Coordinate>>>| -> u64 {
         finals.iter().fold(0, |s, (_, groups)| {
             // each element of groups is a side
+            println!("groups: {groups:?}");
             s + (groups.len() as u64)
         })
     };
@@ -143,6 +148,120 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     let vertical_sides = sum_sides(&col2finals);
     horizontal_sides + vertical_sides
 }
+
+// fn count_sides(garden: &Garden, region: &Region) -> u64 {
+//     let debug = region.letter == 'A';
+
+//     let exterior = {
+//         let mut e = trace_perimiter(garden, &region.members);
+//         e.sort();
+//         e
+//     };
+
+//     println!("{}'s exterior: {exterior:?}", region.letter);
+//     // if debug {
+//     // }
+
+//     if exterior.len() == 1 {
+//         return 4;
+//     }
+
+//     // (row or column index) => all coordinates of the EXTERIOR that are in that (row/colum)
+//     let create_2coords = |row_view: bool| -> HashMap<usize, Vec<Coordinate>> {
+//         let mut m = HashMap::<usize, Vec<Coordinate>>::new();
+//         exterior.iter().for_each(|c| {
+//             let v = if row_view { c.row } else { c.col };
+//             match m.get_mut(&v) {
+//                 Some(existing) => existing.push(c.clone()),
+//                 None => {
+//                     m.insert(v, vec![c.clone()]);
+//                 }
+//             }
+//         });
+//         m
+//     };
+
+//     // (row or column index, exterior coordinates on the same row/col) => input partitioned into groups of contigious coordinates
+//     let perform_merge_split = |row_view: bool, coords: &[Coordinate]| -> Vec<Vec<Coordinate>> {
+//         if coords.len() == 0 {
+//             panic!("Cannot handle empty coordinates list!");
+//         }
+//         if coords.len() == 1 {
+//             return vec![vec![coords[0].clone()]];
+//         }
+
+//         let coords = {
+//             let mut cs = coords.to_vec();
+//             let cmp = if row_view {
+//                 |a: &Coordinate, b: &Coordinate| a.row.cmp(&b.row)
+//             } else {
+//                 |a: &Coordinate, b: &Coordinate| a.col.cmp(&b.col)
+//             };
+//             cs.sort_by(cmp);
+//             cs
+//         };
+
+//         println!("sorted coordinates: {}", VecCoords(&coords));
+
+//         let mut new = Vec::new();
+//         let mut current = vec![coords[0].clone()];
+
+//         for c in &coords[1..coords.len()] {
+//             match current.last() {
+//                 Some(x) => {
+//                     let (last_cur_group, inspecting) = if row_view {
+//                         (x.row, c.row)
+//                     } else {
+//                         (x.col, c.col)
+//                     };
+//                     if last_cur_group.abs_diff(inspecting) == 1 {
+//                         println!(
+//                             "\t[row?:{row_view}] {last_cur_group:?} is next to {inspecting:?}"
+//                         );
+//                         current.push(c.clone());
+//                     } else {
+//                         println!("\t[row?:{row_view}] {last_cur_group:?} is NOT next to {inspecting:?} -- distance: {}", last_cur_group.abs_diff(inspecting));
+//                         new.push(current);
+//                         current = vec![c.clone()];
+//                     }
+//                 }
+//                 None => panic!(),
+//             }
+//         }
+
+//         new.push(current);
+//         new
+//     };
+
+//     // (row or column) => index -> groups of contigious exterior coordinates in that (row/col)
+//     let create_final = |row_view: bool| -> HashMap<usize, Vec<Vec<Coordinate>>> {
+//         create_2coords(row_view)
+//             .iter()
+//             .map(|(v, coords)| {
+//                 println!(
+//                     "row_view: {row_view} @ index: {v}: coords={}",
+//                     VecCoords(&coords)
+//                 );
+//                 (*v, perform_merge_split(row_view, coords))
+//             })
+//             .collect::<HashMap<_, _>>()
+//     };
+
+//     let row2finals = create_final(true);
+//     let col2finals = create_final(false);
+
+//     let sum_sides = |finals: &HashMap<_, Vec<Vec<Coordinate>>>| -> u64 {
+//         finals.iter().fold(0, |s, (_, groups)| {
+//             // each element of groups is a side
+//             println!("groups: {groups:?}");
+//             s + (groups.len() as u64)
+//         })
+//     };
+
+//     let horizontal_sides = sum_sides(&row2finals);
+//     let vertical_sides = sum_sides(&col2finals);
+//     horizontal_sides + vertical_sides
+// }
 
 impl HasCharacter for char {
     fn character(&self) -> char {
@@ -552,6 +671,11 @@ mod test {
         );
         // count_sides_test(&EXAMPLE_SM);
         // count_sides_test(&EXAMPLE_LG);
+    }
+
+    #[test]
+    fn sides_simple() {
+        count_sides_test(&vec![vec!['A']], vec![('A', 4)]);
     }
 
     fn count_sides_test(garden: &Garden, expected: Vec<(char, u64)>) {
