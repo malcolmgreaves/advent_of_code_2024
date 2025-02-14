@@ -83,6 +83,57 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
 
     let group_by_row = group_by(|e| e.row, exterior);
 
+    let overcount = {
+        let mut oc = group_by_row
+            .iter()
+            .map(|(row, group)| (*row, 2 + 2 * group.len() as u64))
+            .collect::<Vec<(_, _)>>();
+        oc.sort_by(|(a_row, _), (b_row, _)| a_row.cmp(b_row));
+        oc
+    };
+
+    let overlap = |a: &Vec<Coordinate>, b: &Vec<Coordinate>| -> u64 {
+        // ASSUME ALL OF a AND b HAVE THE SAME ROW !!!!
+        let a_col = group_by(|e| e.col, a.clone());
+        let b_col = group_by(|e| e.col, b.clone());
+        let a_keys = a_col.keys().collect::<HashSet<_>>();
+        let b_keys = b_col.keys().collect::<HashSet<_>>();
+        let intersection: std::collections::hash_set::Intersection<
+            '_,
+            &usize,
+            std::hash::RandomState,
+        > = a_keys.intersection(&b_keys);
+        intersection.fold(0, |s, _| s + 1) // .len()
+    };
+
+    let mut final_counts = overcount.clone().into_iter().collect::<HashMap<_, _>>();
+
+    let count_correction =
+        |final_counts: &mut HashMap<usize, u64>, index: usize, n_overlap: u64| match final_counts
+            .get_mut(&index)
+        {
+            Some(mut existing) => *existing -= n_overlap,
+            None => panic!(),
+        };
+
+    // taking (i,i+1) from overcount means they are the closest they can be to each other
+    // thus, if the difference isn't 1, then they are NOT next to each other!
+    for i in 0..(overcount.len() - 1) {
+        let j = i + 1;
+        let (i_row, _) = overcount[i];
+        let (j_row, _) = overcount[j];
+        if i_row.abs_diff(j_row) != 1 {
+            continue;
+        }
+        let n_overlap = overlap(
+            &group_by_row.get(&i).unwrap(),
+            &group_by_row.get(&j).unwrap(),
+        );
+
+        count_correction(&mut final_counts, i, n_overlap);
+        count_correction(&mut final_counts, j, n_overlap);
+    }
+
     panic!("**UNIMPLEMENTED**")
 }
 
