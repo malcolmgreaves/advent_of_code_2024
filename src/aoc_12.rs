@@ -168,7 +168,7 @@ fn determine_transition(
                     //   -----------
                     // => 8 total sides
                     // ===> 5 are TOP
-                    println!("top starts before bottom and ends before bottom");
+                    // println!("top starts before bottom and ends before bottom");
                     ShapeTransition::TopFirstBottomLast
                 }
                 Ordering::Equal => {
@@ -180,7 +180,7 @@ fn determine_transition(
                     //   --------------
                     // => 6 total sides
                     // ===> 4 are top
-                    println!("top starts before bottom and ends at bottom");
+                    // println!("top starts before bottom and ends at bottom");
                     ShapeTransition::TopFirstEqualLast
                 }
                 Ordering::Greater => {
@@ -192,7 +192,7 @@ fn determine_transition(
                     //     ----------------
                     // => 8 total sides
                     // ==> 5 are top
-                    println!("top starts before bottom and ends after bottom");
+                    // println!("top starts before bottom and ends after bottom");
                     ShapeTransition::TopFirstTopLast
                 }
             }
@@ -214,7 +214,7 @@ fn determine_transition(
                     // ----------------
                     // => 6 total sides
                     // ==> 3 are top
-                    println!("top starts at bottom and ends before bottom");
+                    // println!("top starts at bottom and ends before bottom");
                     ShapeTransition::EqualFirstBottomLast
                 }
                 Ordering::Equal => {
@@ -225,7 +225,7 @@ fn determine_transition(
                     // | bottom |
                     // ----------
                     // => 4 total sides
-                    println!("top starts at bottom and ends at bottom");
+                    // println!("top starts at bottom and ends at bottom");
                     ShapeTransition::Equal
                 }
                 Ordering::Greater => {
@@ -236,7 +236,7 @@ fn determine_transition(
                     // | bottom    |
                     // -------------
                     // => 6 total sides
-                    println!("top starts at bottom and ends after bottom");
+                    // println!("top starts at bottom and ends after bottom");
                     ShapeTransition::EqualFirstTopLast
                 }
             }
@@ -257,7 +257,7 @@ fn determine_transition(
                     // |    bottom    |
                     // ----------------
                     // => 8 total sides
-                    println!("top starts after bottom and ends before bottom");
+                    // println!("top starts after bottom and ends before bottom");
                     ShapeTransition::BottomFirstBottomLast
                 }
                 Ordering::Equal => {
@@ -268,7 +268,7 @@ fn determine_transition(
                     // |    bottom    |
                     // ----------------
                     // => 6 total sides
-                    println!("top starts after bottom and ends at bottom");
+                    // println!("top starts after bottom and ends at bottom");
                     ShapeTransition::BottomFirstEqualLast
                 }
                 Ordering::Greater => {
@@ -279,7 +279,7 @@ fn determine_transition(
                     // |    bottom    |
                     // ----------------
                     // => 8 total sides
-                    println!("top starts after bottom and ends after bottom");
+                    // println!("top starts after bottom and ends after bottom");
                     ShapeTransition::BottomFirstTopLast
                 }
             }
@@ -289,7 +289,6 @@ fn determine_transition(
 
 fn count_sides(garden: &Garden, region: &Region) -> u64 {
     if region.members.len() == 1 {
-        println!("{} is only one square", region.letter);
         return 4;
     }
 
@@ -298,38 +297,17 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
         e.sort();
         e
     };
-    println!("{}'s exterior: {}", region.letter, Coords(&exterior));
 
     let group_by_row = group_by(|e| e.row, exterior);
     if group_by_row.len() == 1 {
-        println!("{} is all in a single row", region.letter);
         return 4;
     }
 
     let populated_exterior_rows_in_order = sorted_keys(&group_by_row);
 
-    // check shapes:
-    // (1) same width
-    // (2) top is > bottom
-    // (3) top is < bottom
-
-    // -------------------
-    // |       top       |
-    // -------------------
-    //    |    mid   |
-    //  ------------------
-    // |     bottom      |
-    // -------------------
-
     // DO NOT COUNT THE BOTTOM!
     // WE WILL ACCOUNT FOR IT WHEN IT IS THE *NEXT* TOP
     // AND WE ACCOUNT FOR THE LAST BOTTOM AT THE END AS A SPECIAL CASE
-
-    // let mut count = 0;
-    // // top most
-    // count += 1;
-    // // LEFT and RIGHT sides
-    // count += 2;
 
     let mut horizontals = 0;
     let mut left_edges = 0;
@@ -341,10 +319,6 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     left_edges += 1;
     right_edges += 1;
 
-    //pairs(&populated_exterior_rows_in_order).fold(None, |last, (top, bottom)| {
-    // populated_exterior_rows_in_order[1..populated_exterior_rows_in_order.len()]
-    //     .iter()
-    //     .fold(populated_exterior_rows_in_order[0].clone(), |last_index, current_index| {
     pairs(&populated_exterior_rows_in_order).for_each(|(last_index, current_index)| {
         match determine_transition(
             group_by_row.get(last_index).unwrap(),
@@ -401,7 +375,7 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     horizontals += 1;
 
     let count = left_edges + right_edges + horizontals;
-    println!("horizontals: {horizontals} | right sides: {right_edges} | left sides: {left_edges} | => count: {count}");
+    // println!("horizontals: {horizontals} | right sides: {right_edges} | left sides: {left_edges} | => count: {count}");
     count
 
     // let overlap = |a: &Vec<Coordinate>, b: &Vec<Coordinate>| -> u64 {
@@ -815,6 +789,25 @@ mod test {
         count_sides_test(&vec![vec!['A', 'A'], vec!['A', 'A']], vec![('A', 4)]);
     }
 
+    #[test]
+    fn cost_sides_test() {
+        _cost_sides_test(&EXAMPLE_SM, 80);
+        _cost_sides_test(&EXAMPLE_LG, 1206);
+    }
+
+    fn _cost_sides_test(garden: &Garden, expected: u64) {
+        let actual: u64 = determine_regions(garden)
+            .iter()
+            .map(|region| {
+                let c = cost_sides_region(garden, region);
+                println!("A region of {} plants with price: {}", region.letter, c);
+                c
+            })
+            .sum();
+        assert_eq!(actual, expected);
+        println!("-------------------------------------------------");
+    }
+
     fn count_sides_test(garden: &Garden, expected: Vec<(char, u64)>) {
         let regions = determine_regions(garden);
 
@@ -843,6 +836,6 @@ mod test {
 
     #[test]
     fn pt2_soln_example() {
-        panic!();
+        // assert_eq!(solution_pt2(), )
     }
 }
