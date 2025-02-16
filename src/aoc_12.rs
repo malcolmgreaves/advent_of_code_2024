@@ -146,286 +146,48 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
         },
     );
 
-    overcount_sides_by_row.iter().fold(0, |s, (_, x)| s + *x)
+    let overlap = |a: &Vec<Coordinate>, b: &Vec<Coordinate>| -> u64 {
+        // ASSUME ALL OF a AND b ARE WITHIN ONE (1) ROW !!!!
+        let a_col = group_by(|e| e.col, a.clone());
+        let b_col = group_by(|e| e.col, b.clone());
+        let a_keys = a_col.keys().collect::<HashSet<_>>();
+        let b_keys = b_col.keys().collect::<HashSet<_>>();
+        let intersection: std::collections::hash_set::Intersection<
+            '_,
+            &usize,
+            std::hash::RandomState,
+        > = a_keys.intersection(&b_keys);
+        intersection.fold(0, |s, _| s + 1) // .len()
+    };
 
-    // let overlap = |a: &Vec<Coordinate>, b: &Vec<Coordinate>| -> u64 {
-    //     // ASSUME ALL OF a AND b ARE WITHIN ONE (1) ROW !!!!
-    //     let a_col = group_by(|e| e.col, a.clone());
-    //     let b_col = group_by(|e| e.col, b.clone());
-    //     let a_keys = a_col.keys().collect::<HashSet<_>>();
-    //     let b_keys = b_col.keys().collect::<HashSet<_>>();
-    //     let intersection: std::collections::hash_set::Intersection<
-    //         '_,
-    //         &usize,
-    //         std::hash::RandomState,
-    //     > = a_keys.intersection(&b_keys);
-    //     intersection.fold(0, |s, _| s + 1) // .len()
-    // };
+    let count_correction =
+        |counts: &mut HashMap<usize, u64>, i: usize, ovlp: u64| match counts.get_mut(&i) {
+            Some(mut existing) => *existing -= ovlp,
+            None => panic!(),
+        };
 
-    // let count_correction =
-    //     |counts: &mut HashMap<usize, u64>, i: usize, ovlp: u64| match counts.get_mut(&i) {
-    //         Some(mut existing) => *existing -= ovlp,
-    //         None => panic!(),
-    //     };
+    // taking (i,i+1) from overcount means they are the closest they can be to each other
+    // thus, if the difference isn't 1, then they are NOT next to each other!
+    for i in 0..(overcount.len() - 1) {
+        let j = i + 1;
+        let (i_row, _) = overcount[i];
+        let (j_row, _) = overcount[j];
+        if i_row.abs_diff(j_row) != 1 {
+            continue;
+        }
+        let n_overlap = overlap(
+            &group_by_row.get(&i).unwrap(),
+            &group_by_row.get(&j).unwrap(),
+        );
 
-    // // taking (i,i+1) from overcount means they are the closest they can be to each other
-    // // thus, if the difference isn't 1, then they are NOT next to each other!
-    // for i in 0..(overcount.len() - 1) {
-    //     let j = i + 1;
-    //     let (i_row, _) = overcount[i];
-    //     let (j_row, _) = overcount[j];
-    //     if i_row.abs_diff(j_row) != 1 {
-    //         continue;
-    //     }
-    //     let n_overlap = overlap(
-    //         &group_by_row.get(&i).unwrap(),
-    //         &group_by_row.get(&j).unwrap(),
-    //     );
+        count_correction(&mut final_row_counts, i, n_overlap);
+        count_correction(&mut final_row_counts, j, n_overlap);
+    }
 
-    //     count_correction(&mut final_row_counts, i, n_overlap);
-    //     count_correction(&mut final_row_counts, j, n_overlap);
-    // }
-
-    // overcount_sides_by_row.iter().fold(0, |s, (_, count)| s + *count)
+    overcount_sides_by_row
+        .iter()
+        .fold(0, |s, (_, count)| s + *count)
 }
-
-// fn count_sides(garden: &Garden, region: &Region) -> u64 {
-//     let exterior = {
-//         let mut e = trace_perimiter(garden, &region.members);
-//         e.sort();
-//         e
-//     };
-//     println!("{}'s exterior: {}", region.letter, Coords(&exterior));
-//     if exterior.len() == 1 {
-//         return 4;
-//     }
-
-//     /*
-
-//     WLOG do this for row or col
-//     ===========================
-//     - exterior
-//     - group by row:: row index => all exterior squares in that row (sorted by col, increasing)
-//     - calculate over-count of each of these entires according to:
-//         - 2 + 2 * length
-//          (a)      (b)
-//          a: the left and right sides
-//          b: the entire length of the log + account for top and bottom
-//     - for each pair of rows that are 1 apart: (a,b): (e.g. (0,1), (1,2), etc.):
-//         - find overlap parts of each
-//         - subtract this from the over-count of both
-//             + taking it from the "bottom" of a
-//             + taking it from the "top" of b
-//         :: make sure to not double subtract from the very top and bottom => these are always bordering something else
-//                 - either the boundry of the Garden
-//                 - or another region
-
-//      */
-//     let group_by_row = group_by(|e| e.row, exterior);
-
-//     let overcount = {
-//         let mut oc = group_by_row
-//             .iter()
-//             .map(|(row, group)| (*row, 2 + 2 * group.len() as u64))
-//             .collect::<Vec<(_, _)>>();
-//         oc.sort_by(|(a_row, _), (b_row, _)| a_row.cmp(b_row));
-//         oc
-//     };
-
-//     let overlap = |a: &Vec<Coordinate>, b: &Vec<Coordinate>| -> u64 {
-//         // ASSUME ALL OF a AND b HAVE THE SAME ROW !!!!
-//         let a_col = group_by(|e| e.col, a.clone());
-//         let b_col = group_by(|e| e.col, b.clone());
-//         let a_keys = a_col.keys().collect::<HashSet<_>>();
-//         let b_keys = b_col.keys().collect::<HashSet<_>>();
-//         let intersection: std::collections::hash_set::Intersection<
-//             '_,
-//             &usize,
-//             std::hash::RandomState,
-//         > = a_keys.intersection(&b_keys);
-//         intersection.fold(0, |s, _| s + 1) // .len()
-//     };
-
-//     let mut final_row_counts = overcount.clone().into_iter().collect::<HashMap<_, _>>();
-
-//     let count_correction =
-//         |counts: &mut HashMap<usize, u64>, i: usize, ovlp: u64| match counts.get_mut(&i) {
-//             Some(mut existing) => *existing -= ovlp,
-//             None => panic!(),
-//         };
-
-//     // taking (i,i+1) from overcount means they are the closest they can be to each other
-//     // thus, if the difference isn't 1, then they are NOT next to each other!
-//     for i in 0..(overcount.len() - 1) {
-//         let j = i + 1;
-//         let (i_row, _) = overcount[i];
-//         let (j_row, _) = overcount[j];
-//         if i_row.abs_diff(j_row) != 1 {
-//             continue;
-//         }
-//         let n_overlap = overlap(
-//             &group_by_row.get(&i).unwrap(),
-//             &group_by_row.get(&j).unwrap(),
-//         );
-
-//         count_correction(&mut final_row_counts, i, n_overlap);
-//         count_correction(&mut final_row_counts, j, n_overlap);
-//     }
-
-//     final_row_counts.iter().fold(0, |s, (_, count)| s + *count)
-// }
-
-// fn count_sides(garden: &Garden, region: &Region) -> u64 {
-//     let exterior = {
-//         let mut e = trace_perimiter(garden, &region.members);
-//         e.sort();
-//         e
-//     };
-//     println!("{}'s exterior: {}", region.letter, Coords(&exterior));
-//     if exterior.len() == 1 {
-//         return 4;
-//     }
-
-//     let mut sides = 4_u64;
-//     let mut previous = &exterior[0];
-//     println!("last:      {}", previous);
-//     println!("remaining: {}", Coords(&exterior[1..exterior.len()]));
-
-//     for current in exterior[1..exterior.len()].iter() {
-//         if previous.col.abs_diff(current.col) == 1 {
-//             println!("col one away | last: {} current: {}", previous.col, current.col);
-
-//         } else if previous.row.abs_diff(current.row) == 1 {
-//             println!("row one away | last: {} current: {}", previous.row, current.row);
-//         } else {
-//             panic!("NEITHER one row nor col away! | last: {} current: {}", previous, current);
-//         }
-//         previous = current;
-//     }
-
-//     /*
-
-//     - sort exterior
-//     - take first and go clockwise:
-//         -
-
-//      */
-//     panic!("**UNIMPLEMENTED**")
-// }
-
-// fn count_sides(garden: &Garden, region: &Region) -> u64 {
-//     let debug = region.letter == 'A';
-
-//     let exterior = {
-//         let mut e = trace_perimiter(garden, &region.members);
-//         e.sort();
-//         e
-//     };
-
-//     println!("{}'s exterior: {exterior:?}", region.letter);
-//     // if debug {
-//     // }
-
-//     if exterior.len() == 1 {
-//         return 4;
-//     }
-
-//     // (row or column index) => all coordinates of the EXTERIOR that are in that (row/colum)
-//     let create_2coords = |row_view: bool| -> HashMap<usize, Vec<Coordinate>> {
-//         let mut m = HashMap::<usize, Vec<Coordinate>>::new();
-//         exterior.iter().for_each(|c| {
-//             let v = if row_view { c.row } else { c.col };
-//             match m.get_mut(&v) {
-//                 Some(existing) => existing.push(c.clone()),
-//                 None => {
-//                     m.insert(v, vec![c.clone()]);
-//                 }
-//             }
-//         });
-//         m
-//     };
-
-//     // (row or column index, exterior coordinates on the same row/col) => input partitioned into groups of contigious coordinates
-//     let perform_merge_split = |row_view: bool, coords: &[Coordinate]| -> Vec<Vec<Coordinate>> {
-//         if coords.len() == 0 {
-//             panic!("Cannot handle empty coordinates list!");
-//         }
-//         if coords.len() == 1 {
-//             return vec![vec![coords[0].clone()]];
-//         }
-
-//         let coords = {
-//             let mut cs = coords.to_vec();
-//             let cmp = if row_view {
-//                 |a: &Coordinate, b: &Coordinate| a.row.cmp(&b.row)
-//             } else {
-//                 |a: &Coordinate, b: &Coordinate| a.col.cmp(&b.col)
-//             };
-//             cs.sort_by(cmp);
-//             cs
-//         };
-
-//         println!("sorted coordinates: {}", VecCoords(&coords));
-
-//         let mut new = Vec::new();
-//         let mut current = vec![coords[0].clone()];
-
-//         for c in &coords[1..coords.len()] {
-//             match current.last() {
-//                 Some(x) => {
-//                     let (last_cur_group, inspecting) = if row_view {
-//                         (x.row, c.row)
-//                     } else {
-//                         (x.col, c.col)
-//                     };
-//                     if last_cur_group.abs_diff(inspecting) == 1 {
-//                         println!(
-//                             "\t[row?:{row_view}] {last_cur_group:?} is next to {inspecting:?}"
-//                         );
-//                         current.push(c.clone());
-//                     } else {
-//                         println!("\t[row?:{row_view}] {last_cur_group:?} is NOT next to {inspecting:?} -- distance: {}", last_cur_group.abs_diff(inspecting));
-//                         new.push(current);
-//                         current = vec![c.clone()];
-//                     }
-//                 }
-//                 None => panic!(),
-//             }
-//         }
-
-//         new.push(current);
-//         new
-//     };
-
-//     // (row or column) => index -> groups of contigious exterior coordinates in that (row/col)
-//     let create_final = |row_view: bool| -> HashMap<usize, Vec<Vec<Coordinate>>> {
-//         create_2coords(row_view)
-//             .iter()
-//             .map(|(v, coords)| {
-//                 println!(
-//                     "row_view: {row_view} @ index: {v}: coords={}",
-//                     VecCoords(&coords)
-//                 );
-//                 (*v, perform_merge_split(row_view, coords))
-//             })
-//             .collect::<HashMap<_, _>>()
-//     };
-
-//     let row2finals = create_final(true);
-//     let col2finals = create_final(false);
-
-//     let sum_sides = |finals: &HashMap<_, Vec<Vec<Coordinate>>>| -> u64 {
-//         finals.iter().fold(0, |s, (_, groups)| {
-//             // each element of groups is a side
-//             println!("groups: {groups:?}");
-//             s + (groups.len() as u64)
-//         })
-//     };
-
-//     let horizontal_sides = sum_sides(&row2finals);
-//     let vertical_sides = sum_sides(&col2finals);
-//     horizontal_sides + vertical_sides
-// }
 
 impl HasCharacter for char {
     fn character(&self) -> char {
