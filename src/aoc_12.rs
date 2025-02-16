@@ -72,7 +72,11 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
 
      */
     let group_by_row = group_by(|e| e.row, exterior);
-    let populated_exterior_rows_in_order = sorted_keys(group_by_row);
+    if group_by_row.len() == 1 {
+        return 4;
+    }
+
+    let populated_exterior_rows_in_order = sorted_keys(&group_by_row);
 
     // check shapes:
     // (1) same width
@@ -82,6 +86,16 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     let overcount_sides_by_row = pairs(&populated_exterior_rows_in_order).fold(
         HashMap::<usize, u64>::new(),
         |mut m, (row_index_top, row_index_bottom)| {
+            if row_index_top.abs_diff(*row_index_bottom) != 1 {
+                println!(
+                    "TOP ({}) AND BOTTOM ({}) ARE {} APART!",
+                    row_index_top,
+                    row_index_bottom,
+                    row_index_top.abs_diff(*row_index_bottom)
+                );
+                return m;
+            }
+
             let top = group_by_row.get(row_index_top).unwrap();
             let bottom = group_by_row.get(row_index_bottom).unwrap();
 
@@ -132,45 +146,47 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
         },
     );
 
-    let overlap = |a: &Vec<Coordinate>, b: &Vec<Coordinate>| -> u64 {
-        // ASSUME ALL OF a AND b ARE WITHIN ONE (1) ROW !!!!
-        let a_col = group_by(|e| e.col, a.clone());
-        let b_col = group_by(|e| e.col, b.clone());
-        let a_keys = a_col.keys().collect::<HashSet<_>>();
-        let b_keys = b_col.keys().collect::<HashSet<_>>();
-        let intersection: std::collections::hash_set::Intersection<
-            '_,
-            &usize,
-            std::hash::RandomState,
-        > = a_keys.intersection(&b_keys);
-        intersection.fold(0, |s, _| s + 1) // .len()
-    };
+    overcount_sides_by_row.iter().fold(0, |s, (_, x)| s + *x)
 
-    let count_correction =
-        |counts: &mut HashMap<usize, u64>, i: usize, ovlp: u64| match counts.get_mut(&i) {
-            Some(mut existing) => *existing -= ovlp,
-            None => panic!(),
-        };
+    // let overlap = |a: &Vec<Coordinate>, b: &Vec<Coordinate>| -> u64 {
+    //     // ASSUME ALL OF a AND b ARE WITHIN ONE (1) ROW !!!!
+    //     let a_col = group_by(|e| e.col, a.clone());
+    //     let b_col = group_by(|e| e.col, b.clone());
+    //     let a_keys = a_col.keys().collect::<HashSet<_>>();
+    //     let b_keys = b_col.keys().collect::<HashSet<_>>();
+    //     let intersection: std::collections::hash_set::Intersection<
+    //         '_,
+    //         &usize,
+    //         std::hash::RandomState,
+    //     > = a_keys.intersection(&b_keys);
+    //     intersection.fold(0, |s, _| s + 1) // .len()
+    // };
 
-    // taking (i,i+1) from overcount means they are the closest they can be to each other
-    // thus, if the difference isn't 1, then they are NOT next to each other!
-    for i in 0..(overcount.len() - 1) {
-        let j = i + 1;
-        let (i_row, _) = overcount[i];
-        let (j_row, _) = overcount[j];
-        if i_row.abs_diff(j_row) != 1 {
-            continue;
-        }
-        let n_overlap = overlap(
-            &group_by_row.get(&i).unwrap(),
-            &group_by_row.get(&j).unwrap(),
-        );
+    // let count_correction =
+    //     |counts: &mut HashMap<usize, u64>, i: usize, ovlp: u64| match counts.get_mut(&i) {
+    //         Some(mut existing) => *existing -= ovlp,
+    //         None => panic!(),
+    //     };
 
-        count_correction(&mut final_row_counts, i, n_overlap);
-        count_correction(&mut final_row_counts, j, n_overlap);
-    }
+    // // taking (i,i+1) from overcount means they are the closest they can be to each other
+    // // thus, if the difference isn't 1, then they are NOT next to each other!
+    // for i in 0..(overcount.len() - 1) {
+    //     let j = i + 1;
+    //     let (i_row, _) = overcount[i];
+    //     let (j_row, _) = overcount[j];
+    //     if i_row.abs_diff(j_row) != 1 {
+    //         continue;
+    //     }
+    //     let n_overlap = overlap(
+    //         &group_by_row.get(&i).unwrap(),
+    //         &group_by_row.get(&j).unwrap(),
+    //     );
 
-    final_row_counts.iter().fold(0, |s, (_, count)| s + *count)
+    //     count_correction(&mut final_row_counts, i, n_overlap);
+    //     count_correction(&mut final_row_counts, j, n_overlap);
+    // }
+
+    // overcount_sides_by_row.iter().fold(0, |s, (_, count)| s + *count)
 }
 
 // fn count_sides(garden: &Garden, region: &Region) -> u64 {
@@ -770,6 +786,8 @@ mod test {
     fn sides_simple() {
         count_sides_test(&vec![vec!['A']], vec![('A', 4)]);
         count_sides_test(&vec![vec!['A', 'A']], vec![('A', 4)]);
+        count_sides_test(&vec![vec!['A'], vec!['A']], vec![('A', 4)]);
+        count_sides_test(&vec![vec!['A', 'A'], vec!['A', 'A']], vec![('A', 4)]);
     }
 
     fn count_sides_test(garden: &Garden, expected: Vec<(char, u64)>) {

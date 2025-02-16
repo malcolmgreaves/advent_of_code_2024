@@ -21,7 +21,7 @@ where
     })
 }
 
-pub fn sorted_keys<K, _V>(m: HashMap<K, _V>) -> Vec<K>
+pub fn sorted_keys<K, _V>(m: &HashMap<K, _V>) -> Vec<K>
 where
     K: Hash + Clone + Ord,
 {
@@ -31,7 +31,11 @@ where
 }
 
 pub fn pairs<T>(elements: &[T]) -> impl Iterator<Item = (&T, &T)> {
-    assert!(elements.len() > 1);
+    assert!(
+        elements.len() > 1,
+        "elements.len() > 1 VIOLATED because length is: {}",
+        elements.len()
+    );
     (0..(elements.len() - 1)).map(|i| (&elements[i], &elements[i + 1]))
 }
 
