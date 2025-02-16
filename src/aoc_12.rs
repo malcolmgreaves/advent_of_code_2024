@@ -68,19 +68,6 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                 - or another region
 
      */
-
-    // let group_by_row: HashMap<usize, Vec<Coordinate>> = exterior
-    //     .into_iter()
-    //     .fold(
-    //         HashMap::new(),
-    //         |mut m, e| {
-    //             match m.get_mut(&e.row) {
-    //                 Some(existing) => _ = existing.push(e),
-    //                 None => _ = m.insert(e.row, vec![e]),
-    //             };
-    //             m
-    //     });
-
     let group_by_row = group_by(|e| e.row, exterior);
 
     let overcount = {
@@ -106,13 +93,11 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
         intersection.fold(0, |s, _| s + 1) // .len()
     };
 
-    let mut final_counts = overcount.clone().into_iter().collect::<HashMap<_, _>>();
+    let mut final_row_counts = overcount.clone().into_iter().collect::<HashMap<_, _>>();
 
     let count_correction =
-        |final_counts: &mut HashMap<usize, u64>, index: usize, n_overlap: u64| match final_counts
-            .get_mut(&index)
-        {
-            Some(mut existing) => *existing -= n_overlap,
+        |counts: &mut HashMap<usize, u64>, i: usize, ovlp: u64| match counts.get_mut(&i) {
+            Some(mut existing) => *existing -= ovlp,
             None => panic!(),
         };
 
@@ -130,12 +115,11 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
             &group_by_row.get(&j).unwrap(),
         );
 
-        count_correction(&mut final_counts, i, n_overlap);
-        count_correction(&mut final_counts, j, n_overlap);
+        count_correction(&mut final_row_counts, i, n_overlap);
+        count_correction(&mut final_row_counts, j, n_overlap);
     }
 
-    
-    final_counts.iter().fold(0, |s, (_, ))
+    final_row_counts.iter().fold(0, |s, (_, count)| s + *count)
 }
 
 // fn count_sides(garden: &Garden, region: &Region) -> u64 {
