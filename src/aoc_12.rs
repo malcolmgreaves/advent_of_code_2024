@@ -6,8 +6,8 @@ use std::{
 use crate::{
     io_help,
     utils::{
-        cardinal_neighbors, exterior_perimiter, group_by, pairs, sorted_keys, trace_perimiter,
-        increment, Coordinate, Coords, Matrix,
+        cardinal_neighbors, exterior_perimiter, group_by, increment, pairs, sorted_keys,
+        trace_perimiter, Coordinate, Coords, Matrix,
     },
 };
 
@@ -99,87 +99,152 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
             let top = group_by_row.get(row_index_top).unwrap();
             let bottom = group_by_row.get(row_index_bottom).unwrap();
 
-            let (n_sides_top, n_sides_bottom) = match top.len().cmp(&bottom.len()) {
-                Ordering::Less => {
-                    //           a
-                    //         ------
-                    //    g h | TOP | b c
-                    //   ------------------
-                    // f |     BOTTOM     | d
-                    //   ------------------
-                    //           e
-                    // SIDES: (a,b,c,d,e,f,g,h) == 8
-                    //      top sides:     (a,b,h) == 3
-                    //      bottom sides:  (c, d, e, f, g) == 5
+            // let (n_sides_top, n_sides_bottom) = match top.len().cmp(&bottom.len()) {
+            let (n_sides_top, n_sides_bottom) = {
+                //           a
+                //         ------
+                //    g h | TOP | b c
+                //   ------------------
+                // f |     BOTTOM     | d
+                //   ------------------
+                //           e
+                // SIDES: (a,b,c,d,e,f,g,h) == 8
+                //      top sides:     (a,b,h) == 3
+                //      bottom sides:  (c, d, e, f, g) == 5
 
+                let top_1st_col = top.first().unwrap().col;
+                let bottom_1st_col = bottom.first().unwrap().col;
+                let top_last_col = top.last().unwrap().col;
+                let bottom_last_col = bottom.last().unwrap().col;
 
-                    let top_1st_col = top.first().unwrap().col;
-                    let bottom_1st_col = bottom.first().unwrap().col;
-
-                    match top_1st_col.cmp(&bottom_1st_col) {
-                        Ordering::Less => {
-                            let top_last_col = top.last().unwrap().col;
-                            let bottom_last_col = bottom.last().unwrap().col;
-                            match top_last_col.cmp(&bottom_last_col) {
-                                Ordering::Less => {
-
-                                },
-                                Ordering::Equal => {
-                                    //        -------
-                                    //        | top |
-                                    // --------------
-                                    // |   bottom   |
-                                    // --------------
-                                },
-                                Ordering::Greater => {
-                                    // 
-                                }
+                match top_1st_col.cmp(&bottom_1st_col) {
+                    Ordering::Less => {
+                        // TOP starts **BEFORE** bottom
+                        // -------
+                        // | top ..?
+                        // ----------------
+                        //   |   bottom   ..?
+                        //   --------------
+                        match top_last_col.cmp(&bottom_last_col) {
+                            Ordering::Less => {
+                                // TOP ends **BEFORE** bottom
+                                // -------
+                                // | top |
+                                // -------------
+                                //   |  bottom |
+                                //   -----------
+                                println!("top starts before bottom and ends before bottom");
                             }
-                            
-                        },
-                        Ordering::Equal => {
-                            // -------
-                            // | top |
-                            // --------------
-                            // |   bottom   |
-                            // -------------- 
+                            Ordering::Equal => {
+                                // TOP ends **AT** bottom
+                                // ----------------
+                                // |       top    |
+                                // ----------------
+                                //   |    bottom  |
+                                //   --------------
+                                println!("top starts before bottom and ends at bottom");
+                            }
+                            Ordering::Greater => {
+                                // TOP ends **AFTER** bottom
+                                // ------------------------
+                                // |         top          |
+                                // ------------------------
+                                //     |    bottom    |
+                                //     ----------------
+                                println!("top starts before bottom and ends after bottom");
+                            }
                         }
                     }
-                    
-
-                    (3, 5)
-                }
-                Ordering::Equal => {
-                    //             a
-                    //    ------------------
-                    //    |       TOP      |
-                    // d  ------------------  b
-                    //    |     BOTTOM     |
-                    //    ------------------
-                    //             c
-                    // SIDES: (a,b,c,d) == 4
-                    (2, 2)
-                }
-                Ordering::Greater => {
-                    //              a
-                    //    ---------------------
-                    //  h |        TOP        |  b
-                    //    ---------------------
-                    //     g f | BOTTOM | d c
-                    //         ----------
-                    //             e
-                    // SIDES: (a,b,c,d,e,f,g,h) == 8
-                    //      top sides:     (a, b, c, g, h) == 5
-                    //      bottom sides:  (d, e, f) == 3
-                    (5, 3)
+                    Ordering::Equal => {
+                        // TOP starts **AT** bottom
+                        // -------
+                        // | top ..?
+                        // --------------
+                        // |   bottom   ..?
+                        // --------------
+                        match top_last_col.cmp(&bottom_last_col) {
+                            Ordering::Less => {
+                                // TOP ends **BEFORE** bottom
+                                // ----------
+                                // |   top  |
+                                // ----------------
+                                // |    bottom    |
+                                // ----------------
+                                println!("top starts at bottom and ends before bottom");
+                            }
+                            Ordering::Equal => {
+                                // TOP ends **AT** bottom
+                                // ----------
+                                // |   top  |
+                                // ----------
+                                // | bottom |
+                                // ----------
+                                println!("top starts at bottom and ends at bottom");
+                            }
+                            Ordering::Greater => {
+                                // TOP ends **AFTER** bottom
+                                // ------------------
+                                // |   top          |
+                                // ------------------
+                                // | bottom    |
+                                // -------------
+                                println!("top starts at bottom and ends after bottom");
+                            }
+                        }
+                    }
+                    Ordering::Greater => {
+                        // TOP starts **AFTER** bottom
+                        //      -------
+                        //      | top ..?
+                        // --------------
+                        // |   bottom   ..?
+                        // --------------
+                        match top_last_col.cmp(&bottom_last_col) {
+                            Ordering::Less => {
+                                // TOP ends **BEFORE** bottom
+                                //     -------
+                                //     | top |
+                                // ----------------
+                                // |    bottom    |
+                                // ----------------
+                                println!("top starts after bottom and ends before bottom");
+                            }
+                            Ordering::Equal => {
+                                // TOP ends **AT** bottom
+                                //      -----------
+                                //      |   top   |
+                                // ----------------
+                                // |    bottom    |
+                                // ----------------
+                                println!("top starts after bottom and ends at bottom");
+                            }
+                            Ordering::Greater => {
+                                // TOP ends **AFTER** bottom
+                                //     --------------------
+                                //     |        top       |
+                                // ------------------------
+                                // |    bottom    |
+                                // ----------------
+                                println!("top starts after bottom and ends after bottom");
+                            }
+                        }
+                    }
                 }
             };
-            
+
             increment(&mut m, *row_index_top, n_sides_top);
             increment(&mut m, *row_index_bottom, n_sides_bottom);
-            
-            println!("TOP    ({row_index_top}): +{n_sides_top} ({}) -> len: {}", m.get(row_index_top).unwrap(), top.len());
-            println!("BOTTOM ({row_index_bottom}): +{n_sides_bottom} ({}) -> len: {}", m.get(row_index_bottom).unwrap(), bottom.len());
+
+            println!(
+                "TOP    ({row_index_top}): +{n_sides_top} ({}) -> len: {}",
+                m.get(row_index_top).unwrap(),
+                top.len()
+            );
+            println!(
+                "BOTTOM ({row_index_bottom}): +{n_sides_bottom} ({}) -> len: {}",
+                m.get(row_index_bottom).unwrap(),
+                bottom.len()
+            );
 
             m
         },
@@ -213,7 +278,6 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     //         );
     //         continue;
     //     }
-
 
     // }
 
