@@ -39,97 +39,112 @@ fn cost_sides_region(garden: &Garden, region: &Region) -> u64 {
     price
 }
 
-
 enum ShapeTransition {
-    
-    //               a
-    //     ---------------------
-    //     |         TOP       | 
-    //  d  --------------------- b
-    //     |        BOTTOM     | 
-    //     ---------------------
-    //               c
-    // SIDES: (a,b,c,d) == 4
+    /// 4 Sides
+    ///
+    ///               a
+    ///     ---------------------
+    ///     |         TOP       |
+    ///  d  --------------------- b
+    ///     |        BOTTOM     |
+    ///     ---------------------
+    ///               c
+    /// SIDES: (a,b,c,d) == 4
     Equal,
-    //             a
-    //    ---------------------
-    //    |         TOP       | b
-    // f  ---------------------
-    //    |    BOTTOM |   c d
-    //    -------------
-    //          e
-    // SIDES: (a,b,c,d,e,f) == 6
+    /// 6 sides
+    ///
+    ///             a
+    ///    ---------------------
+    ///    |         TOP       | b
+    /// f  ---------------------
+    ///    |    BOTTOM |   c d
+    ///    -------------
+    ///          e
+    /// SIDES: (a,b,c,d,e,f) == 6
     EqualFirstTopLast,
-    //             a
-    //    ---------------
-    //    |       TOP   | b c
-    // f  ---------------------
-    //    |       BOTTOM      | d
-    //    ---------------------
-    //             e
-    // SIDES: (a,b,c,d,e,f) == 6
+    /// 6 sides
+    ///
+    ///             a
+    ///    ---------------
+    ///    |       TOP   | b c
+    /// f  ---------------------
+    ///    |       BOTTOM      | d
+    ///    ---------------------
+    ///             e
+    /// SIDES: (a,b,c,d,e,f) == 6
     EqualFirstBottomLast,
-    //             a
-    //   ----------------
-    // h |         TOP  | b c
-    //   ---------------------
-    //    f g  | BOTTOM       | d
-    //          ---------------
-    //              e
-    // SIDES: (a,b,c,d,e,f,g,h) == 8
+    /// 8 sides
+    ///
+    ///             a
+    ///   ----------------
+    /// h |         TOP  | b c
+    ///   ---------------------
+    ///    f g  | BOTTOM       | d
+    ///          ---------------
+    ///              e
+    /// SIDES: (a,b,c,d,e,f,g,h) == 8
     TopFirstBottomLast,
-    //             a
-    //   ---------------
-    // f |         TOP  |
-    //   ---------------- b
-    //    d e  | BOTTOM | 
-    //          -------
-    //              c
-    // SIDES: (a,b,c,d,e,f) == 6
+    /// 6 sides
+    ///
+    ///             a
+    ///   ---------------
+    /// f |         TOP  |
+    ///   ---------------- b
+    ///    d e  | BOTTOM |
+    ///          -------
+    ///              c
+    /// SIDES: (a,b,c,d,e,f) == 6
     TopFirstEqualLast,
-    //             a
-    //   ---------------------
-    // h |         TOP       | b
-    //   ---------------------
-    //    f g  | BOTTOM | c d
-    //          -------
-    //              e
-    // SIDES: (a,b,c,d,e,f,g,h) == 8
+    /// 8 sides
+    ///
+    ///             a
+    ///   ---------------------
+    /// h |         TOP       | b
+    ///   ---------------------
+    ///    f g  | BOTTOM | c d
+    ///          -------
+    ///              e
+    /// SIDES: (a,b,c,d,e,f,g,h) == 8
     TopFirstTopLast,
-    //           a
-    //         ------
-    //    g h | TOP | b c
-    //   ------------------
-    // f |     BOTTOM     | d
-    //   ------------------
-    //           e
-    // SIDES: (a,b,c,d,e,f,g,h) == 8
-    //      top sides:     (a,b,h) == 3
-    //      bottom sides:  (c, d, e, f, g) == 5
+    /// 8 sides
+    ///
+    ///           a
+    ///         ------
+    ///    g h | TOP | b c
+    ///   ------------------
+    /// f |     BOTTOM     | d
+    ///   ------------------
+    ///           e
+    /// SIDES: (a,b,c,d,e,f,g,h) == 8
     BottomFirstBottomLast,
-    //           a
-    //         -------
-    //    e f | TOP  | 
-    //   ------------- b
-    // d |     BOTTOM |
-    //   --------------
-    //           c
-    // SIDES: (a,b,c,d,e,f) == 6
+    /// 6 sides
+    ///
+    ///           a
+    ///         -------
+    ///    e f | TOP  |
+    ///   ------------- b
+    /// d |     BOTTOM |
+    ///   --------------
+    ///           c
+    /// SIDES: (a,b,c,d,e,f) == 6
     BottomFirstEqualLast,
-    //           a
-    //         -----------
-    //    g h | TOP       | b
-    //   ------------------
-    // f |     BOTTOM | c d
-    //   --------------
-    //           e
-    // SIDES: (a,b,c,d,e,f,g,h) == 8
+    /// 8 sides
+    ///
+    ///           a
+    ///         -----------
+    ///    g h | TOP       | b
+    ///   ------------------
+    /// f |     BOTTOM | c d
+    ///   --------------
+    ///           e
+    /// SIDES: (a,b,c,d,e,f,g,h) == 8
     BottomFirstTopLast,
-    
 }
 
-fn determine_transition(last_row: &Vec<Coordinate>, current_row: &Vec<Coordinate>) -> ShapeTransition {
-
+fn determine_transition(
+    last_row: &Vec<Coordinate>,
+    current_row: &Vec<Coordinate>,
+) -> ShapeTransition {
     let last_row_1st_col = last_row.first().unwrap().col;
     let current_1st_col = current_row.first().unwrap().col;
     let last_row_last_col = last_row.last().unwrap().col;
@@ -273,39 +288,21 @@ fn determine_transition(last_row: &Vec<Coordinate>, current_row: &Vec<Coordinate
 }
 
 fn count_sides(garden: &Garden, region: &Region) -> u64 {
+    if region.members.len() == 1 {
+        println!("{} is only one square", region.letter);
+        return 4;
+    }
+
     let exterior = {
         let mut e = trace_perimiter(garden, &region.members);
         e.sort();
         e
     };
     println!("{}'s exterior: {}", region.letter, Coords(&exterior));
-    if exterior.len() == 1 {
-        return 4;
-    }
 
-    /*
-
-    WLOG do this for row or col
-    ===========================
-    - exterior
-    - group by row:: row index => all exterior squares in that row (sorted by col, increasing)
-    - calculate over-count of each of these entires according to:
-        - 2 + 2 * length
-         (a)      (b)
-         a: the left and right sides
-         b: the entire length of the log + account for top and bottom
-    - for each pair of rows that are 1 apart: (a,b): (e.g. (0,1), (1,2), etc.):
-        - find overlap parts of each
-        - subtract this from the over-count of both
-            + taking it from the "bottom" of a
-            + taking it from the "top" of b
-        :: make sure to not double subtract from the very top and bottom => these are always bordering something else
-                - either the boundry of the Garden
-                - or another region
-
-     */
     let group_by_row = group_by(|e| e.row, exterior);
     if group_by_row.len() == 1 {
+        println!("{} is all in a single row", region.letter);
         return 4;
     }
 
@@ -324,31 +321,102 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     // |     bottom      |
     // -------------------
 
-
-    
-
-
     // DO NOT COUNT THE BOTTOM!
     // WE WILL ACCOUNT FOR IT WHEN IT IS THE *NEXT* TOP
     // AND WE ACCOUNT FOR THE LAST BOTTOM AT THE END AS A SPECIAL CASE
-    let overcount_sides_by_row = pairs(&populated_exterior_rows_in_order).fold(
-        HashMap::<usize, u64>::new(),
-        ,
-    );
 
-    let overlap = |a: &Vec<Coordinate>, b: &Vec<Coordinate>| -> u64 {
-        // ASSUME ALL OF a AND b ARE WITHIN ONE (1) ROW !!!!
-        let a_col = group_by(|e| e.col, a.clone());
-        let b_col = group_by(|e| e.col, b.clone());
-        let a_keys = a_col.keys().collect::<HashSet<_>>();
-        let b_keys = b_col.keys().collect::<HashSet<_>>();
-        let intersection: std::collections::hash_set::Intersection<
-            '_,
-            &usize,
-            std::hash::RandomState,
-        > = a_keys.intersection(&b_keys);
-        intersection.fold(0, |s, _| s + 1) // .len()
-    };
+    // let mut count = 0;
+    // // top most
+    // count += 1;
+    // // LEFT and RIGHT sides
+    // count += 2;
+
+    let mut horizontals = 0;
+    let mut left_edges = 0;
+    let mut right_edges = 0;
+
+    // top most
+    horizontals += 1;
+    // LEFT and RIGHT sides
+    left_edges += 1;
+    right_edges += 1;
+
+    //pairs(&populated_exterior_rows_in_order).fold(None, |last, (top, bottom)| {
+    // populated_exterior_rows_in_order[1..populated_exterior_rows_in_order.len()]
+    //     .iter()
+    //     .fold(populated_exterior_rows_in_order[0].clone(), |last_index, current_index| {
+    pairs(&populated_exterior_rows_in_order).for_each(|(last_index, current_index)| {
+        match determine_transition(
+            group_by_row.get(last_index).unwrap(),
+            group_by_row.get(current_index).unwrap(),
+        ) {
+            ShapeTransition::Equal => {
+                // LEFT and RIGHT sides ARE NOT INCREMENTED
+                // NEITHER ARE HORIZONATLS because WE MIGHT DO THIS LATER
+            }
+            ShapeTransition::EqualFirstTopLast => {
+                // LEFT edge IS NOT INCREMENTED
+                right_edges += 1;
+                horizontals += 1;
+            }
+            ShapeTransition::EqualFirstBottomLast => {
+                // LEFT edge IS NOT INCREMENTED
+                right_edges += 1;
+                horizontals += 1;
+            }
+            ShapeTransition::TopFirstBottomLast => {
+                right_edges += 1;
+                left_edges += 1;
+                horizontals += 2;
+            }
+            ShapeTransition::TopFirstEqualLast => {
+                // RIGHT edge IS NOT INCREMENTED
+                left_edges += 1;
+                horizontals += 1;
+            }
+            ShapeTransition::TopFirstTopLast => {
+                right_edges += 1;
+                left_edges += 1;
+                horizontals += 2;
+            }
+            ShapeTransition::BottomFirstBottomLast => {
+                right_edges += 1;
+                left_edges += 1;
+                horizontals += 2;
+            }
+
+            ShapeTransition::BottomFirstEqualLast => {
+                // RIGHT edge IS NOT INCREMENTED
+                left_edges += 1;
+                horizontals += 1;
+            }
+            ShapeTransition::BottomFirstTopLast => {
+                left_edges += 1;
+                right_edges += 1;
+                horizontals += 2;
+            }
+        }
+    });
+
+    horizontals += 1;
+
+    let count = left_edges + right_edges + horizontals;
+    println!("horizontals: {horizontals} | right sides: {right_edges} | left sides: {left_edges} | => count: {count}");
+    count
+
+    // let overlap = |a: &Vec<Coordinate>, b: &Vec<Coordinate>| -> u64 {
+    //     // ASSUME ALL OF a AND b ARE WITHIN ONE (1) ROW !!!!
+    //     let a_col = group_by(|e| e.col, a.clone());
+    //     let b_col = group_by(|e| e.col, b.clone());
+    //     let a_keys = a_col.keys().collect::<HashSet<_>>();
+    //     let b_keys = b_col.keys().collect::<HashSet<_>>();
+    //     let intersection: std::collections::hash_set::Intersection<
+    //         '_,
+    //         &usize,
+    //         std::hash::RandomState,
+    //     > = a_keys.intersection(&b_keys);
+    //     intersection.fold(0, |s, _| s + 1) // .len()
+    // };
 
     // taking (i,i+1) from overcount means they are the closest they can be to each other
     // thus, if the difference isn't 1, then they are NOT next to each other!
@@ -382,10 +450,6 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     //     count_correction(&mut final_row_counts, i, n_overlap);
     //     count_correction(&mut final_row_counts, j, n_overlap);
     // }
-
-    overcount_sides_by_row
-        .iter()
-        .fold(0, |s, (_, count)| s + *count)
 }
 
 impl HasCharacter for char {
