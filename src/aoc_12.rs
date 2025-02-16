@@ -3,8 +3,8 @@ use std::collections::{HashMap, HashSet};
 use crate::{
     io_help,
     utils::{
-        cardinal_neighbors, exterior_perimiter, group_by, trace_perimiter, Coordinate, Coords,
-        Matrix,
+        cardinal_neighbors, exterior_perimiter, group_by, pairs, sorted_keys, trace_perimiter,
+        Coordinate, Coords, Matrix,
     },
 };
 
@@ -69,18 +69,18 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
 
      */
     let group_by_row = group_by(|e| e.row, exterior);
+    let populated_exterior_rows_in_order = sorted_keys(group_by_row);
 
-    let overcount = {
-        let mut oc = group_by_row
-            .iter()
-            .map(|(row, group)| (*row, 2 + 2 * group.len() as u64))
-            .collect::<Vec<(_, _)>>();
-        oc.sort_by(|(a_row, _), (b_row, _)| a_row.cmp(b_row));
-        oc
-    };
+    // check shapes:
+    // (1) same width
+    // (2) top is > bottom
+    // (3) top is < bottom
+    for (top, bottom) in pairs(&populated_exterior_rows_in_order) {
+        panic!()
+    }
 
     let overlap = |a: &Vec<Coordinate>, b: &Vec<Coordinate>| -> u64 {
-        // ASSUME ALL OF a AND b HAVE THE SAME ROW !!!!
+        // ASSUME ALL OF a AND b ARE WITHIN ONE (1) ROW !!!!
         let a_col = group_by(|e| e.col, a.clone());
         let b_col = group_by(|e| e.col, b.clone());
         let a_keys = a_col.keys().collect::<HashSet<_>>();
@@ -92,8 +92,6 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
         > = a_keys.intersection(&b_keys);
         intersection.fold(0, |s, _| s + 1) // .len()
     };
-
-    let mut final_row_counts = overcount.clone().into_iter().collect::<HashMap<_, _>>();
 
     let count_correction =
         |counts: &mut HashMap<usize, u64>, i: usize, ovlp: u64| match counts.get_mut(&i) {
@@ -121,6 +119,92 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
 
     final_row_counts.iter().fold(0, |s, (_, count)| s + *count)
 }
+
+// fn count_sides(garden: &Garden, region: &Region) -> u64 {
+//     let exterior = {
+//         let mut e = trace_perimiter(garden, &region.members);
+//         e.sort();
+//         e
+//     };
+//     println!("{}'s exterior: {}", region.letter, Coords(&exterior));
+//     if exterior.len() == 1 {
+//         return 4;
+//     }
+
+//     /*
+
+//     WLOG do this for row or col
+//     ===========================
+//     - exterior
+//     - group by row:: row index => all exterior squares in that row (sorted by col, increasing)
+//     - calculate over-count of each of these entires according to:
+//         - 2 + 2 * length
+//          (a)      (b)
+//          a: the left and right sides
+//          b: the entire length of the log + account for top and bottom
+//     - for each pair of rows that are 1 apart: (a,b): (e.g. (0,1), (1,2), etc.):
+//         - find overlap parts of each
+//         - subtract this from the over-count of both
+//             + taking it from the "bottom" of a
+//             + taking it from the "top" of b
+//         :: make sure to not double subtract from the very top and bottom => these are always bordering something else
+//                 - either the boundry of the Garden
+//                 - or another region
+
+//      */
+//     let group_by_row = group_by(|e| e.row, exterior);
+
+//     let overcount = {
+//         let mut oc = group_by_row
+//             .iter()
+//             .map(|(row, group)| (*row, 2 + 2 * group.len() as u64))
+//             .collect::<Vec<(_, _)>>();
+//         oc.sort_by(|(a_row, _), (b_row, _)| a_row.cmp(b_row));
+//         oc
+//     };
+
+//     let overlap = |a: &Vec<Coordinate>, b: &Vec<Coordinate>| -> u64 {
+//         // ASSUME ALL OF a AND b HAVE THE SAME ROW !!!!
+//         let a_col = group_by(|e| e.col, a.clone());
+//         let b_col = group_by(|e| e.col, b.clone());
+//         let a_keys = a_col.keys().collect::<HashSet<_>>();
+//         let b_keys = b_col.keys().collect::<HashSet<_>>();
+//         let intersection: std::collections::hash_set::Intersection<
+//             '_,
+//             &usize,
+//             std::hash::RandomState,
+//         > = a_keys.intersection(&b_keys);
+//         intersection.fold(0, |s, _| s + 1) // .len()
+//     };
+
+//     let mut final_row_counts = overcount.clone().into_iter().collect::<HashMap<_, _>>();
+
+//     let count_correction =
+//         |counts: &mut HashMap<usize, u64>, i: usize, ovlp: u64| match counts.get_mut(&i) {
+//             Some(mut existing) => *existing -= ovlp,
+//             None => panic!(),
+//         };
+
+//     // taking (i,i+1) from overcount means they are the closest they can be to each other
+//     // thus, if the difference isn't 1, then they are NOT next to each other!
+//     for i in 0..(overcount.len() - 1) {
+//         let j = i + 1;
+//         let (i_row, _) = overcount[i];
+//         let (j_row, _) = overcount[j];
+//         if i_row.abs_diff(j_row) != 1 {
+//             continue;
+//         }
+//         let n_overlap = overlap(
+//             &group_by_row.get(&i).unwrap(),
+//             &group_by_row.get(&j).unwrap(),
+//         );
+
+//         count_correction(&mut final_row_counts, i, n_overlap);
+//         count_correction(&mut final_row_counts, j, n_overlap);
+//     }
+
+//     final_row_counts.iter().fold(0, |s, (_, count)| s + *count)
+// }
 
 // fn count_sides(garden: &Garden, region: &Region) -> u64 {
 //     let exterior = {
@@ -435,61 +519,6 @@ fn expanded_neighborhood(region_builder: &Matrix<State>, row: usize, col: usize)
     FloodFill::New(neighborhood.into_iter().collect())
 }
 
-// fn neighborhood(region_builder: &Matrix<State>, row: usize, col: usize) -> Option<Vec<Coordinate>> {
-//     let character_at = |row: usize, col: usize| -> Option<char> {
-//         match region_builder[row][col] {
-//             State::Building(c) => Some(c),
-//             State::Finished(_) => None,
-//         }
-//     };
-
-//     let char_at_center = match character_at(row, col) {
-//         Some(c) => c,
-//         None => return None,
-//     };
-
-//     /*
-//                   (row-1, col)
-//                  ---------------
-//     (row, col-1)| (row,  col) |  (row, col+1)
-//                  ---------------
-//                   (row+1, col)
-//       */
-//     let neighbor_positions = vec![
-//         (sub_row(row), Some(col)),
-//         (Some(row), sub_col(col)),
-//         (Some(row), add_col(region_builder, col)),
-//         (add_row(region_builder, row), Some(col)),
-//     ]
-//     .iter()
-//     .flat_map(|x| match x {
-//         (Some(new_row), Some(new_col)) => Some(Coordinate {
-//             row: *new_row,
-//             col: *new_col,
-//         }),
-//         _ => None,
-//     })
-//     .collect::<Vec<_>>();
-
-//     if neighbor_positions.len() == 0 {
-//         return None;
-//     }
-
-//     let neighbor_positions = neighbor_positions
-//         .into_iter()
-//         .filter(
-//             |coordinate| match character_at(coordinate.row, coordinate.col) {
-//                 Some(char_coordinate) => char_coordinate == char_at_center,
-//                 None => false,
-//             },
-//         )
-//         .collect::<Vec<_>>();
-//     if neighbor_positions.len() == 0 {
-//         return None;
-//     }
-//     Some(neighbor_positions)
-// }
-
 fn cost(regions: &[Region]) -> u64 {
     regions.iter().fold(0, |s, r| s + r.price())
 }
@@ -499,7 +528,7 @@ fn cost(regions: &[Region]) -> u64 {
 #[cfg(test)]
 mod test {
 
-    use std::{cmp::Ordering, collections::HashMap};
+    use std::cmp::Ordering;
 
     use indoc::indoc;
     use lazy_static::lazy_static;
@@ -687,6 +716,7 @@ mod test {
     #[test]
     fn sides_simple() {
         count_sides_test(&vec![vec!['A']], vec![('A', 4)]);
+        count_sides_test(&vec![vec!['A', 'A']], vec![('A', 4)]);
     }
 
     fn count_sides_test(garden: &Garden, expected: Vec<(char, u64)>) {

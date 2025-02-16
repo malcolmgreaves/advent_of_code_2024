@@ -20,6 +20,20 @@ where
     })
 }
 
+pub fn sorted_keys<K, _V>(m: HashMap<K, _V>) -> Vec<K>
+where
+    K: Hash + Clone + Ord,
+{
+    let mut ks = m.keys().map(|x| x.clone()).collect::<Vec<_>>();
+    ks.sort();
+    ks
+}
+
+pub fn pairs<T>(elements: &[T]) -> impl Iterator<Item = (&T, &T)> {
+    assert!(elements.len() > 1);
+    (0..(elements.len() - 1)).map(|i| (&elements[i], &elements[i + 1]))
+}
+
 // heap-allocated a rectangular 2D array with runtime-determined size
 pub type Matrix<T> = Vec<Vec<T>>;
 
