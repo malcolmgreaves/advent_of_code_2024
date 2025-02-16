@@ -7,7 +7,7 @@ use crate::{
     io_help,
     utils::{
         cardinal_neighbors, exterior_perimiter, group_by, pairs, sorted_keys, trace_perimiter,
-        update, Coordinate, Coords, Matrix,
+        increment, Coordinate, Coords, Matrix,
     },
 };
 
@@ -138,9 +138,12 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                     (5, 3)
                 }
             };
+            println!("TOP    ({row_index_top}): {n_sides_top}");
+            println!("BOTTOM ({row_index_bottom}): {n_sides_bottom}");
 
-            update(&mut m, *row_index_top, n_sides_top);
-            update(&mut m, *row_index_bottom, n_sides_bottom);
+            increment(&mut m, *row_index_top, n_sides_top);
+            increment(&mut m, *row_index_bottom, n_sides_bottom);
+
 
             m
         },
@@ -160,29 +163,39 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
         intersection.fold(0, |s, _| s + 1) // .len()
     };
 
-    let count_correction =
-        |counts: &mut HashMap<usize, u64>, i: usize, ovlp: u64| match counts.get_mut(&i) {
-            Some(mut existing) => *existing -= ovlp,
-            None => panic!(),
-        };
-
     // taking (i,i+1) from overcount means they are the closest they can be to each other
     // thus, if the difference isn't 1, then they are NOT next to each other!
-    for i in 0..(overcount.len() - 1) {
-        let j = i + 1;
-        let (i_row, _) = overcount[i];
-        let (j_row, _) = overcount[j];
-        if i_row.abs_diff(j_row) != 1 {
-            continue;
-        }
-        let n_overlap = overlap(
-            &group_by_row.get(&i).unwrap(),
-            &group_by_row.get(&j).unwrap(),
-        );
 
-        count_correction(&mut final_row_counts, i, n_overlap);
-        count_correction(&mut final_row_counts, j, n_overlap);
-    }
+    // for (row_index_top, row_index_bottom) in pairs(&populated_exterior_rows_in_order) {
+
+    //     if row_index_top.abs_diff(*row_index_bottom) != 1 {
+    //         println!(
+    //             "TOP ({}) AND BOTTOM ({}) ARE {} APART!",
+    //             row_index_top,
+    //             row_index_bottom,
+    //             row_index_top.abs_diff(*row_index_bottom)
+    //         );
+    //         continue;
+    //     }
+
+
+    // }
+
+    // for i in 0..(overcount.len() - 1) {
+    //     let j = i + 1;
+    //     let (i_row, _) = overcount[i];
+    //     let (j_row, _) = overcount[j];
+    //     if i_row.abs_diff(j_row) != 1 {
+    //         continue;
+    //     }
+    //     let n_overlap = overlap(
+    //         &group_by_row.get(&i).unwrap(),
+    //         &group_by_row.get(&j).unwrap(),
+    //     );
+
+    //     count_correction(&mut final_row_counts, i, n_overlap);
+    //     count_correction(&mut final_row_counts, j, n_overlap);
+    // }
 
     overcount_sides_by_row
         .iter()

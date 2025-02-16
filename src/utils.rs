@@ -4,7 +4,7 @@ use std::{
     error::Error,
     fmt::{Debug, Display},
     hash::Hash,
-    ops::AddAssign,
+    ops::{AddAssign, SubAssign},
 };
 
 pub fn group_by<K, V>(key: fn(&V) -> K, values: Vec<V>) -> HashMap<K, Vec<V>>
@@ -39,15 +39,24 @@ pub fn pairs<T>(elements: &[T]) -> impl Iterator<Item = (&T, &T)> {
     (0..(elements.len() - 1)).map(|i| (&elements[i], &elements[i + 1]))
 }
 
-pub fn update<K, V>(m: &mut HashMap<K, V>, key: K, val: V)
+pub fn increment<K, V>(m: &mut HashMap<K, V>, key: K, val: V)
 where
     K: Hash + Eq,
     V: AddAssign,
 {
     match m.get_mut(&key) {
-        Some(existing) => {
-            *existing += val;
-        }
+        Some(existing) => *existing += val,
+        None => _ = m.insert(key, val),
+    }
+}
+
+pub fn decrement<K, V>(m: &mut HashMap<K, V>, key: K, val: V)
+where
+    K: Hash + Eq,
+    V: SubAssign,
+{
+    match m.get_mut(&key) {
+        Some(existing) => *existing -= val,
         None => _ = m.insert(key, val),
     }
 }
