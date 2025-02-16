@@ -111,6 +111,42 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                     // SIDES: (a,b,c,d,e,f,g,h) == 8
                     //      top sides:     (a,b,h) == 3
                     //      bottom sides:  (c, d, e, f, g) == 5
+
+
+                    let top_1st_col = top.first().unwrap().col;
+                    let bottom_1st_col = bottom.first().unwrap().col;
+
+                    match top_1st_col.cmp(&bottom_1st_col) {
+                        Ordering::Less => {
+                            let top_last_col = top.last().unwrap().col;
+                            let bottom_last_col = bottom.last().unwrap().col;
+                            match top_last_col.cmp(&bottom_last_col) {
+                                Ordering::Less => {
+
+                                },
+                                Ordering::Equal => {
+                                    //        -------
+                                    //        | top |
+                                    // --------------
+                                    // |   bottom   |
+                                    // --------------
+                                },
+                                Ordering::Greater => {
+                                    // 
+                                }
+                            }
+                            
+                        },
+                        Ordering::Equal => {
+                            // -------
+                            // | top |
+                            // --------------
+                            // |   bottom   |
+                            // -------------- 
+                        }
+                    }
+                    
+
                     (3, 5)
                 }
                 Ordering::Equal => {
@@ -138,12 +174,12 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                     (5, 3)
                 }
             };
-            println!("TOP    ({row_index_top}): {n_sides_top}");
-            println!("BOTTOM ({row_index_bottom}): {n_sides_bottom}");
-
+            
             increment(&mut m, *row_index_top, n_sides_top);
             increment(&mut m, *row_index_bottom, n_sides_bottom);
-
+            
+            println!("TOP    ({row_index_top}): +{n_sides_top} ({}) -> len: {}", m.get(row_index_top).unwrap(), top.len());
+            println!("BOTTOM ({row_index_bottom}): +{n_sides_bottom} ({}) -> len: {}", m.get(row_index_bottom).unwrap(), bottom.len());
 
             m
         },
