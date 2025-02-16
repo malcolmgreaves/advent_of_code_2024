@@ -83,6 +83,17 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     // (2) top is > bottom
     // (3) top is < bottom
 
+    // -------------------
+    // |       top       |
+    // -------------------
+    //    |    mid   |
+    //  ------------------
+    // |     bottom      |
+    // -------------------
+
+    // DO NOT COUNT THE BOTTOM!
+    // WE WILL ACCOUNT FOR IT WHEN IT IS THE *NEXT* TOP
+    // AND WE ACCOUNT FOR THE LAST BOTTOM AT THE END AS A SPECIAL CASE
     let overcount_sides_by_row = pairs(&populated_exterior_rows_in_order).fold(
         HashMap::<usize, u64>::new(),
         |mut m, (row_index_top, row_index_bottom)| {
@@ -100,7 +111,9 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
             let bottom = group_by_row.get(row_index_bottom).unwrap();
 
             // let (n_sides_top, n_sides_bottom) = match top.len().cmp(&bottom.len()) {
-            let (n_sides_top, n_sides_bottom) = {
+
+            // let (n_sides_top, n_sides_bottom) = {
+            let n_sides_top = {
                 //           a
                 //         ------
                 //    g h | TOP | b c
@@ -133,7 +146,10 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                                 // -------------
                                 //   |  bottom |
                                 //   -----------
+                                // => 8 total sides
+                                // ===> 5 are TOP
                                 println!("top starts before bottom and ends before bottom");
+                                5
                             }
                             Ordering::Equal => {
                                 // TOP ends **AT** bottom
@@ -142,6 +158,8 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                                 // ----------------
                                 //   |    bottom  |
                                 //   --------------
+                                // => 6 total sides
+                                // ===> 4 are top
                                 println!("top starts before bottom and ends at bottom");
                             }
                             Ordering::Greater => {
@@ -151,6 +169,7 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                                 // ------------------------
                                 //     |    bottom    |
                                 //     ----------------
+                                // => 8 total sides
                                 println!("top starts before bottom and ends after bottom");
                             }
                         }
@@ -170,6 +189,7 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                                 // ----------------
                                 // |    bottom    |
                                 // ----------------
+                                // => 6 total sides
                                 println!("top starts at bottom and ends before bottom");
                             }
                             Ordering::Equal => {
@@ -179,6 +199,7 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                                 // ----------
                                 // | bottom |
                                 // ----------
+                                // => 4 total sides
                                 println!("top starts at bottom and ends at bottom");
                             }
                             Ordering::Greater => {
@@ -188,6 +209,7 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                                 // ------------------
                                 // | bottom    |
                                 // -------------
+                                // => 6 total sides
                                 println!("top starts at bottom and ends after bottom");
                             }
                         }
@@ -207,6 +229,7 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                                 // ----------------
                                 // |    bottom    |
                                 // ----------------
+                                // => 8 total sides
                                 println!("top starts after bottom and ends before bottom");
                             }
                             Ordering::Equal => {
@@ -216,6 +239,7 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                                 // ----------------
                                 // |    bottom    |
                                 // ----------------
+                                // => 6 total sides
                                 println!("top starts after bottom and ends at bottom");
                             }
                             Ordering::Greater => {
@@ -225,6 +249,7 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
                                 // ------------------------
                                 // |    bottom    |
                                 // ----------------
+                                // => 8 total sides
                                 println!("top starts after bottom and ends after bottom");
                             }
                         }
