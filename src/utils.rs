@@ -4,6 +4,7 @@ use std::{
     error::Error,
     fmt::{Debug, Display},
     hash::Hash,
+    ops::AddAssign,
 };
 
 pub fn group_by<K, V>(key: fn(&V) -> K, values: Vec<V>) -> HashMap<K, Vec<V>>
@@ -32,6 +33,19 @@ where
 pub fn pairs<T>(elements: &[T]) -> impl Iterator<Item = (&T, &T)> {
     assert!(elements.len() > 1);
     (0..(elements.len() - 1)).map(|i| (&elements[i], &elements[i + 1]))
+}
+
+pub fn update<K, V>(m: &mut HashMap<K, V>, key: K, val: V)
+where
+    K: Hash + Eq,
+    V: AddAssign,
+{
+    match m.get_mut(&key) {
+        Some(existing) => {
+            *existing += val;
+        }
+        None => _ = m.insert(key, val),
+    }
 }
 
 // heap-allocated a rectangular 2D array with runtime-determined size

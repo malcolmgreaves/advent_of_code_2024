@@ -1,10 +1,13 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    cmp::Ordering,
+    collections::{HashMap, HashSet},
+};
 
 use crate::{
     io_help,
     utils::{
         cardinal_neighbors, exterior_perimiter, group_by, pairs, sorted_keys, trace_perimiter,
-        Coordinate, Coords, Matrix,
+        update, Coordinate, Coords, Matrix,
     },
 };
 
@@ -75,9 +78,59 @@ fn count_sides(garden: &Garden, region: &Region) -> u64 {
     // (1) same width
     // (2) top is > bottom
     // (3) top is < bottom
-    for (top, bottom) in pairs(&populated_exterior_rows_in_order) {
-        panic!()
-    }
+
+    let overcount_sides_by_row = pairs(&populated_exterior_rows_in_order).fold(
+        HashMap::<usize, u64>::new(),
+        |mut m, (row_index_top, row_index_bottom)| {
+            let top = group_by_row.get(row_index_top).unwrap();
+            let bottom = group_by_row.get(row_index_bottom).unwrap();
+
+            let (n_sides_top, n_sides_bottom) = match top.len().cmp(&bottom.len()) {
+                Ordering::Less => {
+                    //           a
+                    //         ------
+                    //    g h | TOP | b c
+                    //   ------------------
+                    // f |     BOTTOM     | d
+                    //   ------------------
+                    //           e
+                    // SIDES: (a,b,c,d,e,f,g,h) == 8
+                    //      top sides:     (a,b,h) == 3
+                    //      bottom sides:  (c, d, e, f, g) == 5
+                    (3, 5)
+                }
+                Ordering::Equal => {
+                    //             a
+                    //    ------------------
+                    //    |       TOP      |
+                    // d  ------------------  b
+                    //    |     BOTTOM     |
+                    //    ------------------
+                    //             c
+                    // SIDES: (a,b,c,d) == 4
+                    (2, 2)
+                }
+                Ordering::Greater => {
+                    //              a
+                    //    ---------------------
+                    //  h |        TOP        |  b
+                    //    ---------------------
+                    //     g f | BOTTOM | d c
+                    //         ----------
+                    //             e
+                    // SIDES: (a,b,c,d,e,f,g,h) == 8
+                    //      top sides:     (a, b, c, g, h) == 5
+                    //      bottom sides:  (d, e, f) == 3
+                    (5, 3)
+                }
+            };
+
+            update(&mut m, *row_index_top, n_sides_top);
+            update(&mut m, *row_index_bottom, n_sides_bottom);
+
+            m
+        },
+    );
 
     let overlap = |a: &Vec<Coordinate>, b: &Vec<Coordinate>| -> u64 {
         // ASSUME ALL OF a AND b ARE WITHIN ONE (1) ROW !!!!
