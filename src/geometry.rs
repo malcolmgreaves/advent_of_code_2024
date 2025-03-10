@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::utils::Coordinate;
+use crate::matrix::Coordinate;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Slope {
@@ -193,11 +193,7 @@ fn custom_round(maximum: usize, x: f64) -> Option<usize> {
     } else {
         let r = x.ceil() as usize;
         // let r = x.round() as usize;
-        if r >= maximum {
-            None
-        } else {
-            Some(r)
-        }
+        if r >= maximum { None } else { Some(r) }
     }
 }
 

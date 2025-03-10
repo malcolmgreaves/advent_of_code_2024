@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 
-use crate::utils::{proc_elements_result, Res};
+use crate::utils::{Res, proc_elements_result};
 
 use crate::io_help;
 

@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    sync::{mpsc::channel, Arc, Mutex},
+    sync::{Arc, Mutex, mpsc::channel},
     thread::available_parallelism,
 };
 

@@ -1,6 +1,7 @@
 mod aoc_1;
 mod aoc_10;
 mod aoc_11;
+mod aoc_12;
 mod aoc_2;
 mod aoc_3;
 mod aoc_4;
@@ -11,6 +12,7 @@ mod aoc_8;
 mod aoc_9;
 mod geometry;
 mod io_help;
+mod matrix;
 mod nums;
 mod set_ops;
 mod utils;
@@ -21,7 +23,7 @@ use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::io::Write;
 use std::process::exit;
-use std::sync::mpsc::{channel, Receiver};
+use std::sync::mpsc::{Receiver, channel};
 use std::sync::{Arc, Mutex};
 use std::{io, thread};
 
@@ -169,6 +171,8 @@ pub fn main() {
         Aoc::new(10, 2, aoc_10::solution_pt2),
         Aoc::new(11, 1, aoc_11::solution_pt1),
         Aoc::new(11, 2, aoc_11::solution_pt2),
+        Aoc::new(12, 1, aoc_12::solution_pt1),
+        Aoc::new(12, 2, aoc_12::solution_pt2),
     ];
 
     let args = Args::parse();

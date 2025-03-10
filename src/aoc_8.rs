@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use crate::{
-    geometry::{antinode_location, antinode_location_resonant_harmonics, AntinodeLoc},
+    geometry::{AntinodeLoc, antinode_location, antinode_location_resonant_harmonics},
     io_help,
-    utils::{Coordinate, Matrix},
+    matrix::{Coordinate, Matrix},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -294,7 +294,7 @@ mod test {
     use io_help::read_lines_in_memory;
     use lazy_static::lazy_static;
 
-    use crate::set_ops::{check_same_elements, CheckSameElements};
+    use crate::set_ops::{CheckSameElements, check_same_elements};
 
     use super::*;
 
@@ -660,10 +660,40 @@ mod test {
                 .collect::<Vec<_>>();
 
             match check_same_elements(&actual, &expected) {
-                CheckSameElements::Equal => println!("SUCCESS! found {} and expected {}", actual.len(), expected.len()),
-                CheckSameElements::ActualExtra(extra) => assert!(false, "[Extra] Expected {} elements: {},\nbut actual has {} extra: {}", expected.len(), pp(expected), actual.len(), pp(extra)),
-                CheckSameElements::ActualMissing(missing) => assert!(false, "[Missing] Expected {} elements: {},\nbut actual has {} and is missing {}: {}", expected.len(), pp(expected), actual.len(), missing.len(), pp(missing)),
-                CheckSameElements::ActualProblems { missing, extra } => assert!(false, "[Problems] Expected {} elements: {}\nbut actual has {} -\n\tit has {} extra: {}\n\tand is missing {}: {}\n-- actual: {}", expected.len(), pp(expected), actual.len(), extra.len(), pp(extra), missing.len(), pp(missing), pp(actual)),
+                CheckSameElements::Equal => println!(
+                    "SUCCESS! found {} and expected {}",
+                    actual.len(),
+                    expected.len()
+                ),
+                CheckSameElements::ActualExtra(extra) => assert!(
+                    false,
+                    "[Extra] Expected {} elements: {},\nbut actual has {} extra: {}",
+                    expected.len(),
+                    pp(expected),
+                    actual.len(),
+                    pp(extra)
+                ),
+                CheckSameElements::ActualMissing(missing) => assert!(
+                    false,
+                    "[Missing] Expected {} elements: {},\nbut actual has {} and is missing {}: {}",
+                    expected.len(),
+                    pp(expected),
+                    actual.len(),
+                    missing.len(),
+                    pp(missing)
+                ),
+                CheckSameElements::ActualProblems { missing, extra } => assert!(
+                    false,
+                    "[Problems] Expected {} elements: {}\nbut actual has {} -\n\tit has {} extra: {}\n\tand is missing {}: {}\n-- actual: {}",
+                    expected.len(),
+                    pp(expected),
+                    actual.len(),
+                    extra.len(),
+                    pp(extra),
+                    missing.len(),
+                    pp(missing),
+                    pp(actual)
+                ),
             }
         } else {
             println!("SUCCESS!");

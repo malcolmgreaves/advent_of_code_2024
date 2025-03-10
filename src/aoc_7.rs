@@ -4,7 +4,7 @@ use num_format::{Locale, ToFormattedString};
 
 use crate::{
     io_help,
-    nums::{binary_enumeration, ternary_enumeration, Binary, Ternary},
+    nums::{Binary, Ternary, binary_enumeration, ternary_enumeration},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]

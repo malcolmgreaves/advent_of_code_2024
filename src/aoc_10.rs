@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::{
     io_help,
-    utils::{Coordinate, Matrix},
+    matrix::{Coordinate, Matrix},
 };
 
 type Topo = Matrix<u8>;
@@ -131,13 +131,7 @@ fn find_hiking_paths(topo_map: &Topo, trailhead: &Coordinate) -> Vec<Path> {
 /// within +1 (**NOT -1**) from loc
 /// in-bounds
 fn neighborhood(topo_map: &Topo, loc: &Coordinate) -> Vec<Coordinate> {
-    let sub = |x: usize| -> Option<usize> {
-        if x > 0 {
-            Some(x - 1)
-        } else {
-            None
-        }
-    };
+    let sub = |x: usize| -> Option<usize> { if x > 0 { Some(x - 1) } else { None } };
 
     let add_row = |x: usize| -> Option<usize> {
         if x + 1 < topo_map.len() {

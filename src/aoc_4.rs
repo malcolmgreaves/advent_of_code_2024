@@ -2,7 +2,11 @@ use core::iter::Iterator;
 
 use std::cmp::{max, min};
 
-use crate::{io_help, utils};
+use crate::{
+    io_help,
+    matrix::{Matrix, convert_to_char_matrix, diagonal_coordinates, fliplr},
+    utils,
+};
 
 // https://adventofcode.com/2024/day/4
 
@@ -13,14 +17,14 @@ pub fn solution_pt1() -> u64 {
     let max_rows = lines.len();
     let max_cols = lines[0].len();
 
-    let matrix = utils::convert_to_char_matrix(max_rows, max_cols, &lines);
+    let matrix = convert_to_char_matrix(max_rows, max_cols, &lines);
     // let matrix: [[char; COLS]; ROWS] = utils::convert_to_char_matrix::<ROWS, COLS>(&lines);
 
     count_terms(max_cols, max_rows, "XMAS", matrix)
     // count_terms("XMAS", &matrix)
 }
 
-type CharMatrix = utils::Matrix<char>;
+type CharMatrix = Matrix<char>;
 
 fn count_terms(max_cols: usize, max_rows: usize, term: &str, lines: CharMatrix) -> u64 {
     // (a) take the matrix and get out each full-length
@@ -133,14 +137,14 @@ fn verticals(max_cols: usize, max_rows: usize, lines: &CharMatrix) -> Vec<String
 fn diagonals(max_cols: usize, max_rows: usize, lines: &CharMatrix) -> Vec<String> {
     assert_eq!(lines.len(), max_rows, "D: char matrix rows != expected");
     assert_eq!(lines[0].len(), max_rows, "D: char matrix rows != expected");
-    let access_diagonals_of = |m: &utils::Matrix<char>| -> Vec<String> {
-        utils::diagonal_coordinates(max_rows as i32, max_cols as i32)
+    let access_diagonals_of = |m: &Matrix<char>| -> Vec<String> {
+        diagonal_coordinates(max_rows as i32, max_cols as i32)
             .iter()
             .map(|diag| diag.iter().map(|(i, j)| m[*i][*j]).collect::<String>())
             .collect::<Vec<_>>()
     };
     let anti_diagonals = access_diagonals_of(lines);
-    let mut true_diagonals = access_diagonals_of(&utils::fliplr(lines));
+    let mut true_diagonals = access_diagonals_of(&fliplr(lines));
     true_diagonals.extend(anti_diagonals);
     true_diagonals
 }
@@ -172,7 +176,7 @@ pub fn solution_pt2() -> u64 {
     assert_ne!(lines.len(), 0);
     let max_rows = lines.len();
     let max_cols = lines[0].len();
-    let chars = utils::convert_to_char_matrix(max_rows, max_cols, &lines);
+    let chars = convert_to_char_matrix(max_rows, max_cols, &lines);
 
     count_mas_x(&chars)
 }
@@ -191,13 +195,10 @@ pub fn count_mas_x(chars: &CharMatrix) -> u64 {
     count
 }
 
-pub fn window_2d<T: Default + Copy>(
-    shape: (usize, usize),
-    m: &utils::Matrix<T>,
-) -> Vec<utils::Matrix<T>> {
+pub fn window_2d<T: Default + Copy>(shape: (usize, usize), m: &Matrix<T>) -> Vec<Matrix<T>> {
     let (w_rows, w_cols) = shape;
 
-    let make_window = |top_left: (usize, usize)| -> Option<utils::Matrix<T>> {
+    let make_window = |top_left: (usize, usize)| -> Option<Matrix<T>> {
         let mut window = vec![vec![Default::default(); w_cols]; w_rows];
         for i in 0..w_rows {
             if top_left.0 + i >= m.len() {
@@ -225,7 +226,7 @@ pub fn window_2d<T: Default + Copy>(
     windows
 }
 
-pub fn check_window(term: &str, window: &utils::Matrix<char>) -> bool {
+pub fn check_window(term: &str, window: &Matrix<char>) -> bool {
     assert_eq!(
         term.len(),
         window.len(),
@@ -257,11 +258,13 @@ pub fn check_window(term: &str, window: &utils::Matrix<char>) -> bool {
 
 #[cfg(test)]
 mod test {
+    use crate::matrix::transpose;
+
     use super::*;
 
     #[test]
     fn test_windows_single() {
-        let example: utils::Matrix<char> = vec![
+        let example: Matrix<char> = vec![
             vec!['M', '.', 'S'],
             vec!['.', 'A', '.'],
             vec!['M', '.', 'S'],
@@ -273,7 +276,7 @@ mod test {
 
     #[test]
     fn part_2() {
-        let example: utils::Matrix<char> = vec![
+        let example: Matrix<char> = vec![
             vec!['.', 'M', '.', 'S', '.', '.', '.', '.', '.', '.'],
             vec!['.', '.', 'A', '.', '.', 'M', 'S', 'M', 'S', '.'],
             vec!['.', 'M', '.', 'S', '.', 'M', 'A', 'A', '.', '.'],
@@ -458,7 +461,7 @@ mod test {
         }
         assert_eq!(result.len(), expected.len());
 
-        let transposed_example = utils::transpose(ROWS, COLS, &convert(example_input));
+        let transposed_example = transpose(ROWS, COLS, &convert(example_input));
         // let transposed_example = utils::transpose(&example_input);
 
         // println!("transposed example:\nrows: {} | cols: {}", transposed_example.len(), transposed_example[0].len());

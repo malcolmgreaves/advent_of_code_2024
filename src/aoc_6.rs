@@ -2,10 +2,10 @@ use std::{cmp::Ordering, collections::HashSet, mem};
 
 use crate::{
     io_help,
-    utils::{self, Coordinate},
+    matrix::{self, Coordinate, Matrix},
 };
 
-type PatrolMap = utils::Matrix<State>;
+type PatrolMap = Matrix<State>;
 
 #[derive(Clone, Debug, PartialEq)]
 enum State {
@@ -78,8 +78,13 @@ fn assert_patrol_map_correctness(patrol_map: &PatrolMap) {
         cols, 0,
         "An empty patrol map is not allowed! Found no columns!"
     );
-    match utils::is_rectangular(rows, cols, patrol_map) {
-        Some(invalid_parts) => assert!(false, "Expected rectangular patrol map ({rows} x {cols}). Dimension mismatch found {} times:\n{:?}", invalid_parts.len(), invalid_parts),
+    match matrix::is_rectangular(rows, cols, patrol_map) {
+        Some(invalid_parts) => assert!(
+            false,
+            "Expected rectangular patrol map ({rows} x {cols}). Dimension mismatch found {} times:\n{:?}",
+            invalid_parts.len(),
+            invalid_parts
+        ),
         None => (), // expected outcome: no invalid parts!
     }
 }
@@ -158,7 +163,7 @@ enum StepResult {
 // board as a result of the performed step.
 fn step_guard_positions(
     patrol_map: &mut PatrolMap,
-    cycle_visisted: &mut utils::Matrix<usize>,
+    cycle_visisted: &mut Matrix<usize>,
 ) -> StepResult {
     let guards = guard_coordinates(&patrol_map);
     if guards.len() == 0 {
@@ -201,7 +206,9 @@ fn step_guard_positions(
                         // NOTE: We don't handle the situation where 2 or more guards attempt to move to the same position.
                         //       They all cannot occupy the same space!
                         if new_guard_positions.contains(&new_guard_position) {
-                            panic!("Unexpected! At least two guards moved to the same location! This is unsuported! New location that is a violation: {new_guard_position:?}");
+                            panic!(
+                                "Unexpected! At least two guards moved to the same location! This is unsuported! New location that is a violation: {new_guard_position:?}"
+                            );
                         }
                         new_guard_positions.insert(new_guard_position);
                         new_direction
@@ -265,7 +272,9 @@ fn guard_step(
             }
         }
     }
-    panic!("Unexpected! Guard ({direction:?} @ {guard_coord:?}) is stuck: no direction lets it take a single step!")
+    panic!(
+        "Unexpected! Guard ({direction:?} @ {guard_coord:?}) is stuck: no direction lets it take a single step!"
+    )
 }
 
 fn new_coordinate(
@@ -742,7 +751,13 @@ fn _check_suitable_obstruction_placement(
     ) {
         Some(c) => c,
         None => {
-            println!("\tFAIL: top-left can't have obstruction / is out of bounds! top-left: {:?} -> obstruction: {:?}, matrix size: {} x {}", rect.top_left, rect._obstruction_top_left(), patrol_map.len(), patrol_map[0].len());
+            println!(
+                "\tFAIL: top-left can't have obstruction / is out of bounds! top-left: {:?} -> obstruction: {:?}, matrix size: {} x {}",
+                rect.top_left,
+                rect._obstruction_top_left(),
+                patrol_map.len(),
+                patrol_map[0].len()
+            );
             return None;
         }
     };
@@ -753,7 +768,13 @@ fn _check_suitable_obstruction_placement(
     ) {
         Some(c) => c,
         None => {
-            println!("\tFAIL: top-right can't have obstruction / is out of bounds! top-right: {:?} -> obstruction: {:?}, matrix size: {} x {}", rect._top_right(),rect._obstruction_top_right(patrol_map), patrol_map.len(), patrol_map[0].len());
+            println!(
+                "\tFAIL: top-right can't have obstruction / is out of bounds! top-right: {:?} -> obstruction: {:?}, matrix size: {} x {}",
+                rect._top_right(),
+                rect._obstruction_top_right(patrol_map),
+                patrol_map.len(),
+                patrol_map[0].len()
+            );
             return None;
         }
     };
@@ -764,7 +785,13 @@ fn _check_suitable_obstruction_placement(
     ) {
         Some(c) => c,
         None => {
-            println!("\tFAIL: bottom-right can't have obstruction / is out of bounds! | bottom-right: {:?} -> obstruction: {:?}, matrix size: {} x {}", rect.bottom_right, rect._obstruction_bottom_right(patrol_map), patrol_map.len(), patrol_map[0].len());
+            println!(
+                "\tFAIL: bottom-right can't have obstruction / is out of bounds! | bottom-right: {:?} -> obstruction: {:?}, matrix size: {} x {}",
+                rect.bottom_right,
+                rect._obstruction_bottom_right(patrol_map),
+                patrol_map.len(),
+                patrol_map[0].len()
+            );
             return None;
         }
     };
@@ -775,7 +802,13 @@ fn _check_suitable_obstruction_placement(
     ) {
         Some(c) => c,
         None => {
-            println!("\tFAIL: bottom-left can't have obstruction / is out of bounds! bottom-left: {:?} -> obstruction: {:?}, matrix size: {} x {}", rect._bottom_left(), rect._obstruction_bottom_left(), patrol_map.len(), patrol_map[0].len());
+            println!(
+                "\tFAIL: bottom-left can't have obstruction / is out of bounds! bottom-left: {:?} -> obstruction: {:?}, matrix size: {} x {}",
+                rect._bottom_left(),
+                rect._obstruction_bottom_left(),
+                patrol_map.len(),
+                patrol_map[0].len()
+            );
             return None;
         }
     };
@@ -807,7 +840,9 @@ fn _check_suitable_obstruction_placement(
     ];
 
     if rect.top_left == (Coordinate { row: 8, col: 4 }) {
-        println!("TOP LEFT IS (8,4): OBSTRUCTION ATTEMPTS:\ntop-left: {obs_tl:?}\ntop-right: {obs_tr:?}\nbottom-right: {obs_br:?}\nbottom-left: {obs_bl:?}");
+        println!(
+            "TOP LEFT IS (8,4): OBSTRUCTION ATTEMPTS:\ntop-left: {obs_tl:?}\ntop-right: {obs_tr:?}\nbottom-right: {obs_br:?}\nbottom-left: {obs_bl:?}"
+        );
     }
 
     let coordinate_that_can_have_an_obstruction = {
