@@ -183,7 +183,7 @@ mod test {
 
     ///////////////////////////////////////////////
 
-    const EXAMPLE_INPUT_STR: &str = indoc! {"
+    const EXAMPLE_INPUT_STR_PART_1: &str = indoc! {"
         Button A: X+94, Y+34
         Button B: X+22, Y+67
         Prize: X=8400, Y=5400
@@ -202,7 +202,7 @@ mod test {
     "};
 
     lazy_static! {
-        static ref EXAMPLE_EXPECTED: Vec<ClawMach> = vec![
+        static ref EXAMPLE_EXPECTED_PART_1: Vec<ClawMach> = vec![
             ClawMach {
                 a: Button { x: 94, y: 34 },
                 b: Button { x: 22, y: 67 },
@@ -226,19 +226,80 @@ mod test {
         ];
     }
 
+    const EXAMPLE_INPUT_STR_PART_2: &str = indoc! {"
+        Button A: X+94, Y+34
+        Button B: X+22, Y+67
+        Prize: X=10000000008400, Y=10000000005400
+
+        Button A: X+26, Y+66
+        Button B: X+67, Y+21
+        Prize: X=10000000012748, Y=10000000012176
+
+        Button A: X+17, Y+86
+        Button B: X+84, Y+37
+        Prize: X=10000000007870, Y=10000000006450
+
+        Button A: X+69, Y+23
+        Button B: X+27, Y+71
+        Prize: X=10000000018641, Y=10279
+    "};
+
+    lazy_static! {
+        static ref EXAMPLE_EXPECTED_PART_2: Vec<ClawMach> = vec![
+            ClawMach {
+                a: Button { x: 94, y: 34 },
+                b: Button { x: 22, y: 67 },
+                prize: Location {
+                    x: 10000000008400,
+                    y: 10000000005400
+                }
+            },
+            ClawMach {
+                a: Button { x: 26, y: 66 },
+                b: Button { x: 67, y: 21 },
+                prize: Location {
+                    x: 10000000012748,
+                    y: 10000000012176
+                }
+            },
+            ClawMach {
+                a: Button { x: 17, y: 86 },
+                b: Button { x: 84, y: 37 },
+                prize: Location {
+                    x: 10000000007870,
+                    y: 10000000006450
+                }
+            },
+            ClawMach {
+                a: Button { x: 69, y: 23 },
+                b: Button { x: 27, y: 71 },
+                prize: Location {
+                    x: 10000000018641,
+                    y: 10000000010279
+                }
+            },
+        ];
+    }
+
     ///////////////////////////////////////////////
 
     #[test]
     fn construction() {
-        let a = construct(&read_lines_in_memory(EXAMPLE_INPUT_STR).collect::<Vec<_>>());
-        match a {
-            Result::Ok(actual) => {
-                assert_eq!(actual.len(), 4);
-                let expected: &[ClawMach] = &EXAMPLE_EXPECTED;
-                assert_eq!(&actual, expected);
+        let do_test = |example: &str, expected: &[ClawMach]| {
+            let a = construct(&read_lines_in_memory(EXAMPLE_INPUT_STR_PART_1).collect::<Vec<_>>());
+            match a {
+                Result::Ok(actual) => {
+                    assert_eq!(actual.len(), 4);
+                    let expected: &[ClawMach] = &EXAMPLE_EXPECTED_PART_1;
+                    assert_eq!(&actual, expected);
+                }
+                Result::Err(error) => {
+                    assert!(false, "Expecting ok parse but found error: {error:?}")
+                }
             }
-            Result::Err(error) => assert!(false, "Expecting ok parse but found error: {error:?}"),
-        }
+        };
+        do_test(EXAMPLE_INPUT_STR_PART_1, &EXAMPLE_EXPECTED_PART_1);
+        do_test(EXAMPLE_INPUT_STR_PART_2, &EXAMPLE_EXPECTED_PART_2);
     }
 
     #[test]
@@ -280,7 +341,7 @@ mod test {
 
     #[test]
     fn solve_example_1_part1() {
-        let claw = &EXAMPLE_EXPECTED[0];
+        let claw = &EXAMPLE_EXPECTED_PART_1[0];
         match solve_brute_force(claw) {
             Some(actual) => {
                 assert_eq!(actual.a, 80);
@@ -296,7 +357,7 @@ mod test {
 
     #[test]
     fn solve_example_2_part1() {
-        let claw = &EXAMPLE_EXPECTED[1];
+        let claw = &EXAMPLE_EXPECTED_PART_1[1];
         match solve_brute_force(claw) {
             Some(actual) => assert!(
                 false,
@@ -308,7 +369,7 @@ mod test {
 
     #[test]
     fn solve_example_3_part1() {
-        let claw = &EXAMPLE_EXPECTED[2];
+        let claw = &EXAMPLE_EXPECTED_PART_1[2];
         match solve_brute_force(claw) {
             Some(actual) => {
                 assert_eq!(actual.a, 38);
@@ -324,7 +385,7 @@ mod test {
 
     #[test]
     fn solve_example_4_part1() {
-        let claw = &EXAMPLE_EXPECTED[3];
+        let claw = &EXAMPLE_EXPECTED_PART_1[3];
         match solve_brute_force(claw) {
             Some(actual) => assert!(
                 false,
@@ -336,7 +397,7 @@ mod test {
 
     #[test]
     fn solve_example_part1() {
-        let claws: &[ClawMach] = &EXAMPLE_EXPECTED;
+        let claws: &[ClawMach] = &EXAMPLE_EXPECTED_PART_1;
         let expected = 480;
         let actual = calculate_solution(claws.iter().map(solve_brute_force));
         assert_eq!(actual, expected);
