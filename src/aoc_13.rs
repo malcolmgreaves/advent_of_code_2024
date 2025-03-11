@@ -450,10 +450,12 @@ mod test {
 
     ///////////////////////////////////////////////
 
-    #[test]
-    fn solve_example_1_part1() {
+    fn solve_example_1<F>(f: F)
+    where
+        F: Fn(&ClawMach) -> Option<Press>,
+    {
         let claw = &EXAMPLE_EXPECTED_PART_1[0];
-        match solve_brute_force(claw) {
+        match f(claw) {
             Some(actual) => {
                 assert_eq!(actual.a, 80);
                 assert_eq!(actual.b, 40);
@@ -466,22 +468,12 @@ mod test {
         }
     }
 
-    #[test]
-    fn solve_example_2_part1() {
-        let claw = &EXAMPLE_EXPECTED_PART_1[1];
-        match solve_brute_force(claw) {
-            Some(actual) => assert!(
-                false,
-                "{claw:?} should not have solution! found: {actual:?}"
-            ),
-            None => (),
-        }
-    }
-
-    #[test]
-    fn solve_example_3_part1() {
+    fn solve_example_3<F>(f: F)
+    where
+        F: Fn(&ClawMach) -> Option<Press>,
+    {
         let claw = &EXAMPLE_EXPECTED_PART_1[2];
-        match solve_brute_force(claw) {
+        match f(claw) {
             Some(actual) => {
                 assert_eq!(actual.a, 38);
                 assert_eq!(actual.b, 86);
@@ -494,16 +486,37 @@ mod test {
         }
     }
 
-    #[test]
-    fn solve_example_4_part1() {
-        let claw = &EXAMPLE_EXPECTED_PART_1[3];
-        match solve_brute_force(claw) {
+    fn solve_example_no_solution<F>(claw: &ClawMach, f: F)
+    where
+        F: Fn(&ClawMach) -> Option<Press>,
+    {
+        match f(claw) {
             Some(actual) => assert!(
                 false,
                 "{claw:?} should not have solution! found: {actual:?}"
             ),
             None => (),
         }
+    }
+
+    #[test]
+    fn solve_example_1_part1() {
+        solve_example_1(solve_brute_force);
+    }
+
+    #[test]
+    fn solve_example_2_part1() {
+        solve_example_no_solution(&EXAMPLE_EXPECTED_PART_1[1], solve_brute_force);
+    }
+
+    #[test]
+    fn solve_example_3_part1() {
+        solve_example_3(solve_brute_force);
+    }
+
+    #[test]
+    fn solve_example_4_part1() {
+        solve_example_no_solution(&EXAMPLE_EXPECTED_PART_1[3], solve_brute_force);
     }
 
     #[test]
@@ -520,6 +533,34 @@ mod test {
     }
 
     ///////////////////////////////////////////////
+
+    #[test]
+    fn solve_example_1_part2() {
+        solve_example_1(solve_dynamic_programming);
+    }
+
+    #[test]
+    fn solve_example_2_part2() {
+        solve_example_no_solution(&EXAMPLE_EXPECTED_PART_1[1], solve_dynamic_programming);
+    }
+
+    #[test]
+    fn solve_example_3_part2() {
+        solve_example_3(solve_dynamic_programming);
+    }
+
+    #[test]
+    fn solve_example_4_part2() {
+        solve_example_no_solution(&EXAMPLE_EXPECTED_PART_1[3], solve_dynamic_programming);
+    }
+
+    #[test]
+    fn solve_example_part2() {
+        let claws: &[ClawMach] = &EXAMPLE_EXPECTED_PART_1;
+        let expected = 480;
+        let actual = calculate_solution(claws.iter().map(solve_dynamic_programming));
+        assert_eq!(actual, expected);
+    }
 
     #[test]
     fn pt2_soln_example() {
