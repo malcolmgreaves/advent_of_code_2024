@@ -29,11 +29,11 @@ struct ClawMach {
 }
 
 impl ClawMach {
-    fn constraint_a(&self) -> (u64, u64, u64) {
+    fn constraint_x(&self) -> (u64, u64, u64) {
         (self.a.x, self.b.x, self.prize.x)
     }
 
-    fn constraint_b(&self) -> (u64, u64, u64) {
+    fn constraint_y(&self) -> (u64, u64, u64) {
         (self.a.y, self.b.y, self.prize.y)
     }
 }
@@ -193,48 +193,48 @@ fn solve_dynamic_programming(claw: &ClawMach) -> Option<Press> {
     //  ==>
     //      94*A + 22*B = 10000000008400
     //      34*A + 67*B = 10000000005400
-    let (a, b, _) = ilp_solve((3, 1), claw.constraint_a(), claw.constraint_b());
+    let (a, b, _) = ilp_solve((3, 1), claw.constraint_x(), claw.constraint_y());
     let p = Press { a, b };
     if verify(claw, &p) { Some(p) } else { None }
 }
 
 fn ilp_solve(
-    (c1, c2): (u64, u64),            /* button token costs */
-    (a11, a12, b1): (u64, u64, u64), /* button A */
-    (a21, a22, b2): (u64, u64, u64), /* button B */
+    (c_a, c_b): (u64, u64),               /* button token costs */
+    (a_x, b_x, x_total): (u64, u64, u64), /* button A */
+    (a_y, b_y, y_total): (u64, u64, u64), /* button B */
 ) -> (u64, u64, u64) {
-    let mut opt_x1 = 0;
-    let mut opt_x2 = 0;
-    let mut opt_soln = u64::MAX;
+    let mut optimal_a = 0;
+    let mut optimal_b = 0;
+    let mut optimal = u64::MAX;
 
     // iterate through feasiable values for button A (x1)
-    for x1 in 0..=(b1 / a11) {
-        if a21 * x1 > b2 {
+    for x in 0..=(x_total / a_x) {
+        if a_y * x > y_total {
             // stop if we've violated constraint
             break;
         }
 
         // iterate through feasiable values for button B (x2)
-        for x2 in 0..=((b1 - a11 * x1) / a12) {
-            if a21 * x1 + a22 * x2 > b2 {
+        for y in 0..=((x_total - a_x * x) / b_x) {
+            if a_y * x + b_y * y > y_total {
                 // stop if we've violated constraint
                 break;
             }
 
             // check if constraints are satisfied
-            if a11 * x1 + a12 * x2 <= b1 && a21 * x1 + a22 * x2 <= b2 {
-                let objective = c1 * x1 + c2 * x2;
+            if a_x * x + b_x * y <= x_total && a_y * x + b_y * y <= y_total {
+                let objective = c_a * x + c_b * y;
                 // Update optimal solution if it's the smallest found
-                if objective < opt_soln {
-                    opt_soln = objective;
-                    opt_x1 = x1;
-                    opt_x2 = x2;
+                if objective < optimal {
+                    optimal = objective;
+                    optimal_a = x;
+                    optimal_b = y;
                 }
             }
         }
     }
 
-    (opt_x1, opt_x2, opt_soln)
+    (optimal_a, optimal_b, optimal)
 }
 
 /*
