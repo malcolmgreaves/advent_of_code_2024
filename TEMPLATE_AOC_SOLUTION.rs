@@ -2,16 +2,27 @@ use crate::io_help;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+struct TODO {
+
+}
+
+fn construct(lines: &[String]) -> Result<TODO, String> {
+    panic!()
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 pub fn solution_pt1() -> u64 {
     let lines = io_help::read_lines("./inputs/???").collect::<Vec<String>>();
-    panic!();
+    panic!("{} lines", lines.len());
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub fn solution_pt2() -> u64 {
     let lines = io_help::read_lines("./inputs/???").collect::<Vec<String>>();
-    panic!();
+    panic!("{} lines", lines.len());
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,6 +37,8 @@ mod test {
 
     use super::*;
 
+    ///////////////////////////////////////////////
+
     const EXAMPLE_INPUT_STR: &str = indoc! {"
     "};
 
@@ -33,15 +46,21 @@ mod test {
         static ref EXAMPLE_EXPECTED: Option<u8> = None;
     }
 
+    ///////////////////////////////////////////////
+
     #[test]
     fn construction() {
         panic!();
     }
 
+    ///////////////////////////////////////////////
+
     #[test]
     fn pt1_soln_example() {
         panic!();
     }
+
+    ///////////////////////////////////////////////
 
     #[test]
     fn pt2_soln_example() {
