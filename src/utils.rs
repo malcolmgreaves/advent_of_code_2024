@@ -1,4 +1,5 @@
 use std::{
+    cmp::Ordering,
     collections::HashMap,
     error::Error,
     hash::Hash,
@@ -19,6 +20,43 @@ macro_rules! log {
             println!($($arg)*);
         }
     };
+}
+
+#[allow(dead_code)]
+pub fn argmin<F, T, C: Ord>(values: &[T], key: F) -> usize
+where
+    F: Fn(&T) -> C,
+{
+    if values.len() == 0 {
+        panic!("must supply non-empty values!");
+    }
+    if values.len() == 1 {
+        return 0;
+    }
+    let mut min_index = 0;
+    let mut min_val = key(&values[min_index]);
+    values.iter().enumerate().for_each(|(i, x)| {
+        let m = key(&x);
+        match min_val.cmp(&m) {
+            Ordering::Less | Ordering::Equal => (),
+            Ordering::Greater => {
+                min_index = i;
+                min_val = m;
+            }
+        }
+    });
+    min_index
+}
+
+#[allow(dead_code)]
+pub fn collect_results<T, E>(results: impl Iterator<Item = Result<T, E>>) -> (Vec<T>, Vec<E>) {
+    results.fold((Vec::new(), Vec::new()), |(mut oks, mut errs), x| {
+        match x {
+            Result::Ok(t) => oks.push(t),
+            Result::Err(e) => errs.push(e),
+        };
+        (oks, errs)
+    })
 }
 
 #[allow(dead_code)]
