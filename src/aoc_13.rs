@@ -205,12 +205,12 @@ fn ilp_solve(
 ) -> (u64, u64, u64) {
     let mut optimal_a = 0;
     let mut optimal_b = 0;
-    let mut optimal = u64::MAX;
+    let mut optimal = u64::MIN;
 
     // iterate through feasiable values for button A (x1)
     for x in 0..=(x_total / a_x) {
         if a_y * x > y_total {
-            // stop if we've violated constraint
+            // stop if we've violated constrainty
             break;
         }
 
@@ -225,10 +225,10 @@ fn ilp_solve(
             if a_x * x + b_x * y <= x_total && a_y * x + b_y * y <= y_total {
                 let objective = c_a * x + c_b * y;
                 // Update optimal solution if it's the smallest found
-                if objective < optimal {
-                    optimal = objective;
+                if objective > optimal {
                     optimal_a = x;
                     optimal_b = y;
+                    optimal = objective;
                 }
             }
         }
@@ -242,10 +242,10 @@ def ilp_2v_dp(c1, c2, a11, a12, b1, a21, a22, b2):
     """
     Solves a 2-variable integer linear programming problem using dynamic programming.
 
-    Maximize:      Z = c1*x1 + c2*x2
-    Subject to:    a11*x1 + a12*x2 ≤ b1
-                   a21*x1 + a22*x2 ≤ b2
-                   x1, x2 ≥ 0 and integer
+    Maximize:      Z = c1*A + c2*B
+    Subject to:    a11*A + a12*B ≤ X
+                   a21*A + a22*B ≤ Y
+                   A, B ≥ 0 and integer
 
     :param c1, c2: Coefficients of the objective function
     :param a11, a12, b1: Coefficients and RHS of first constraint
