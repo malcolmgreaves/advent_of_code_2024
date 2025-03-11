@@ -1,17 +1,20 @@
-use crate::{io_help, utils::collect_results};
+use crate::{
+    io_help,
+    utils::{argmin, collect_results},
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct Button {
-    x: usize,
-    y: usize,
+    x: u64,
+    y: u64,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct Location {
-    x: usize,
-    y: usize,
+    x: u64,
+    y: u64,
 }
 
 // A Claw Machine.
@@ -88,9 +91,9 @@ fn parse_prize(s: &str) -> Result<Location, String> {
     }
 }
 
-fn parse_num_from(symbol: &str, s: &str) -> Result<usize, String> {
+fn parse_num_from(symbol: &str, s: &str) -> Result<u64, String> {
     match s.split(symbol).last() {
-        Some(x) => x.parse::<usize>().map_err(|e| e.to_string()),
+        Some(x) => x.parse::<u64>().map_err(|e| e.to_string()),
         None => Result::Err(format!(
             "missing separator symbol '{symbol}' in input string: '{s}'"
         )),
@@ -102,7 +105,55 @@ fn parse_num_from(symbol: &str, s: &str) -> Result<usize, String> {
 pub fn solution_pt1() -> u64 {
     let lines = io_help::read_lines("./inputs/13").collect::<Vec<String>>();
     let claw_machines = construct(&lines).unwrap();
-    panic!("found {} claw machines", claw_machines.len());
+    calculate_solution(claw_machines.iter().map(solve_brute_force))
+}
+
+fn calculate_solution(solved: impl Iterator<Item = Option<Press>>) -> u64 {
+    solved.fold(0, |s, maybe_press| match maybe_press {
+        Some(press) => cost(&press) + s,
+        None => s,
+    })
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct Press {
+    a: u64,
+    b: u64,
+}
+
+fn press(claw: &ClawMach, p: &Press) -> Location {
+    let x = p.a * claw.a.x + p.b * claw.b.x;
+    let y = p.a * claw.a.y + p.b * claw.b.y;
+    Location { x, y }
+}
+
+fn verify(claw: &ClawMach, p: &Press) -> bool {
+    press(claw, p) == claw.prize
+}
+
+fn cost(p: &Press) -> u64 {
+    p.a * 3 + p.b
+}
+
+fn brute_force(limit: u64, claw: &ClawMach) -> Vec<Press> {
+    (0..limit)
+        .flat_map(|a| {
+            (0..limit).flat_map(move |b| {
+                let p = Press { a, b };
+                if verify(claw, &p) { Some(p) } else { None }
+            })
+        })
+        .collect()
+}
+
+fn solve_brute_force(claw: &ClawMach) -> Option<Press> {
+    let mut possibilities = brute_force(100, claw);
+    if possibilities.len() == 0 {
+        None
+    } else {
+        let index_of_min = argmin(possibilities.iter().map(|p| (p, cost(p))), |(_, c)| *c);
+        Some(possibilities.swap_remove(index_of_min))
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +171,7 @@ mod test {
     use indoc::indoc;
     use lazy_static::lazy_static;
 
-    use crate::{io_help::read_lines_in_memory, utils::Res};
+    use crate::io_help::read_lines_in_memory;
 
     use super::*;
 
@@ -220,6 +271,70 @@ mod test {
     }
 
     ///////////////////////////////////////////////
+
+    #[test]
+    fn solve_example_1() {
+        let claw = &EXAMPLE_EXPECTED[0];
+        match solve_brute_force(claw) {
+            Some(actual) => {
+                assert_eq!(actual.a, 80);
+                assert_eq!(actual.b, 40);
+                assert_eq!(cost(&actual), 280);
+            }
+            None => assert!(
+                false,
+                "{claw:?} should have a solution with a min cost of 280"
+            ),
+        }
+    }
+
+    #[test]
+    fn solve_example_2() {
+        let claw = &EXAMPLE_EXPECTED[1];
+        match solve_brute_force(claw) {
+            Some(actual) => assert!(
+                false,
+                "{claw:?} should not have solution! found: {actual:?}"
+            ),
+            None => (),
+        }
+    }
+
+    #[test]
+    fn solve_example_3() {
+        let claw = &EXAMPLE_EXPECTED[2];
+        match solve_brute_force(claw) {
+            Some(actual) => {
+                assert_eq!(actual.a, 38);
+                assert_eq!(actual.b, 86);
+                assert_eq!(cost(&actual), 200);
+            }
+            None => assert!(
+                false,
+                "{claw:?} should have a solution with a min cost of 200"
+            ),
+        }
+    }
+
+    #[test]
+    fn solve_example_4() {
+        let claw = &EXAMPLE_EXPECTED[3];
+        match solve_brute_force(claw) {
+            Some(actual) => assert!(
+                false,
+                "{claw:?} should not have solution! found: {actual:?}"
+            ),
+            None => (),
+        }
+    }
+
+    #[test]
+    fn solve_example() {
+        let claws: &[ClawMach] = &EXAMPLE_EXPECTED;
+        let expected = 480;
+        let actual = calculate_solution(claws.iter().map(solve_brute_force));
+        assert_eq!(actual, expected);
+    }
 
     #[test]
     fn pt1_soln_example() {
