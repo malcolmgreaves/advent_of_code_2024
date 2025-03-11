@@ -193,7 +193,7 @@ fn solve_dynamic_programming(claw: &ClawMach) -> Option<Press> {
     //  ==>
     //      94*A + 22*B = 10000000008400
     //      34*A + 67*B = 10000000005400
-    let (a, b, _) = ilp_solve((3, 1), claw.constraint_x(), claw.constraint_y());
+    let (a, b, _) = ilp_solve((3, 1), claw.constraint_x(), claw.constraint_y(), true);
     let p = Press { a, b };
     if verify(claw, &p) { Some(p) } else { None }
 }
@@ -202,33 +202,47 @@ fn ilp_solve(
     (c_a, c_b): (u64, u64),               /* button token costs */
     (a_x, b_x, x_total): (u64, u64, u64), /* button A */
     (a_y, b_y, y_total): (u64, u64, u64), /* button B */
+    is_exact: bool,
 ) -> (u64, u64, u64) {
+    let constraint = if is_exact {
+        |a: u64, b: u64| -> bool { a == b } as fn(u64, u64) -> bool
+    } else {
+        |a: u64, b: u64| -> bool { a <= b } as fn(u64, u64) -> bool
+    };
+
     let mut optimal_a = 0;
     let mut optimal_b = 0;
     let mut optimal = u64::MIN;
+
+    // let mut solutions = Vec::new();
 
     // iterate through feasiable values for button A (x1)
     for x in 0..=(x_total / a_x) {
         if a_y * x > y_total {
             // stop if we've violated constrainty
+            // println!("\tstop[1]: a_y * x > y_total: {a_y} * {x} = {} > {y_total}", a_y * x);
             break;
         }
 
         // iterate through feasiable values for button B (x2)
         for y in 0..=((x_total - a_x * x) / b_x) {
             if a_y * x + b_y * y > y_total {
+                // println!("\tstop[2]: a_y * x + b_y * y > y_total: {a_y} * {x} + {b_y} * {y} = {} > {y_total}", a_y * x + b_y * y);
                 // stop if we've violated constraint
                 break;
             }
 
             // check if constraints are satisfied
-            if a_x * x + b_x * y <= x_total && a_y * x + b_y * y <= y_total {
+            if constraint(a_x * x + b_x * y, x_total) && constraint(a_y * x + b_y * y, y_total) {
                 let objective = c_a * x + c_b * y;
                 // Update optimal solution if it's the smallest found
                 if objective > optimal {
                     optimal_a = x;
                     optimal_b = y;
                     optimal = objective;
+                    // let zzz = (optimal_a.clone(), optimal_b.clone(), optimal.clone());
+                    // println!("\tSOLUTION: {zzz:?}");
+                    // solutions.push(zzz);
                 }
             }
         }
