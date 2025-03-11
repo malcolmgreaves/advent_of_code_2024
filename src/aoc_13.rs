@@ -2,20 +2,6 @@ use crate::{io_help, utils::collect_results};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt1() -> u64 {
-    let lines = io_help::read_lines("./inputs/13").collect::<Vec<String>>();
-    panic!();
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-pub fn solution_pt2() -> u64 {
-    let lines = io_help::read_lines("./inputs/13").collect::<Vec<String>>();
-    panic!();
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct Button {
     x: usize,
@@ -110,6 +96,23 @@ fn parse_num_from(symbol: &str, s: &str) -> Result<usize, String> {
         )),
     }
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+pub fn solution_pt1() -> u64 {
+    let lines = io_help::read_lines("./inputs/13").collect::<Vec<String>>();
+    let claw_machines = construct(&lines).unwrap();
+    panic!("found {} claw machines", claw_machines.len());
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+pub fn solution_pt2() -> u64 {
+    let lines = io_help::read_lines("./inputs/13").collect::<Vec<String>>();
+    panic!("{} lines", lines.len())
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #[cfg(test)]
 mod test {
