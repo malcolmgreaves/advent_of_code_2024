@@ -28,6 +28,10 @@ struct Location {
     y: usize,
 }
 
+// A Claw Machine.
+//
+// Each press of its A or B buttons will move the claw in the specified X & Y directions.
+// The prize is located at a specific X,Y coordinate.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct ClawMach {
     a: Button,
@@ -59,7 +63,7 @@ fn parse_claw_machine(chunk: &[String]) -> Result<ClawMach, String> {
     }
     Result::Ok(ClawMach {
         a: parse_button(&chunk[0])?,
-        b: parse_button(&chunk[0])?,
+        b: parse_button(&chunk[1])?,
         prize: parse_prize(&chunk[2])?,
     })
 }
@@ -113,7 +117,7 @@ mod test {
     use indoc::indoc;
     use lazy_static::lazy_static;
 
-    use crate::io_help::read_lines_in_memory;
+    use crate::{io_help::read_lines_in_memory, utils::Res};
 
     use super::*;
 
@@ -136,12 +140,76 @@ mod test {
     "};
 
     lazy_static! {
-        static ref EXAMPLE_EXPECTED: Option<u8> = None;
+        static ref EXAMPLE_EXPECTED: Vec<ClawMach> = vec![
+            ClawMach {
+                a: Button { x: 94, y: 34 },
+                b: Button { x: 22, y: 67 },
+                prize: Location { x: 8400, y: 5400 }
+            },
+            ClawMach {
+                a: Button { x: 26, y: 66 },
+                b: Button { x: 67, y: 21 },
+                prize: Location { x: 12748, y: 12176 }
+            },
+            ClawMach {
+                a: Button { x: 17, y: 86 },
+                b: Button { x: 84, y: 37 },
+                prize: Location { x: 7870, y: 6450 }
+            },
+            ClawMach {
+                a: Button { x: 69, y: 23 },
+                b: Button { x: 27, y: 71 },
+                prize: Location { x: 18641, y: 10279 }
+            },
+        ];
     }
 
     #[test]
     fn construction() {
-        panic!();
+        let a = construct(&read_lines_in_memory(EXAMPLE_INPUT_STR).collect::<Vec<_>>());
+        match a {
+            Result::Ok(actual) => {
+                assert_eq!(actual.len(), 4);
+                let expected: &[ClawMach] = &EXAMPLE_EXPECTED;
+                assert_eq!(&actual, expected);
+            }
+            Result::Err(error) => assert!(false, "Expecting ok parse but found error: {error:?}"),
+        }
+    }
+
+    #[test]
+    fn construction_single() {
+        let actual = construct(&[
+            "Button A: X+94, Y+34".to_string(),
+            "Button B: X+22, Y+67".to_string(),
+            "Prize: X=8400, Y=5400".to_string(),
+        ]);
+        match actual {
+            Result::Ok(actuals) => {
+                assert_eq!(actuals.len(), 1);
+                assert_eq!(
+                    actuals[0],
+                    ClawMach {
+                        a: Button { x: 94, y: 34 },
+                        b: Button { x: 22, y: 67 },
+                        prize: Location { x: 8400, y: 5400 }
+                    }
+                );
+            }
+            Result::Err(error) => assert!(false, "Expecting ok parse, but found error: {error:?}"),
+        };
+    }
+
+    #[test]
+    fn construction_error() {
+        let actual = construct(&[
+            "Button A: X+94, Y+34".to_string(),
+            "Button B: X+22, Y+67".to_string(),
+        ]);
+        assert!(
+            actual.is_err(),
+            "Expecting an error, instead it is: {actual:?}"
+        );
     }
 
     #[test]
