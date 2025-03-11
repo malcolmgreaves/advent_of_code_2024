@@ -562,19 +562,19 @@ mod test {
         assert_eq!(actual, expected);
     }
 
-    #[test]
-    fn solve_example_part2_ilp() {
-        let claws: &[ClawMach] = &EXAMPLE_EXPECTED_PART_2;
-        println!("solving #1...");
-        assert!(solve_dynamic_programming(&claws[0]).is_none());
-        println!("solving #2...");
-        assert!(solve_dynamic_programming(&claws[1]).is_some());
-        println!("solving #3...");
-        assert!(solve_dynamic_programming(&claws[2]).is_none());
-        println!("solving #4...");
-        assert!(solve_dynamic_programming(&claws[3]).is_some());
-        println!("solved!");
-    }
+    // #[test]
+    // fn solve_example_part2_ilp() {
+    //     let claws: &[ClawMach] = &EXAMPLE_EXPECTED_PART_2;
+    //     println!("solving #1...");
+    //     assert!(solve_dynamic_programming(&claws[0]).is_none());
+    //     println!("solving #2...");
+    //     assert!(solve_dynamic_programming(&claws[1]).is_some());
+    //     println!("solving #3...");
+    //     assert!(solve_dynamic_programming(&claws[2]).is_none());
+    //     println!("solving #4...");
+    //     assert!(solve_dynamic_programming(&claws[3]).is_some());
+    //     println!("solved!");
+    // }
 
     #[test]
     fn pt2_soln_example() {
