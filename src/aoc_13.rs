@@ -235,16 +235,26 @@ fn ilp_solve(
 
     // let mut solutions = Vec::new();
 
+    let lower_bound_x = if a_x > 0 {
+        (x_total / a_x).saturating_sub((x_total / a_x))
+    } else {
+        0
+    };
     // iterate through feasiable values for button A (x1)
-    for x in 0..=(x_total / a_x) {
+    for x in lower_bound_x..=(x_total / a_x) {
         if a_y * x > y_total {
             // stop if we've violated constrainty
             // println!("\tstop[1]: a_y * x > y_total: {a_y} * {x} = {} > {y_total}", a_y * x);
             break;
         }
 
+        let lower_bound_y = if b_x > 0 {
+            (x_total.saturating_sub(a_x * x)) / b_x
+        } else {
+            0
+        };
         // iterate through feasiable values for button B (x2)
-        for y in 0..=((x_total - a_x * x) / b_x) {
+        for y in lower_bound_y..=((x_total - a_x * x) / b_x) {
             if a_y * x + b_y * y > y_total {
                 // println!("\tstop[2]: a_y * x + b_y * y > y_total: {a_y} * {x} + {b_y} * {y} = {} > {y_total}", a_y * x + b_y * y);
                 // stop if we've violated constraint
@@ -269,49 +279,6 @@ fn ilp_solve(
 
     (optimal_a, optimal_b, optimal)
 }
-
-/*
-def ilp_2v_dp(c1, c2, a11, a12, b1, a21, a22, b2):
-    """
-    Solves a 2-variable integer linear programming problem using dynamic programming.
-
-    Maximize:      Z = c1*A + c2*B
-    Subject to:    a11*A + a12*B ≤ X
-                   a21*A + a22*B ≤ Y
-                   A, B ≥ 0 and integer
-
-    :param c1, c2: Coefficients of the objective function
-    :param a11, a12, b1: Coefficients and RHS of first constraint
-    :param a21, a22, b2: Coefficients and RHS of second constraint
-    :return: (optimal_x1, optimal_x2, optimal_value)
-    """
-    dp = {}  # Dictionary to store feasible states and their objective values
-    optimal_state = (0, 0)
-    optimal_value = float('-inf')  # For maximization
-
-    # Iterate over feasible values of x1
-    for x1 in range((b1 // a11) + 1):  # Limit based on constraint 1
-        if a21 * x1 > b2:  # Check feasibility w.r.t. constraint 2
-            break
-
-        # Iterate over feasible values of x2 for a given x1
-        for x2 in range((b1 - a11 * x1) // a12 + 1):
-            if a21 * x1 + a22 * x2 > b2:  # Check feasibility for second constraint
-                break
-
-            # Check if the state satisfies both constraints
-            if a11 * x1 + a12 * x2 <= b1 and a21 * x1 + a22 * x2 <= b2:
-                Z = c1 * x1 + c2 * x2  # Compute objective function value
-                dp[(x1, x2)] = Z  # Store the state and its value
-
-                # Track the best solution found
-                if Z > optimal_value:
-                    optimal_value = Z
-                    optimal_state = (x1, x2)
-
-    return optimal_state[0], optimal_state[1], optimal_value
-
-*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -568,31 +535,45 @@ mod test {
     ///////////////////////////////////////////////
 
     #[test]
-    fn solve_example_1_part2() {
+    fn solve_example_1_ilp() {
         solve_example_1(solve_dynamic_programming);
     }
 
     #[test]
-    fn solve_example_2_part2() {
+    fn solve_example_2_ilp() {
         solve_example_no_solution(&EXAMPLE_EXPECTED_PART_1[1], solve_dynamic_programming);
     }
 
     #[test]
-    fn solve_example_3_part2() {
+    fn solve_example_3_ilp() {
         solve_example_3(solve_dynamic_programming);
     }
 
     #[test]
-    fn solve_example_4_part2() {
+    fn solve_example_4_ilp() {
         solve_example_no_solution(&EXAMPLE_EXPECTED_PART_1[3], solve_dynamic_programming);
     }
 
     #[test]
-    fn solve_example_part2() {
+    fn solve_example_part1_ilp() {
         let claws: &[ClawMach] = &EXAMPLE_EXPECTED_PART_1;
         let expected = 480;
         let actual = calculate_solution(claws.iter().map(solve_dynamic_programming));
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn solve_example_part2_ilp() {
+        let claws: &[ClawMach] = &EXAMPLE_EXPECTED_PART_2;
+        println!("solving #1...");
+        assert!(solve_dynamic_programming(&claws[0]).is_none());
+        println!("solving #2...");
+        assert!(solve_dynamic_programming(&claws[1]).is_some());
+        println!("solving #3...");
+        assert!(solve_dynamic_programming(&claws[2]).is_none());
+        println!("solving #4...");
+        assert!(solve_dynamic_programming(&claws[3]).is_some());
+        println!("solved!");
     }
 
     #[test]
