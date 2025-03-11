@@ -17,6 +17,15 @@ struct Location {
     y: u64,
 }
 
+impl Location {
+    fn increment(&self, val: u64) -> Self {
+        Self {
+            x: self.x + val,
+            y: self.y + val,
+        }
+    }
+}
+
 // A Claw Machine.
 //
 // Each press of its A or B buttons will move the claw in the specified X & Y directions.
@@ -180,9 +189,19 @@ fn solve_brute_force(claw: &ClawMach) -> Option<Press> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+const MODIFIER_PART_2: u64 = 10000000000000;
+
 pub fn solution_pt2() -> u64 {
     let lines = io_help::read_lines("./inputs/13").collect::<Vec<String>>();
-    let claw_machines = construct(&lines).unwrap();
+    let claw_machines = construct(&lines)
+        .unwrap()
+        .into_iter()
+        .map(|claw| ClawMach {
+            a: claw.a,
+            b: claw.b,
+            prize: claw.prize.increment(10000000000000),
+        })
+        .collect::<Vec<_>>();
     calculate_solution(claw_machines.iter().map(solve_dynamic_programming))
 }
 
