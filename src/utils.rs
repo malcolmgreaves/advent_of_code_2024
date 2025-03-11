@@ -22,6 +22,17 @@ macro_rules! log {
 }
 
 #[allow(dead_code)]
+pub fn collect_results<T, E>(results: impl Iterator<Item = Result<T, E>>) -> (Vec<T>, Vec<E>) {
+    results.fold((Vec::new(), Vec::new()), |(mut oks, mut errs), x| {
+        match x {
+            Result::Ok(t) => oks.push(t),
+            Result::Err(e) => errs.push(e),
+        };
+        (oks, errs)
+    })
+}
+
+#[allow(dead_code)]
 pub fn group_by<K, V>(key: fn(&V) -> K, values: Vec<V>) -> HashMap<K, Vec<V>>
 where
     K: Hash + Eq,
