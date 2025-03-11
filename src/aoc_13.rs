@@ -151,7 +151,13 @@ fn solve_brute_force(claw: &ClawMach) -> Option<Press> {
     if possibilities.len() == 0 {
         None
     } else {
-        let index_of_min = argmin(possibilities.iter().map(|p| (p, cost(p))), |(_, c)| *c);
+        let index_of_min = argmin(
+            &possibilities
+                .iter()
+                .map(|p| (p, cost(p)))
+                .collect::<Vec<_>>(),
+            |(_, c)| *c,
+        );
         Some(possibilities.swap_remove(index_of_min))
     }
 }
@@ -273,7 +279,7 @@ mod test {
     ///////////////////////////////////////////////
 
     #[test]
-    fn solve_example_1() {
+    fn solve_example_1_part1() {
         let claw = &EXAMPLE_EXPECTED[0];
         match solve_brute_force(claw) {
             Some(actual) => {
@@ -289,7 +295,7 @@ mod test {
     }
 
     #[test]
-    fn solve_example_2() {
+    fn solve_example_2_part1() {
         let claw = &EXAMPLE_EXPECTED[1];
         match solve_brute_force(claw) {
             Some(actual) => assert!(
@@ -301,7 +307,7 @@ mod test {
     }
 
     #[test]
-    fn solve_example_3() {
+    fn solve_example_3_part1() {
         let claw = &EXAMPLE_EXPECTED[2];
         match solve_brute_force(claw) {
             Some(actual) => {
@@ -317,7 +323,7 @@ mod test {
     }
 
     #[test]
-    fn solve_example_4() {
+    fn solve_example_4_part1() {
         let claw = &EXAMPLE_EXPECTED[3];
         match solve_brute_force(claw) {
             Some(actual) => assert!(
@@ -329,7 +335,7 @@ mod test {
     }
 
     #[test]
-    fn solve_example() {
+    fn solve_example_part1() {
         let claws: &[ClawMach] = &EXAMPLE_EXPECTED;
         let expected = 480;
         let actual = calculate_solution(claws.iter().map(solve_brute_force));
@@ -338,7 +344,7 @@ mod test {
 
     #[test]
     fn pt1_soln_example() {
-        panic!();
+        assert_eq!(solution_pt1(), 30973);
     }
 
     ///////////////////////////////////////////////

@@ -23,7 +23,7 @@ macro_rules! log {
 }
 
 #[allow(dead_code)]
-pub fn argmin<F, T, C: Ord>(values: impl Iterator<Item = T>, key: F) -> usize
+pub fn argmin<F, T, C: Ord>(values: &[T], key: F) -> usize
 where
     F: Fn(&T) -> C,
 {
