@@ -22,7 +22,7 @@ macro_rules! log {
     };
 }
 
-trait HasBool {
+pub trait HasBool {
     fn as_bool(&self) -> bool;
 }
 

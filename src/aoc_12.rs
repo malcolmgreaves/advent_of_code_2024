@@ -2,7 +2,7 @@ use std::{
     cmp::Ordering,
     collections::{HashMap, HashSet},
     fmt::{Debug, Display},
-    ops::{Add, Div, Mul, Range, Sub},
+    ops::{Add, Div, Mul, Sub},
 };
 
 use crate::{
@@ -394,6 +394,7 @@ fn scan_sides<T: Eq + Clone + Ord + Debug>(
     sides_as_regions.len() as u64
 }
 
+#[allow(dead_code)]
 fn count_sides_custom<T: Eq + Clone + Ord + Debug + Default + Display>(
     garden: &Matrix<T>,
 ) -> Vec<(Region<T>, u64)> {
@@ -457,7 +458,7 @@ fn expand_to_intersection_points_grid<T: Default + Clone>(mat: &Matrix<T>) -> Ma
     // for each i,j turn into 8 NEW points: all neighbors + 1 original point
     mat.iter().enumerate().for_each(|(i, row)| {
         let i_expanded = i * 2;
-        row.iter().enumerate().for_each(|(j, x)| {
+        row.iter().enumerate().for_each(|(j, _x)| {
             // i,j in mat
             //  ==>
             // i*2, j*2 in expanded
@@ -817,6 +818,7 @@ mod test {
         MMMISSJEEE
     "};
 
+    #[allow(dead_code)]
     const EXAMPLE_INPUT_STR_WEIRD: &str = indoc! {"
         AAIBBBB
         AAIIIBB

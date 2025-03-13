@@ -663,6 +663,7 @@ mod test {
         assert_eq!(actual, 1928);
     }
 
+    #[allow(non_camel_case_types, dead_code)]
     #[derive(PartialEq, Debug, Eq)]
     enum PrintKind {
         full,
@@ -760,7 +761,7 @@ mod test {
             .iter()
             .map(|e| match e {
                 Some(x) => {
-                    assert!(0 <= *x && *x <= 9);
+                    assert!(*x <= 9); // NOTE: since x is unsinged, 0 <= *x  is always true
                     x.to_string()
                 }
                 None => ".".to_string(),

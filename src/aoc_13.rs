@@ -189,8 +189,6 @@ fn solve_brute_force(claw: &ClawMach) -> Option<Press> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-const MODIFIER_PART_2: u64 = 10000000000000;
-
 pub fn solution_pt2() -> u64 {
     let lines = io_help::read_lines("./inputs/13").collect::<Vec<String>>();
     let claw_machines = construct(&lines)
@@ -236,7 +234,7 @@ fn ilp_solve(
     // let mut solutions = Vec::new();
 
     let lower_bound_x = if a_x > 0 {
-        (x_total / a_x).saturating_sub((x_total / a_x))
+        (x_total / a_x).saturating_sub(x_total / a_x)
     } else {
         0
     };
@@ -352,7 +350,7 @@ mod test {
 
         Button A: X+69, Y+23
         Button B: X+27, Y+71
-        Prize: X=10000000018641, Y=10279
+        Prize: X=10000000018641, Y=10000000010279
     "};
 
     lazy_static! {
@@ -397,11 +395,10 @@ mod test {
     #[test]
     fn construction() {
         let do_test = |example: &str, expected: &[ClawMach]| {
-            let a = construct(&read_lines_in_memory(EXAMPLE_INPUT_STR_PART_1).collect::<Vec<_>>());
+            let a = construct(&read_lines_in_memory(example).collect::<Vec<_>>());
             match a {
                 Result::Ok(actual) => {
                     assert_eq!(actual.len(), 4);
-                    let expected: &[ClawMach] = &EXAMPLE_EXPECTED_PART_1;
                     assert_eq!(&actual, expected);
                 }
                 Result::Err(error) => {
