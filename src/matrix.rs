@@ -26,7 +26,7 @@ impl Direction {
     }
 
     // [0,3] the # of turns to get from self to other, rotating clockwise
-    #[allow(unused)]
+    #[allow(dead_code)]
     pub fn calculate_clockwise_turns(&self, other: &Direction) -> u8 {
         let mut d = self.clone();
         let mut n = 0;
@@ -37,6 +37,7 @@ impl Direction {
         n
     }
 
+    #[allow(dead_code)]
     pub fn opposite(&self) -> Direction {
         match self {
             Direction::Up => Direction::Down,
@@ -47,9 +48,10 @@ impl Direction {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct GridMovement {
-    max_row: usize,
-    max_col: usize,
+    pub max_row: usize,
+    pub max_col: usize,
 }
 
 impl GridMovement {
@@ -60,6 +62,7 @@ impl GridMovement {
         }
     }
 
+    #[allow(dead_code)]
     pub fn full_neighborhood(&self, row: usize, col: usize) -> [(Option<usize>, Option<usize>); 9] {
         [
             (self.sub(row), self.sub(col)),
@@ -74,19 +77,25 @@ impl GridMovement {
         ]
     }
 
+    #[allow(dead_code)]
     pub fn sub(&self, x: usize) -> Option<usize> {
         if x > 0 { Some(x - 1) } else { None }
     }
+
+    #[allow(dead_code)]
     pub fn add_row(&self, x: usize) -> Option<usize> {
         let y = x + 1;
         if y < self.max_row { Some(y) } else { None }
     }
+
+    #[allow(dead_code)]
     pub fn add_col(&self, x: usize) -> Option<usize> {
         let y = x + 1;
         if y < self.max_col { Some(y) } else { None }
     }
 
     /// Obtain up to 4 positions around loc, ordered by clockwise rotation starting from facing.
+    #[allow(dead_code)]
     pub fn clockwise_rotation(
         &self,
         loc: &Coordinate,
@@ -149,6 +158,62 @@ impl GridMovement {
             Some(Coordinate { row, col: loc.col })
         } else {
             None
+        }
+    }
+
+    pub fn wrap_increment_row(&self, c: usize, incer_by: i32) -> usize {
+        Self::wrap_increment(self.max_row, c, incer_by)
+    }
+
+    pub fn wrap_increment_col(&self, c: usize, incer_by: i32) -> usize {
+        Self::wrap_increment(self.max_col, c, incer_by)
+    }
+
+    // max is inclusive (it is an index!)
+    fn wrap_increment(max: usize, c: usize, incer_by: i32) -> usize {
+        // CAN I REPLACE ALL OF THIS WITH `c % incr_by` ???
+        match incer_by.cmp(&0) {
+            Ordering::Equal => c,
+            Ordering::Greater => {
+                // positive: check for potential overflow
+                let increment_pos = TryInto::<usize>::try_into(incer_by).unwrap();
+                let raw_incremented = c + increment_pos;
+                if raw_incremented <= max {
+                    // no overflow!
+                    // println!("\tno overflow: raw_incremented={raw_incremented} max={max}");
+                    raw_incremented
+                } else {
+                    // overflow!
+                    // go to the "zero" for the row/col and add the leftover!
+                    let remaining = raw_incremented - max - 1;
+                    // println!("\toverflow!: raw_incremented={raw_incremented} max={max}, remaining={remaining}");
+                    if remaining == 0 {
+                        0
+                    } else {
+                        Self::wrap_increment(max, 0, remaining as i32)
+                    }
+                }
+            }
+            Ordering::Less => {
+                // negative: check for posability of underflow
+                let c_signed = TryInto::<i64>::try_into(c).unwrap();
+                // always safe to go from i32 -> i64
+                let incremented_signed = c_signed + incer_by as i64;
+                if incremented_signed >= 0 {
+                    // no underflow!
+                    // always safe to go from i64 -> u64
+                    TryInto::<usize>::try_into(incremented_signed).unwrap()
+                } else {
+                    // underflow!
+                    // go to the "end" of the row/col and subtract the leftover!
+                    let remaining = TryInto::<i32>::try_into(incremented_signed).unwrap() + 1;
+                    if remaining == 0 {
+                        max
+                    } else {
+                        Self::wrap_increment(max, max, remaining)
+                    }
+                }
+            }
         }
     }
 }
@@ -226,6 +291,7 @@ pub fn exterior_perimiter<T>(mat: &Matrix<T>, members: &[Coordinate]) -> u64 {
         })
 }
 
+#[allow(dead_code)]
 pub fn trace_perimiter<T>(mat: &Matrix<T>, members: &[Coordinate]) -> Vec<Coordinate> {
     let g = GridMovement::new(mat);
     // create set: (row,col) => in members?
@@ -549,6 +615,27 @@ pub fn diagonal_coordinates(n: i32, m: i32) -> Vec<Vec<(usize, usize)>> {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn wrapping() {
+        let g = GridMovement {
+            max_row: 5,
+            max_col: 10,
+        };
+        assert_eq!(g.wrap_increment_col(1, 5), 6, "add: no under/over-flow");
+        assert_eq!(g.wrap_increment_col(1, 9), 10, "add: no under/over-flow");
+        assert_eq!(g.wrap_increment_col(1, 21), 0, "add: overflow");
+        assert_eq!(g.wrap_increment_row(1, 4), 5, "add: no under/over-flow");
+        assert_eq!(g.wrap_increment_row(1, 5), 0, "add: overflow");
+        assert_eq!(g.wrap_increment_row(1, 6), 1, "add: overflow");
+        assert_eq!(g.wrap_increment_row(1, 10), 5, "add: overflow");
+        assert_eq!(g.wrap_increment_row(1, 11), 0, "add: overflow");
+        assert_eq!(g.wrap_increment_row(3, -2), 1, "sub: no under/over-flow");
+        assert_eq!(g.wrap_increment_row(3, -3), 0, "sub: no under/over-flow");
+        assert_eq!(g.wrap_increment_row(3, -4), 5, "sub: underflow");
+        assert_eq!(g.wrap_increment_row(3, -8), 1, "sub: underflow");
+        assert_eq!(g.wrap_increment_col(5, -10), 6, "sub: underflow");
+    }
 
     #[test]
     fn try_flip_diagonal_coordinates() {

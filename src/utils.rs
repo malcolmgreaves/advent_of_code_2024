@@ -22,6 +22,30 @@ macro_rules! log {
     };
 }
 
+trait HasBool {
+    fn as_bool(&self) -> bool;
+}
+
+impl HasBool for bool {
+    fn as_bool(&self) -> bool {
+        *self
+    }
+}
+
+impl HasBool for &bool {
+    fn as_bool(&self) -> bool {
+        return **self;
+    }
+}
+
+// Number of true elements.
+pub fn sum_bools<'a, I>(bools: impl Iterator<Item = I>) -> usize
+where
+    I: HasBool,
+{
+    bools.fold(0 as usize, |c, b| if b.as_bool() { c + 1 } else { c })
+}
+
 #[allow(dead_code)]
 pub fn argmin<F, T, C: Ord>(values: &[T], key: F) -> usize
 where
