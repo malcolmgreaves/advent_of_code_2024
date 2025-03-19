@@ -216,6 +216,41 @@ impl GridMovement {
             }
         }
     }
+
+    pub fn positions_up(&self, from: &Coordinate) -> Vec<Coordinate> {
+        self.positions(from, |c: &Coordinate| self.next_up(c))
+    }
+
+    pub fn positions_down(&self, from: &Coordinate) -> Vec<Coordinate> {
+        self.positions(from, |c: &Coordinate| self.next_down(c))
+    }
+
+    pub fn positions_left(&self, from: &Coordinate) -> Vec<Coordinate> {
+        self.positions(from, |c: &Coordinate| self.next_left(c))
+    }
+
+    pub fn positions_right(&self, from: &Coordinate) -> Vec<Coordinate> {
+        self.positions(from, |c: &Coordinate| self.next_right(c))
+    }
+
+    fn positions(
+        &self,
+        from: &Coordinate,
+        f: impl Fn(&Coordinate) -> Option<Coordinate>,
+    ) -> Vec<Coordinate> {
+        let mut v = Vec::new();
+        let mut loc = from.clone();
+        loop {
+            loc = match f(&loc) {
+                Some(p) => {
+                    v.push(p.clone());
+                    p
+                }
+                None => break,
+            };
+        }
+        v
+    }
 }
 
 pub fn cardinal_neighbors<T>(
@@ -432,6 +467,7 @@ pub fn display_matrix<T: Display>(
         .join(r_sep)
 }
 
+#[allow(unused)]
 pub fn print_matrix<T: Display>(m: &Matrix<T>) {
     println!("{}", display_matrix(m, ",", "\n", "_"));
 }
