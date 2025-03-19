@@ -2,8 +2,10 @@ use crate::io_help;
 
 // https://adventofcode.com/2024/day/2
 
-pub fn solution_pt1() -> u64 {
-    count_ok_levels(io_help::read_lines_as_ints(" ", "./inputs/2").to_vec())
+pub fn solution_pt1() -> Result<u64, String> {
+    Ok(count_ok_levels(
+        io_help::read_lines_as_ints(" ", "./inputs/2").to_vec(),
+    ))
 }
 
 fn count_ok_levels(levels: Vec<Vec<i32>>) -> u64 {
@@ -52,8 +54,10 @@ fn check_level(level: &[i32]) -> bool {
     return ascending_or_descending && diff_check;
 }
 
-pub fn solution_pt2() -> u64 {
-    count_ok_levels_with_damper(io_help::read_lines_as_ints(" ", "./inputs/2").to_vec())
+pub fn solution_pt2() -> Result<u64, String> {
+    Ok(count_ok_levels_with_damper(
+        io_help::read_lines_as_ints(" ", "./inputs/2").to_vec(),
+    ))
 }
 
 fn count_ok_levels_with_damper(levels: Vec<Vec<i32>>) -> u64 {

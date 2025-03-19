@@ -13,16 +13,16 @@ fn construct(lines: &[String]) -> Result<TODO, String> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt1() -> u64 {
-    let lines = io_help::read_lines("./inputs/???").collect::<Vec<String>>();
-    panic!("{} lines", lines.len());
+pub fn solution_pt1() -> Result<u64, String> {
+    let lines = io_help::read_lines("./inputs/???");
+    Err(format!("part 1 is unimplemented! have lines={lines:?}"))
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt2() -> u64 {
-    let lines = io_help::read_lines("./inputs/???").collect::<Vec<String>>();
-    panic!("{} lines", lines.len());
+pub fn solution_pt2() -> Result<u64, String> {
+    let lines = io_help::read_lines("./inputs/???");
+    Err(format!("part 2 is unimplemented! have lines={lines:?}"))
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,6 +55,7 @@ mod test {
 
     ///////////////////////////////////////////////
 
+    #[ignore]
     #[test]
     fn pt1_soln_example() {
         panic!();
@@ -62,6 +63,7 @@ mod test {
 
     ///////////////////////////////////////////////
 
+    #[ignore]
     #[test]
     fn pt2_soln_example() {
         panic!();

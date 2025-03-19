@@ -1,7 +1,6 @@
 use std::{
     cmp::Ordering,
     collections::HashMap,
-    error::Error,
     hash::Hash,
     ops::{AddAssign, SubAssign},
 };
@@ -144,21 +143,6 @@ where
 
 pub fn reverse_string(x: String) -> String {
     x.chars().rev().collect::<String>()
-}
-
-pub type Res<T> = Result<T, Box<dyn Error>>;
-
-pub fn proc_elements_result<A, B>(process: fn(&A) -> Res<B>, elements: &[A]) -> Res<Vec<B>> {
-    let mut collected: Vec<B> = Vec::new();
-    for x in elements.iter() {
-        match process(x) {
-            Ok(result) => collected.push(result),
-            Err(error) => {
-                return Err(error);
-            }
-        }
-    }
-    Ok(collected)
 }
 
 // #[cfg(test)]

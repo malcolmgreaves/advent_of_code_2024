@@ -25,11 +25,11 @@ type FullSignalMat = Matrix<Vec<State>>;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt1() -> u64 {
+pub fn solution_pt1() -> Result<u64, String> {
     // How many unique locations within the bounds of the map contain an antinode?
     let lines = io_help::read_lines("./inputs/8").collect::<Vec<String>>();
     let signals = construct_signal_matrix(&lines);
-    n_unique_antinodes(&signals)
+    Ok(n_unique_antinodes(&signals))
 }
 
 fn construct_signal_matrix(lines: &[String]) -> SignalMat {
@@ -271,10 +271,10 @@ fn antenna_to_locs(signals: &SignalMat) -> HashMap<char, Vec<Coordinate>> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/8").collect::<Vec<String>>();
     let signals: SignalMat = construct_signal_matrix(&lines);
-    n_unique_antinodes_resonant_harmonics(&signals)
+    Ok(n_unique_antinodes_resonant_harmonics(&signals))
 }
 
 fn n_unique_antinodes_resonant_harmonics(signals: &SignalMat) -> u64 {

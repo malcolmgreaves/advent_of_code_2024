@@ -71,11 +71,11 @@ fn display_equation(equation: &Equation) -> String {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt1() -> u64 {
+pub fn solution_pt1() -> Result<u64, String> {
     // total calibration result, which is the sum of the test values from just the equations that could possibly be true
     let lines = io_help::read_lines("./inputs/7").collect::<Vec<String>>();
     let operative_equations = create_equations(&lines);
-    total_binary_calibration_result(&operative_equations)
+    Ok(total_binary_calibration_result(&operative_equations))
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -217,10 +217,10 @@ fn compute(eqn: &Equation) -> u64 {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/7").collect::<Vec<String>>();
     let operative_equations = create_equations(&lines);
-    total_ternary_calibration_result(&operative_equations)
+    Ok(total_ternary_calibration_result(&operative_equations))
 }
 
 fn total_ternary_calibration_result(op_eqns: &[OperativeEquation]) -> u64 {

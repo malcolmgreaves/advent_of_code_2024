@@ -38,16 +38,16 @@ fn construct(lines: &[String]) -> Topo {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt1() -> u64 {
+pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/10").collect::<Vec<String>>();
     let trailhead_paths = construct_and_find_all_trailhead_paths(&lines);
-    score_trailhead_paths(&trailhead_paths)
+    Ok(score_trailhead_paths(&trailhead_paths))
 }
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/10").collect::<Vec<String>>();
     let trailhead_paths = construct_and_find_all_trailhead_paths(&lines);
-    rate_trailhead_paths(&trailhead_paths)
+    Ok(rate_trailhead_paths(&trailhead_paths))
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

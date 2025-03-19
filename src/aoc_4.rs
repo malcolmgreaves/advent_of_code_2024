@@ -10,7 +10,7 @@ use crate::{
 
 // https://adventofcode.com/2024/day/4
 
-pub fn solution_pt1() -> u64 {
+pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/4").collect::<Vec<String>>();
     assert_ne!(lines.len(), 0);
 
@@ -20,7 +20,7 @@ pub fn solution_pt1() -> u64 {
     let matrix = convert_to_char_matrix(max_rows, max_cols, &lines);
     // let matrix: [[char; COLS]; ROWS] = utils::convert_to_char_matrix::<ROWS, COLS>(&lines);
 
-    count_terms(max_cols, max_rows, "XMAS", matrix)
+    Ok(count_terms(max_cols, max_rows, "XMAS", matrix))
     // count_terms("XMAS", &matrix)
 }
 
@@ -171,14 +171,15 @@ fn diagonals_r2l(max_cols: usize, max_rows: usize, lines: &CharMatrix) -> Vec<St
         .collect::<Vec<_>>()
 }
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/4").collect::<Vec<String>>();
-    assert_ne!(lines.len(), 0);
+    if lines.len() == 0 {
+        return Err(format!("need non-empty input!"));
+    }
     let max_rows = lines.len();
     let max_cols = lines[0].len();
     let chars = convert_to_char_matrix(max_rows, max_cols, &lines);
-
-    count_mas_x(&chars)
+    Ok(count_mas_x(&chars))
 }
 
 pub fn count_mas_x(chars: &CharMatrix) -> u64 {

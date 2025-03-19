@@ -16,11 +16,11 @@ use crate::{
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt1() -> u64 {
+pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/12").collect::<Vec<String>>();
     let garden = construct(&lines);
     let regions = determine_regions(&garden);
-    cost(&regions)
+    Ok(cost(&regions))
 }
 
 impl HasValue<char> for char {
@@ -232,10 +232,10 @@ fn cost<T: Eq + Clone + Ord + Debug>(regions: &[Region<T>]) -> u64 {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/12").collect::<Vec<String>>();
     let garden = construct(&lines);
-    cost_sides(&garden)
+    Ok(cost_sides(&garden))
 }
 
 fn cost_sides(garden: &Garden) -> u64 {
@@ -1280,11 +1280,11 @@ mod test {
 
     #[test]
     fn pt1_soln_example() {
-        assert_eq!(solution_pt1(), 1473620);
+        assert_eq!(solution_pt1().unwrap(), 1473620);
     }
 
     #[test]
     fn pt2_soln_example() {
-        // assert_eq!(solution_pt2(), )
+        // assert_eq!(solution_pt2().unwrap(), )
     }
 }

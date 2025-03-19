@@ -4,10 +4,10 @@ use crate::io_help;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt1() -> u64 {
+pub fn solution_pt1() -> Result<u64, String> {
     // How many unique locations within the bounds of the map contain an antinode?
     let lines = io_help::read_lines("./inputs/9").collect::<Vec<String>>();
-    solution(defrag_inplace, &lines)
+    Ok(solution(defrag_inplace, &lines))
 }
 
 fn solution(defragment: fn(&mut ExpandedLine) -> (), lines: &[String]) -> u64 {
@@ -451,9 +451,9 @@ fn defrag_whole_files_inplace(expanded: &mut ExpandedLine) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/9").collect::<Vec<String>>();
-    solution(defrag_whole_files_inplace, &lines)
+    Ok(solution(defrag_whole_files_inplace, &lines))
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

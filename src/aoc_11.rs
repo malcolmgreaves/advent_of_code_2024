@@ -11,20 +11,22 @@ use crate::io_help;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// solutions
 
-pub fn solution_pt1() -> u64 {
+pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/11").collect::<Vec<String>>();
     let stone_line = construct(lines[0].as_str());
     let final_stone_line = iterate_stones(&stone_line, 25);
-    final_stone_line.len() as u64
+    Ok(final_stone_line.len() as u64)
 }
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/11").collect::<Vec<String>>();
-    assert_eq!(lines.len(), 1, "Can only handle one input stone line.");
+    if lines.len() != 1 {
+        return Err(format!("Can only handle one input stone line."));
+    }
     let stone_line = construct(lines[0].as_str());
     // iterate_stones_parallel_count(&stone_line, 75, Some(100))
     // iterate_stones_depth_first(&stone_line, 75, Some(25))
-    iterate_stones_count(&stone_line, 75)
+    Ok(iterate_stones_count(&stone_line, 75))
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -13,9 +13,9 @@ fn convert_to_int_lists(nums: Vec<Vec<i32>>) -> (Vec<i32>, Vec<i32>) {
         .unzip::<i32, i32, Vec<i32>, Vec<i32>>()
 }
 
-pub fn solution_pt1() -> u64 {
+pub fn solution_pt1() -> Result<u64, String> {
     let (l1, l2) = convert_to_int_lists(io_help::read_lines_as_ints("   ", "./inputs/1"));
-    sum_sorted_distances(&l1, &l2)
+    Ok(sum_sorted_distances(&l1, &l2))
 }
 
 fn sum_sorted_distances(list1: &[i32], list2: &[i32]) -> u64 {
@@ -32,9 +32,9 @@ fn sum_sorted_distances(list1: &[i32], list2: &[i32]) -> u64 {
     s as u64
 }
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     let (l1, l2) = convert_to_int_lists(io_help::read_lines_as_ints("   ", "./inputs/1"));
-    similarity_score(&l1, &l2)
+    Ok(similarity_score(&l1, &l2))
 }
 
 fn similarity_score(list1: &[i32], list2: &[i32]) -> u64 {

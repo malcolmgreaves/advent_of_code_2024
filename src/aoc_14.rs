@@ -104,14 +104,14 @@ where
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt1() -> u64 {
+pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/14");
     let robots = construct(lines).unwrap();
     let board = create_board_state(robots);
     assert_eq!(board.g.max_row + 1, 103);
     assert_eq!(board.g.max_col + 1, 101);
     let final_positions = run_robot_paths(&board, 100);
-    safety_factor(&final_positions)
+    Ok(safety_factor(&final_positions))
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -313,13 +313,13 @@ fn filter_robots_by_coordinate<'a>(
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/14");
     let robots = construct(lines).unwrap();
     let board = create_board_state(robots);
     assert_eq!(board.g.max_row + 1, 103);
     assert_eq!(board.g.max_col + 1, 101);
-    find_christmas_tree_iteration(&board)
+    Ok(find_christmas_tree_iteration(&board))
 }
 
 fn find_christmas_tree_iteration(board: &BoardState) -> u64 {
@@ -698,13 +698,13 @@ mod test {
 
     #[test]
     fn pt1_soln_example() {
-        assert_eq!(solution_pt1(), 228457125);
+        assert_eq!(solution_pt1().unwrap(), 228457125);
     }
 
     ///////////////////////////////////////////////
 
     #[test]
     fn pt2_soln_example() {
-        assert_eq!(solution_pt2(), 6493);
+        assert_eq!(solution_pt2().unwrap(), 6493);
     }
 }

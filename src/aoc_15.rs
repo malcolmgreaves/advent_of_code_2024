@@ -142,10 +142,10 @@ fn parse_moves(line: &str) -> Result<Moves, String> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt1() -> u64 {
+pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/15");
-    let warehouse = construct(lines).unwrap();
-    solve_1(&warehouse)
+    let warehouse = construct(lines)?;
+    Ok(solve_1(&warehouse))
 }
 
 fn solve_1(warehouse: &Warehouse) -> u64 {
@@ -286,10 +286,13 @@ fn locate_robot(floor: &Floor) -> Result<Coordinate, String> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/15");
-    let warehouse = construct(lines).unwrap();
-    panic!("part2 is incomplenete! warehouse={warehouse:?}");
+    let warehouse = construct(lines)?;
+    Err(format!(
+        "part2 is incomplete! warehouse's robot={:?}",
+        warehouse.robot
+    ))
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -621,7 +624,7 @@ mod test {
 
     #[test]
     fn pt1_soln_example() {
-        assert_eq!(solution_pt1(), 1398947);
+        assert_eq!(solution_pt1().unwrap(), 1398947);
     }
 
     ///////////////////////////////////////////////

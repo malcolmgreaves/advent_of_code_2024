@@ -7,15 +7,19 @@ use crate::io_help::{self, to_int32};
 
 // https://adventofcode.com/2024/day/3
 
-pub fn solution_pt1() -> u64 {
-    solve_inputs_mul(&io_help::read_lines("./inputs/3").collect::<Vec<String>>())
+pub fn solution_pt1() -> Result<u64, String> {
+    Ok(solve_inputs_mul(
+        &io_help::read_lines("./inputs/3").collect::<Vec<String>>(),
+    ))
 }
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     // turn a string into a sequence of instructions
     // instructions are: mul(L,R), do, don't
     // then process as state machine
-    solve_inputs_conditionals(io_help::read_lines("./inputs/3").collect::<String>())
+    Ok(solve_inputs_conditionals(
+        io_help::read_lines("./inputs/3").collect::<String>(),
+    ))
 }
 
 pub struct MulGroup {

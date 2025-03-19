@@ -1,13 +1,8 @@
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 
-use crate::utils::{Res, proc_elements_result};
-
 use crate::io_help;
 
-// pub struct PrintRulesQueue<'a> {
-//     rules: &'a [PrintRule],
-//     queue: &'a [PrintJob<'a>],
 #[derive(Debug, PartialEq)]
 pub struct PrintRulesQueue {
     rules: Vec<PrintRule>,
@@ -20,7 +15,6 @@ pub struct PrintRule {
     after: Page,
 }
 
-// pub type PrintJob<'a> = &'a [Page];
 pub type PrintJob = Vec<Page>;
 
 pub type Page = usize;
@@ -50,15 +44,13 @@ struct WorkingPrintRules {
     before_afters: HashMap<Page, HashSet<Page>>,
 }
 
-pub fn solution_pt1() -> u64 {
+pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/5").collect::<Vec<String>>();
-    match create_print_rules_queue_from_input(&lines) {
-        Ok(print_queue_rules) => sum_of_middles_of_valid_print_queues(&print_queue_rules),
-        Err(error) => panic!("Could not create print queue rules from inputs/5 !! {error}"),
-    }
+    let print_queue_rules = create_print_rules_queue_from_input(&lines)?;
+    Ok(sum_of_middles_of_valid_print_queues(&print_queue_rules))
 }
 
-fn create_print_rules_queue_from_input(lines: &[String]) -> Res<PrintRulesQueue> {
+fn create_print_rules_queue_from_input(lines: &[String]) -> Result<PrintRulesQueue, String> {
     let index_separation = {
         let mut idx = None;
         for i in 0..lines.len() {
@@ -77,12 +69,12 @@ fn create_print_rules_queue_from_input(lines: &[String]) -> Res<PrintRulesQueue>
     let queue_part = &lines[(index_separation?) + 1..lines.len()];
 
     let rules_final = proc_elements_result(
-        |x: &String| -> Res<PrintRule> { create_rule(x.to_string()) },
+        |x: &String| -> Result<PrintRule, String> { create_rule(x.to_string()) },
         &rules_part,
     )?;
 
     let queue_final = proc_elements_result(
-        |x: &String| -> Res<Vec<Page>> { create_queue(x.to_string()) },
+        |x: &String| -> Result<Vec<Page>, String> { create_queue(x.to_string()) },
         &queue_part,
     )?;
 
@@ -92,19 +84,39 @@ fn create_print_rules_queue_from_input(lines: &[String]) -> Res<PrintRulesQueue>
     })
 }
 
-fn create_rule(rule: String) -> Res<PrintRule> {
+fn proc_elements_result<A, B>(
+    process: fn(&A) -> Result<B, String>,
+    elements: &[A],
+) -> Result<Vec<B>, String> {
+    let mut collected: Vec<B> = Vec::new();
+    for x in elements.iter() {
+        match process(x) {
+            Ok(result) => collected.push(result),
+            Err(error) => {
+                return Err(error);
+            }
+        }
+    }
+    Ok(collected)
+}
+
+fn create_rule(rule: String) -> Result<PrintRule, String> {
     // "a|b" ==> PrintRule{before: a, after: b}
     match rule.find("|") {
         Some(index) => {
-            let before = rule[0..index].parse::<usize>()?;
-            let after = rule[(index + 1)..rule.len()].parse::<usize>()?;
+            let before = rule[0..index]
+                .parse::<usize>()
+                .map_err(|e| format!("{e:?}"))?;
+            let after = rule[(index + 1)..rule.len()]
+                .parse::<usize>()
+                .map_err(|e| format!("{e:?}"))?;
             Ok(PrintRule { before, after })
         }
         None => Err(format!("Could not find separator (|) for rule: {rule}").into()),
     }
 }
 
-fn create_queue(queue: String) -> Res<Vec<Page>> {
+fn create_queue(queue: String) -> Result<Vec<Page>, String> {
     // "a,b,c,d" ==> vec![a,b,c,d]
     // let bits = queue.split(",");
     // let mut pages: Vec<Page> = Vec::new();
@@ -120,7 +132,7 @@ fn create_queue(queue: String) -> Res<Vec<Page>> {
     // }
     // Ok(pages)
     proc_elements_result(
-        |x: &&str| -> Res<usize> {
+        |x: &&str| -> Result<usize, String> {
             match x.parse::<usize>() {
                 Ok(page) => Ok(page),
                 Err(error) => Err(error.to_string().into()),
@@ -188,12 +200,12 @@ fn middles_of(queue: &[&PrintJob]) -> Vec<Page> {
         .collect::<Vec<_>>()
 }
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/5").collect::<Vec<String>>();
-    match create_print_rules_queue_from_input(&lines) {
-        Ok(print_queue_rules) => sum_of_middles_on_only_invalid_fixed_queues(&print_queue_rules),
-        Err(error) => panic!("Could not create print queue rules from inputs/5 !! {error}"),
-    }
+    let print_queue_rules = create_print_rules_queue_from_input(&lines)?;
+    Ok(sum_of_middles_on_only_invalid_fixed_queues(
+        &print_queue_rules,
+    ))
 }
 
 fn sum_of_middles_on_only_invalid_fixed_queues(print_queue_rules: &PrintRulesQueue) -> u64 {

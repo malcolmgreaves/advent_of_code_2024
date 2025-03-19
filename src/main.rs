@@ -66,15 +66,17 @@ struct Args {
 
 type PosInt = usize;
 
+type Return = Result<u64, String>;
+
 #[derive(Debug, Clone, PartialEq, Eq, Ord)]
 struct Aoc {
     problem: PosInt,
     part: PosInt,
-    func: fn() -> u64,
+    func: fn() -> Return,
 }
 
 impl Aoc {
-    fn new(problem: PosInt, part: PosInt, func: fn() -> u64) -> Aoc {
+    fn new(problem: PosInt, part: PosInt, func: fn() -> Return) -> Aoc {
         if problem == 0 {
             panic!("problem number must be positive!");
         }
@@ -130,8 +132,8 @@ impl<T> FutureResults<T> {
     // }
 }
 
-fn concurrently_run(problems: &[Aoc]) -> FutureResults<u64> {
-    let (s, r) = channel::<(Aoc, u64)>();
+fn concurrently_run(problems: &[Aoc]) -> FutureResults<Return> {
+    let (s, r) = channel::<(Aoc, Return)>();
     let tx = Arc::new(Mutex::new(s));
 
     problems.iter().for_each(|aoc| {
@@ -164,7 +166,7 @@ pub fn main() {
         Aoc::new(5, 1, aoc_5::solution_pt1),
         Aoc::new(5, 2, aoc_5::solution_pt2),
         Aoc::new(6, 1, aoc_6::solution_pt1),
-        // Aoc::new(6, 2, aoc_6::solution_pt2),
+        Aoc::new(6, 2, aoc_6::solution_pt2),
         Aoc::new(7, 1, aoc_7::solution_pt1),
         Aoc::new(7, 2, aoc_7::solution_pt2),
         Aoc::new(8, 1, aoc_8::solution_pt1),
@@ -231,7 +233,7 @@ pub fn main() {
             print!("{name}: ");
             io::stdout().flush().expect("Could not flush STDOUT.");
             let r = func();
-            println!("{r}");
+            println!("{}", display_return(r));
         }
         _ => {
             println!(
@@ -241,8 +243,15 @@ pub fn main() {
             let solutions = concurrently_run(&problems);
             // for (name, r) in solutions.r.iter().take(solutions.n_expected) {
             for (name, r) in solutions.collect() {
-                println!("{name}: {r}");
+                println!("{name}: {}", display_return(r));
             }
         }
+    }
+}
+
+fn display_return(r: Return) -> String {
+    match r {
+        Ok(val) => format!("{val}"),
+        Err(err) => format!("[ERROR] {err}"),
     }
 }

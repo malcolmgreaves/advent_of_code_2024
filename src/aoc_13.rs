@@ -121,10 +121,12 @@ fn parse_num_from(symbol: &str, s: &str) -> Result<u64, String> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt1() -> u64 {
+pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/13").collect::<Vec<String>>();
-    let claw_machines = construct(&lines).unwrap();
-    calculate_solution(claw_machines.iter().map(solve_brute_force))
+    let claw_machines = construct(&lines)?;
+    Ok(calculate_solution(
+        claw_machines.iter().map(solve_brute_force),
+    ))
 }
 
 fn calculate_solution(solved: impl Iterator<Item = Option<Press>>) -> u64 {
@@ -189,7 +191,7 @@ fn solve_brute_force(claw: &ClawMach) -> Option<Press> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt2() -> u64 {
+pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/13").collect::<Vec<String>>();
     let claw_machines = construct(&lines)
         .unwrap()
@@ -200,7 +202,15 @@ pub fn solution_pt2() -> u64 {
             prize: claw.prize.increment(10000000000000),
         })
         .collect::<Vec<_>>();
-    calculate_solution(claw_machines.iter().map(solve_dynamic_programming))
+    if false {
+        Ok(calculate_solution(
+            claw_machines.iter().map(solve_dynamic_programming),
+        ))
+    } else {
+        Err(format!(
+            "part 2 takes too long! need binary search in ILP routine perhaps?"
+        ))
+    }
 }
 
 fn solve_dynamic_programming(claw: &ClawMach) -> Option<Press> {
@@ -526,7 +536,7 @@ mod test {
 
     #[test]
     fn pt1_soln_example() {
-        assert_eq!(solution_pt1(), 30973);
+        assert_eq!(solution_pt1().unwrap(), 30973);
     }
 
     ///////////////////////////////////////////////
