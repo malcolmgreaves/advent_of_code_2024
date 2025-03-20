@@ -23,7 +23,6 @@ pub fn check_matrices<T: Eq + Debug>(
             if a.len() != e.len() {
                 Some(format!("row {row_num} has mismatched column lengths: actual={} vs. expected={}",a.len(), e.len()))
             } else if a != e {
-                
                 Some(format!("row {row_num} has differences: actual[{row_num}]={a:?} vs. expected[{row_num}]={e:?}"))
             } else {
                 None

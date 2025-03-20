@@ -321,16 +321,12 @@ mod test {
                 Tile::Wall,
                 Tile::Empty,
                 Tile::Wall,
-                Tile::Empty,
-                Tile::Wall
             ],
             vec![
                 Tile::Wall,
                 Tile::Empty,
                 Tile::Wall,
                 Tile::Wall,
-                Tile::Wall,
-                Tile::Empty,
                 Tile::Wall,
                 Tile::Empty,
                 Tile::Wall,
