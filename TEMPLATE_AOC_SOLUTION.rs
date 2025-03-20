@@ -6,7 +6,7 @@ struct TODO {
 
 }
 
-fn construct(lines: &[String]) -> Result<TODO, String> {
+fn construct(lines: impl Iterator<Item=String>) -> Result<TODO, String> {
     panic!()
 }
 
@@ -15,14 +15,16 @@ fn construct(lines: &[String]) -> Result<TODO, String> {
 
 pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/???");
-    Err(format!("part 1 is unimplemented! have lines={lines:?}"))
+    let _ = lines;
+    Err(format!("part 1 is unimplemented!"));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/???");
-    Err(format!("part 2 is unimplemented! have lines={lines:?}"))
+    let _ = lines;
+    Err(format!("part 2 is unimplemented!"))
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
