@@ -20,6 +20,7 @@ mod io_help;
 mod matrix;
 mod nums;
 mod set_ops;
+mod testing_utilities;
 mod utils;
 
 use std::cmp::Ordering;
