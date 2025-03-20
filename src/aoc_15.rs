@@ -303,7 +303,7 @@ mod test {
     use indoc::indoc;
     use lazy_static::lazy_static;
 
-    use crate::io_help::read_lines_in_memory;
+    use crate::{io_help::read_lines_in_memory, testing_utilities::check_matrices};
 
     use super::*;
 
@@ -467,24 +467,7 @@ mod test {
             robot,
             "robot is in incorrect position"
         );
-        check_floors(&actual, &expected);
-    }
-
-    fn check_floors(actual: &Floor, expected: &Floor) {
-        assert_eq!(actual.len(), expected.len(), "incorrect # of rows");
-        actual
-            .iter()
-            .zip(expected.iter())
-            .enumerate()
-            .for_each(|(row, (a, e))| {
-                assert_eq!(
-                    a.len(),
-                    e.len(),
-                    "row {} has mismatched column lengths",
-                    row + 1
-                );
-                assert_eq!(a, e, "row {} has differences", row + 1);
-            });
+        check_matrices(&actual, &expected).unwrap()
     }
 
     #[test]
