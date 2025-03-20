@@ -87,8 +87,6 @@ pub fn solution_pt2() -> Result<u64, String> {
 #[cfg(test)]
 mod test {
 
-    use std::iter::TakeWhile;
-
     use indoc::indoc;
     use lazy_static::lazy_static;
 
@@ -396,20 +394,22 @@ mod test {
         #################
     "};
 
-    lazy_static! {
-        static ref EXAMPLE_EXPECTED_2: Puzzle = vec![vec![],];
-    }
-
     ///////////////////////////////////////////////
 
     #[test]
     fn construction_1() {
+        // 1
         let expected: &Puzzle = &EXAMPLE_EXPECTED_1;
         let acutal: Puzzle = construct(read_lines_in_memory(EXAMPLE_INPUT_STR_1)).unwrap();
         match check_matrices(&acutal, expected) {
             Ok(()) => (),
             Err(e) => assert!(false, "{e}"),
-        }
+        };
+        // 2
+        match construct(read_lines_in_memory(EXAMPLE_INPUT_STR_2)) {
+            Ok(_) => (),
+            Err(e) => assert!(false, "{e}"),
+        };
     }
 
     #[ignore]
