@@ -92,7 +92,7 @@ mod test {
     use indoc::indoc;
     use lazy_static::lazy_static;
 
-    use crate::io_help::read_lines_in_memory;
+    use crate::{io_help::read_lines_in_memory, testing_utilities::check_matrices};
 
     use super::*;
 
@@ -204,6 +204,8 @@ mod test {
                 Tile::Wall,
             ],
             vec![
+                Tile::Wall,
+                Tile::Empty,
                 Tile::Wall,
                 Tile::Empty,
                 Tile::Wall,
@@ -405,7 +407,18 @@ mod test {
     ///////////////////////////////////////////////
 
     #[test]
-    fn construction() {
+    fn construction_1() {
+        let expected: &Puzzle = &EXAMPLE_EXPECTED_1;
+        let acutal: Puzzle = construct(read_lines_in_memory(EXAMPLE_INPUT_STR_1)).unwrap();
+        match check_matrices(&acutal, expected) {
+            Ok(()) => (),
+            Err(e) => assert!(false, "{e}"),
+        }
+    }
+
+    #[ignore]
+    #[test]
+    fn construction_2() {
         panic!();
     }
 
