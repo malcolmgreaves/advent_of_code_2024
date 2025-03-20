@@ -1,4 +1,8 @@
-use crate::{io_help, matrix::Matrix, utils::collect_results};
+use crate::{
+    io_help,
+    matrix::{Coordinate, Direction, Matrix},
+    utils::collect_results,
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -70,7 +74,80 @@ fn parse_tile(c: char) -> Result<Tile, String> {
 pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/???");
     let puzzle: Puzzle = construct(lines)?;
-    Err(format!("part 1 is unimplemented!"))
+    let (_, cost) = lowest_cost_path_dijkstras(&puzzle);
+    Ok(cost)
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum Move {
+    Rotate90Clockwise,
+    Rotate90CounterCW,
+    Step(Direction),
+}
+
+fn cost(path: &[Move]) -> u64 {
+    path.iter()
+        .map(|m| match m {
+            Move::Rotate90Clockwise | Move::Rotate90CounterCW => 1000,
+            Move::Step(_) => 1,
+        })
+        .sum()
+}
+
+fn brute_force_lowest_cost(puzzle: &Puzzle) -> (Vec<Move>, u64) {
+    let start = locate(puzzle, Tile::Start).unwrap();
+    let end = locate(puzzle, Tile::End).unwrap();
+
+    all_paths(puzzle, &start, &end).map(|p| cost(&p)).min()
+}
+
+fn locate(puzzle: &Puzzle, start_or_end: Tile) -> Result<Coordinate, String> {
+    match start_or_end {
+        Tile::Empty | Tile::Wall => Err(format!("only locate start or end!")),
+        _ => {
+            let mut locs = puzzle
+                .iter()
+                .enumerate()
+                .flat_map(|(row, r)| {
+                    r.iter().enumerate().flat_map(move |(col, t)| {
+                        if *t == start_or_end {
+                            Some(Coordinate { row, col })
+                        } else {
+                            None
+                        }
+                    })
+                })
+                .collect::<Vec<_>>();
+            if locs.len() != 1 {
+                Err(format!(
+                    "expecting to find exactly 1 location for {start_or_end} but found {}: {}",
+                    locs.len(),
+                    Coords(&locs)
+                ))
+            } else {
+                Ok(locs.swap_remove(0))
+            }
+        }
+    }
+}
+
+fn all_paths(
+    puzzle: &Puzzle,
+    start: &Coordinate,
+    end: &Coordinate,
+) -> impl Iterator<Item = Vec<Move>> {
+    panic!()
+}
+
+fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
+    // create graph from Puzzle
+    // create priority queue
+    // create cost ("distance") map from start -> each vertx (empty space)
+    // while queue is not empty
+    //      v = take lowest cost from queue
+    //      if v is end: return cost(v)
+    //
+    panic!()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
