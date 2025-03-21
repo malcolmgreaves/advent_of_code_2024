@@ -79,9 +79,12 @@ fn parse_tile(c: char) -> Result<Tile, String> {
 pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/16");
     let puzzle: Puzzle = construct(lines)?;
-    // let (_, cost) = lowest_cost_path_dijkstras(&puzzle);
-    let (_, cost) = brute_force_lowest_cost(&puzzle);
-    Ok(cost)
+    match lowest_cost_path_dijkstras(&puzzle) {
+        Some(cost) => Ok(cost),
+        None => Err(format!("no path from start -> finish was found!")),
+    }
+    // let (_, cost) = brute_force_lowest_cost(&puzzle);
+    // Ok(cost)
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
