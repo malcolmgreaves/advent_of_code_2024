@@ -273,7 +273,7 @@ impl GridMovement {
         v
     }
 
-    fn coordinates(&self) -> impl Iterator<Item = Coordinate> {
+    pub fn coordinates(&self) -> impl Iterator<Item = Coordinate> {
         (0..=self.max_row)
             .flat_map(|row| (0..=self.max_col).map(move |col| Coordinate { row, col }))
     }

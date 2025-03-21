@@ -1,4 +1,4 @@
-use std::collections::{BinaryHeap, HashSet};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 
 use crate::{
     graph::{self, Graph, GraphBuilder, Node, SparseBuilder, SparseGraph},
@@ -321,13 +321,26 @@ impl Ord for Search {
 }
 
 fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
+    let start = locate(puzzle, Tile::Start).unwrap();
+    let end = locate(puzzle, Tile::End).unwrap();
+
     // create graph from Puzzle
     let graph = create_graph(puzzle);
     // create priority queue
 
-    // let mut distance =
-
     let mut priority_queue = BinaryHeap::<Search>::new();
+    priority_queue.push(Search {
+        loc: start.clone(),
+        cost: 0,
+    });
+
+    let mut distance: HashMap<Coordinate, u64> = GridMovement::new(puzzle)
+        .coordinates()
+        .map(|c| {
+            let cost_from_start = if c == start { 0 } else { u64::MAX };
+            (c, cost_from_start)
+        })
+        .collect();
 
     // create cost ("distance") map from start -> each vertx (empty space)
     // while queue is not empty
