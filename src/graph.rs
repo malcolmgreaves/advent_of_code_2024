@@ -1,12 +1,14 @@
-use std::{collections::HashMap, fmt::Debug, hash::Hash};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Debug,
+    hash::Hash,
+};
 
 trait NodeConstraints: Debug + Clone + PartialEq + Eq + Hash {}
 impl<T: Debug + Clone + PartialEq + Eq + Hash> NodeConstraints for T {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Node<T: NodeConstraints> {
-    data: T,
-}
+pub struct Node<T: NodeConstraints>(pub T);
 
 pub trait Graph<T: NodeConstraints> {
     fn neighbors(&self, node: &Node<T>) -> Option<&[Node<T>]>;
@@ -15,6 +17,19 @@ pub trait Graph<T: NodeConstraints> {
 
 pub struct SparseGraph<T: NodeConstraints> {
     connections: HashMap<Node<T>, Vec<Node<T>>>,
+}
+
+impl<T: NodeConstraints> SparseGraph<T> {
+    pub fn new() -> SparseGraph<T> {
+        SparseGraph {
+            connections: HashMap::new(),
+        }
+    }
+    pub fn with_capacity(capacity: usize) -> SparseGraph<T> {
+        SparseGraph {
+            connections: HashMap::with_capacity(capacity),
+        }
+    }
 }
 
 impl<T: NodeConstraints> Graph<T> for SparseGraph<T> {
@@ -27,5 +42,53 @@ impl<T: NodeConstraints> Graph<T> for SparseGraph<T> {
 
     fn vertices(&self) -> Vec<&Node<T>> {
         self.connections.keys().collect::<Vec<_>>()
+    }
+}
+
+pub trait GraphBuilder<T: NodeConstraints, G: Graph<T>> {
+    fn new() -> Self;
+    fn with_capacity(capacity: usize) -> Self;
+    fn insert(self, source: Node<T>, destination: Node<T>);
+    fn to_graph(self) -> G;
+}
+
+pub struct SparseBuilder<T: NodeConstraints> {
+    connections: HashMap<Node<T>, HashSet<Node<T>>>,
+}
+
+impl<T: NodeConstraints> GraphBuilder<T, SparseGraph<T>> for SparseBuilder<T> {
+    fn new() -> Self {
+        SparseBuilder {
+            connections: HashMap::new(),
+        }
+    }
+
+    fn with_capacity(capacity: usize) -> Self {
+        SparseBuilder {
+            connections: HashMap::with_capacity(capacity),
+        }
+    }
+
+    fn insert(mut self, source: Node<T>, destination: Node<T>) {
+        match self.connections.get_mut(&source) {
+            Some(existing) => {
+                existing.insert(destination);
+            }
+            None => {
+                let mut n = HashSet::new();
+                n.insert(destination);
+                self.connections.insert(source, n);
+            }
+        }
+    }
+
+    fn to_graph(self) -> SparseGraph<T> {
+        SparseGraph {
+            connections: self
+                .connections
+                .into_iter()
+                .map(|(vertex, neighborhood)| (vertex, neighborhood.into_iter().collect()))
+                .collect(),
+        }
     }
 }

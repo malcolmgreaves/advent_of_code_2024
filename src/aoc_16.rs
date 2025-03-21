@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use crate::{
+    graph::{GraphBuilder, Node, SparseBuilder, SparseGraph},
     io_help,
     matrix::{Coordinate, Coords, Direction, GridMovement, Matrix},
     utils::collect_results,
@@ -83,7 +84,7 @@ pub fn solution_pt1() -> Result<u64, String> {
     Ok(cost)
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 enum Move {
     Rotate90Clockwise,
     Rotate90CounterCW,
@@ -298,6 +299,15 @@ fn walk(
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+pub fn solution_pt2() -> Result<u64, String> {
+    let lines = io_help::read_lines("./inputs/16");
+    let puzzle: Puzzle = construct(lines)?;
+    let _ = puzzle;
+    Err(format!("part 2 is unimplemented!"))
+}
+
 fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     // create graph from Puzzle
     // create priority queue
@@ -309,13 +319,22 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     panic!()
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-pub fn solution_pt2() -> Result<u64, String> {
-    let lines = io_help::read_lines("./inputs/16");
-    let puzzle: Puzzle = construct(lines)?;
-    let _ = puzzle;
-    Err(format!("part 2 is unimplemented!"))
+fn create_graph(puzzle: &Puzzle) -> SparseGraph<Coordinate> {
+    let g = &GridMovement::new(puzzle);
+    let mut graph_builder = SparseBuilder::with_capacity(puzzle.len());
+    for (row, r) in puzzle.iter().enumerate() {
+        for (col, t) in r.iter().enumerate() {
+            if *t != Tile::Wall {
+                let c = Coordinate { row, col };
+                for neighbor_coordinate in g.cardinal_neighbors(&c) {
+                    if puzzle[neighbor_coordinate.row][neighbor_coordinate.col] != Tile::Wall {
+                        graph_builder.insert(Node(c.clone()), Node(neighbor_coordinate));
+                    }
+                }
+            }
+        }
+    }
+    graph_builder.to_graph()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
