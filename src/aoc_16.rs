@@ -1,8 +1,12 @@
+use std::collections::HashSet;
+
 use crate::{
     io_help,
     matrix::{Coordinate, Coords, Direction, GridMovement, Matrix},
     utils::collect_results,
 };
+
+use stacker;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -100,7 +104,7 @@ fn brute_force_lowest_cost(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     let end = locate(puzzle, Tile::End).unwrap();
 
     let results = all_paths(puzzle, &start, &end);
-    println!("results: {results:?}");
+    println!("results.len()= {:?}", results.len());
 
     results
         .into_iter()
@@ -159,14 +163,17 @@ fn all_paths(puzzle: &Puzzle, start: &Coordinate, end: &Coordinate) -> Vec<Path>
 
     let mut path_accumulator = Vec::new();
     // start facing EAST aka right
-    walk(
-        &GridMovement::new(puzzle),
-        puzzle,
-        start.clone(),
-        Direction::Right,
-        vec![],
-        &mut path_accumulator,
-    );
+    stacker::maybe_grow(32 * 1024, 1024 * 1024, || {
+        walk(
+            &GridMovement::new(puzzle),
+            puzzle,
+            start.clone(),
+            Direction::Right,
+            vec![],
+            &mut path_accumulator,
+            &mut HashSet::new(),
+        )
+    });
     path_accumulator
 }
 
@@ -179,6 +186,7 @@ fn walk(
     facing: Direction,
     current: Path,
     finished_paths: &mut Vec<Path>,
+    visisted: &mut HashSet<Coordinate>,
 ) {
     if puzzle[loc.row][loc.col] == Tile::End {
         println!("FINISHED!");
@@ -186,37 +194,63 @@ fn walk(
         return;
     }
 
-    let try_advance = |finished_paths: &mut Vec<Path>, current: &Path, d: Direction| match g
-        .next_advance(&loc, &d)
-    {
-        Some(continuing) => match &puzzle[continuing.row][continuing.col] {
-            Tile::Empty => {
-                println!("\tadvancing from {loc} to {continuing}!");
-                let mut extended_path = current.clone();
-                extended_path.push(Move::Step(d.clone()));
-                walk(g, puzzle, continuing, d, extended_path, finished_paths);
+    let try_advance = |finished_paths: &mut Vec<Path>,
+                       visisted: &mut HashSet<Coordinate>,
+                       current: &Path,
+                       d: Direction| {
+        // println!("\ttry_advance(.., loc={loc}, facing={d:?})");
+        match g.next_advance(&loc, &d) {
+            Some(continuing) => {
+                if visisted.contains(&continuing) {
+                    println!("\t\t\talready visisted {continuing} on this run");
+                    return;
+                }
+
+                match &puzzle[continuing.row][continuing.col] {
+                    Tile::Empty => {
+                        println!("\tadvancing from {loc} to {continuing} along {d:?}!");
+                        let mut extended_path = current.clone();
+                        extended_path.push(Move::Step(d.clone()));
+                        let mut new_visisted = visisted.clone();
+                        new_visisted.insert(continuing.clone());
+                        stacker::maybe_grow(32 * 1024, 1024 * 1024, || {
+                            // guaranteed to have at least 32M of stack
+                            walk(
+                                g,
+                                puzzle,
+                                continuing,
+                                d,
+                                extended_path,
+                                finished_paths,
+                                &mut new_visisted,
+                            )
+                        });
+                    }
+                    t => {
+                        println!(
+                            "\t\tcannot move {d:?} from {loc} into {continuing} because the tile is non-empty: {t:?}",
+                        );
+                        ();
+                    }
+                }
             }
-            t => {
-                println!(
-                    "\tcannot move into {continuing} because the tile is non-empty: {:?} -> direction: {d:?}\n",
-                    t
-                );
+            None => {
+                ();
+                // println!("\t\tcannot go {d:?} from {loc} as it is out of bounds\n");
             }
-        },
-        None => {
-            println!("\t\tcannot go {d:?} from {loc} as it is out of bounds\n");
         }
     };
 
-    println!("conituning in direction: {facing:?} from {loc}");
-    try_advance(finished_paths, &current, facing.clone());
+    // println!("conituning in direction: {facing:?} from {loc}");
+    try_advance(finished_paths, visisted, &current, facing.clone());
 
-    println!(
-        "trying clockwise rotation: {:?} from {loc}",
-        facing.clockwise()
-    );
+    // println!(
+    //     "trying clockwise rotation: {:?} from {loc}",
+    //     facing.clockwise()
+    // );
     try_advance(
         finished_paths,
+        visisted,
         &{
             let mut p = current.clone();
             p.push(Move::Rotate90Clockwise);
@@ -228,29 +262,31 @@ fn walk(
     // one more clockwise would be going BACKWARDS
     // so we do 2 clockwise rotations
     // ==> this is equivalent to a counter-clockwise rotation from the original direction
-    println!(
-        "trying counter-clockwise rotation: {:?} from {loc}",
-        facing.counter_clockwise()
-    );
+    // println!(
+    //     "trying counter-clockwise rotation: {:?} from {loc}",
+    //     facing.counter_clockwise()
+    // );
     try_advance(
         finished_paths,
+        visisted,
         &{
             let mut p = current.clone();
             p.push(Move::Rotate90CounterCW);
             p
         },
-        facing.clockwise(),
+        facing.counter_clockwise(),
     );
 
     // we ONLY ROTATE TO FACE WHERE WE CAME FROM AT THE START
     // otherwise, if we do this, we will infinite loop!
     if current.len() == 0 {
-        println!(
-            "initial: turning 180 -> facing {:?} from {loc}",
-            facing.opposite()
-        );
+        // println!(
+        //     "initial: turning 180 -> facing {:?} from {loc}",
+        //     facing.opposite()
+        // );
         try_advance(
             finished_paths,
+            visisted,
             &{
                 let mut p = current.clone();
                 p.push(Move::Rotate90Clockwise);
