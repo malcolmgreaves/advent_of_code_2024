@@ -13,6 +13,7 @@ pub struct Node<T: NodeConstraints>(pub T);
 pub trait Graph<T: NodeConstraints> {
     fn neighbors(&self, node: &Node<T>) -> Option<&[Node<T>]>;
     fn vertices(&self) -> Vec<&Node<T>>;
+    fn edges(&self) -> Vec<(&Node<T>, &Node<T>)>;
 }
 
 pub struct SparseGraph<T: NodeConstraints> {
@@ -41,7 +42,14 @@ impl<T: NodeConstraints> Graph<T> for SparseGraph<T> {
     }
 
     fn vertices(&self) -> Vec<&Node<T>> {
-        self.connections.keys().collect::<Vec<_>>()
+        self.connections.keys().collect()
+    }
+
+    fn edges(&self) -> Vec<(&Node<T>, &Node<T>)> {
+        self.connections
+            .iter()
+            .flat_map(|(vertex, neighbors)| neighbors.iter().map(move |n| (vertex, n)))
+            .collect()
     }
 }
 

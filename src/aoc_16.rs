@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use crate::{
-    graph::{GraphBuilder, Node, SparseBuilder, SparseGraph},
+    graph::{Graph, GraphBuilder, Node, SparseBuilder, SparseGraph},
     io_help,
     matrix::{Coordinate, Coords, Direction, GridMovement, Matrix},
     utils::collect_results,
@@ -310,7 +310,9 @@ pub fn solution_pt2() -> Result<u64, String> {
 
 fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     // create graph from Puzzle
+    let graph = create_graph(puzzle);
     // create priority queue
+
     // create cost ("distance") map from start -> each vertx (empty space)
     // while queue is not empty
     //      v = take lowest cost from queue
@@ -319,7 +321,7 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     panic!()
 }
 
-fn create_graph(puzzle: &Puzzle) -> SparseGraph<Coordinate> {
+fn create_graph(puzzle: &Puzzle) -> impl Graph<Coordinate> {
     let g = &GridMovement::new(puzzle);
     let mut graph_builder = SparseBuilder::with_capacity(puzzle.len());
     for (row, r) in puzzle.iter().enumerate() {
