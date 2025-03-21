@@ -25,6 +25,15 @@ impl Direction {
         }
     }
 
+    pub fn counter_clockwise(&self) -> Direction {
+        match self {
+            Direction::Up => Direction::Left,
+            Direction::Right => Direction::Up,
+            Direction::Down => Direction::Right,
+            Direction::Left => Direction::Down,
+        }
+    }
+
     // [0,3] the # of turns to get from self to other, rotating clockwise
     #[allow(dead_code)]
     pub fn calculate_clockwise_turns(&self, other: &Direction) -> u8 {
@@ -75,6 +84,18 @@ impl GridMovement {
             (self.add_row(row), Some(col)),
             (self.add_row(row), self.add_col(col)),
         ]
+    }
+
+    pub fn cardinal_neighbors(&self, loc: &Coordinate) -> Vec<Coordinate> {
+        [
+            self.next_up(loc),
+            self.next_down(loc),
+            self.next_left(loc),
+            self.next_right(loc),
+        ]
+        .into_iter()
+        .flatten()
+        .collect()
     }
 
     #[allow(dead_code)]
@@ -671,6 +692,17 @@ mod test {
         assert_eq!(g.wrap_increment_row(3, -4), 5, "sub: underflow");
         assert_eq!(g.wrap_increment_row(3, -8), 1, "sub: underflow");
         assert_eq!(g.wrap_increment_col(5, -10), 6, "sub: underflow");
+    }
+
+    #[test]
+    fn direction_rotation_clock() {
+        let check = |d: &Direction| {
+            assert_eq!(&(&d).clockwise().counter_clockwise(), d);
+        };
+        check(&Direction::Up);
+        check(&Direction::Down);
+        check(&Direction::Left);
+        check(&Direction::Right);
     }
 
     #[test]

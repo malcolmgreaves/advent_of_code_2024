@@ -1,12 +1,12 @@
 use crate::{
     io_help,
-    matrix::{Coordinate, Direction, Matrix},
+    matrix::{Coordinate, Coords, Direction, GridMovement, Matrix},
     utils::collect_results,
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 enum Tile {
     Wall,
     Empty,
@@ -74,11 +74,12 @@ fn parse_tile(c: char) -> Result<Tile, String> {
 pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/???");
     let puzzle: Puzzle = construct(lines)?;
-    let (_, cost) = lowest_cost_path_dijkstras(&puzzle);
+    // let (_, cost) = lowest_cost_path_dijkstras(&puzzle);
+    let (_, cost) = brute_force_lowest_cost(&puzzle);
     Ok(cost)
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 enum Move {
     Rotate90Clockwise,
     Rotate90CounterCW,
@@ -98,19 +99,27 @@ fn brute_force_lowest_cost(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     let start = locate(puzzle, Tile::Start).unwrap();
     let end = locate(puzzle, Tile::End).unwrap();
 
-    all_paths(puzzle, &start, &end).map(|p| cost(&p)).min()
+    all_paths(puzzle, &start, &end)
+        .into_iter()
+        .map(|p| {
+            let c = cost(&p);
+            (p, c)
+        })
+        .min_by_key(|(_, c)| *c)
+        .unwrap()
 }
 
 fn locate(puzzle: &Puzzle, start_or_end: Tile) -> Result<Coordinate, String> {
     match start_or_end {
         Tile::Empty | Tile::Wall => Err(format!("only locate start or end!")),
-        _ => {
+        s_e => {
+            let ptr_se = &s_e;
             let mut locs = puzzle
                 .iter()
                 .enumerate()
                 .flat_map(|(row, r)| {
                     r.iter().enumerate().flat_map(move |(col, t)| {
-                        if *t == start_or_end {
+                        if t == ptr_se {
                             Some(Coordinate { row, col })
                         } else {
                             None
@@ -120,7 +129,7 @@ fn locate(puzzle: &Puzzle, start_or_end: Tile) -> Result<Coordinate, String> {
                 .collect::<Vec<_>>();
             if locs.len() != 1 {
                 Err(format!(
-                    "expecting to find exactly 1 location for {start_or_end} but found {}: {}",
+                    "expecting to find exactly 1 location for {s_e:?} but found {}: {}",
                     locs.len(),
                     Coords(&locs)
                 ))
@@ -131,12 +140,63 @@ fn locate(puzzle: &Puzzle, start_or_end: Tile) -> Result<Coordinate, String> {
     }
 }
 
-fn all_paths(
+fn all_paths(puzzle: &Puzzle, start: &Coordinate, end: &Coordinate) -> Vec<Path> {
+    assert_eq!(
+        puzzle[start.row][start.col],
+        Tile::Start,
+        "expecting start to be at {start} but found {:?}",
+        puzzle[start.row][start.col]
+    );
+    assert_eq!(
+        puzzle[end.row][end.col],
+        Tile::End,
+        "expecting end to be at {end} but found {:?}",
+        puzzle[end.row][end.col]
+    );
+
+    let mut path_accumulator = Vec::new();
+    // start facing EAST aka right
+    walk(
+        &GridMovement::new(puzzle),
+        puzzle,
+        start,
+        &Direction::Right,
+        vec![],
+        &mut path_accumulator,
+    );
+    path_accumulator
+}
+
+type Path = Vec<Move>;
+
+fn walk(
+    g: &GridMovement,
     puzzle: &Puzzle,
-    start: &Coordinate,
-    end: &Coordinate,
-) -> impl Iterator<Item = Vec<Move>> {
-    panic!()
+    loc: &Coordinate,
+    facing: &Direction,
+    current: Path,
+    finished_paths: &mut Vec<Path>,
+) {
+    if puzzle[loc.row][loc.col] == Tile::End {
+        finished_paths.push(current);
+        return;
+    }
+
+    let try_advance = |finished_paths: &mut Vec<Path>, d: &Direction| match g.next_advance(loc, d) {
+        Some(continuing) => {
+            let mut extended_path = current.clone();
+            extended_path.push(Move::Step(d.clone()));
+            walk(g, puzzle, &continuing, d, extended_path, finished_paths);
+        }
+        None => (),
+    };
+
+    try_advance(finished_paths, facing);
+    try_advance(finished_paths, &facing.clockwise());
+    // one more clockwise would be going BACKWARDS
+    // so we do 2 clockwise rotations
+    // ==> this is equivalent to a counter-clockwise rotation from the original direction
+    try_advance(finished_paths, &facing.clockwise());
 }
 
 fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
