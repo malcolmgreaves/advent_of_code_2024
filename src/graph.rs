@@ -48,7 +48,7 @@ impl<T: NodeConstraints> Graph<T> for SparseGraph<T> {
 pub trait GraphBuilder<T: NodeConstraints, G: Graph<T>> {
     fn new() -> Self;
     fn with_capacity(capacity: usize) -> Self;
-    fn insert(self, source: Node<T>, destination: Node<T>);
+    fn insert(&mut self, source: Node<T>, destination: Node<T>);
     fn to_graph(self) -> G;
 }
 
@@ -69,7 +69,7 @@ impl<T: NodeConstraints> GraphBuilder<T, SparseGraph<T>> for SparseBuilder<T> {
         }
     }
 
-    fn insert(mut self, source: Node<T>, destination: Node<T>) {
+    fn insert(&mut self, source: Node<T>, destination: Node<T>) {
         match self.connections.get_mut(&source) {
             Some(existing) => {
                 existing.insert(destination);

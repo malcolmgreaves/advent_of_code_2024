@@ -328,7 +328,7 @@ fn create_graph(puzzle: &Puzzle) -> SparseGraph<Coordinate> {
                 let c = Coordinate { row, col };
                 for neighbor_coordinate in g.cardinal_neighbors(&c) {
                     if puzzle[neighbor_coordinate.row][neighbor_coordinate.col] != Tile::Wall {
-                        graph_builder.insert(Node(c.clone()), Node(neighbor_coordinate));
+                        (&mut graph_builder).insert(Node(c.clone()), Node(neighbor_coordinate));
                     }
                 }
             }
