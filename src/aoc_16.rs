@@ -734,7 +734,10 @@ mod test {
                 );
                 assert_eq!(p, path);
             }
-            None => assert!(both_none, "can't have expected cost and path both be none!"),
+            None => assert!(
+                !both_none,
+                "can't have expected cost and path both be none!"
+            ),
         }
     }
 
