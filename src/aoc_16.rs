@@ -1,7 +1,7 @@
-use std::collections::HashSet;
+use std::collections::{BinaryHeap, HashSet};
 
 use crate::{
-    graph::{Graph, GraphBuilder, Node, SparseBuilder, SparseGraph},
+    graph::{self, Graph, GraphBuilder, Node, SparseBuilder, SparseGraph},
     io_help,
     matrix::{Coordinate, Coords, Direction, GridMovement, Matrix},
     utils::collect_results,
@@ -308,10 +308,24 @@ pub fn solution_pt2() -> Result<u64, String> {
     Err(format!("part 2 is unimplemented!"))
 }
 
+#[derive(Debug, PartialEq, Eq, PartialOrd)]
+struct Search {
+    loc: Coordinate,
+    cost: u64,
+}
+
+impl Ord for Search {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.cost.cmp(&other.cost)
+    }
+}
+
 fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     // create graph from Puzzle
     let graph = create_graph(puzzle);
     // create priority queue
+
+    let mut priority_queue = BinaryHeap::<Search>::new();
 
     // create cost ("distance") map from start -> each vertx (empty space)
     // while queue is not empty
@@ -321,16 +335,57 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     panic!()
 }
 
-fn create_graph(puzzle: &Puzzle) -> impl Graph<Coordinate> {
+/// Represents moving into Coorindate and facing Direction.
+type MovedInto = (Coordinate, Direction);
+
+fn create_graph(puzzle: &Puzzle) -> impl Graph<MovedInto> {
     let g = &GridMovement::new(puzzle);
     let mut graph_builder = SparseBuilder::with_capacity(puzzle.len());
+
+    // initial rotation?
+    // or does the if puizzle[...][...] != Start in insert(.) work??
+    // graph_builder.insert(
+    //     Node(),
+    //     Node(),
+    // );
+
+    let insert = |graph_builder: &mut SparseBuilder<MovedInto>,
+                  source: Coordinate,
+                  destination: Coordinate| {
+        for d1 in [
+            Direction::Up,
+            Direction::Down,
+            Direction::Left,
+            Direction::Right,
+        ] {
+            for d2 in [
+                Direction::Up,
+                Direction::Down,
+                Direction::Left,
+                Direction::Right,
+            ] {
+                if puzzle[source.row][source.col] != Tile::Start && d1.opposite() == d2 {
+                    continue;
+                }
+                graph_builder.insert(
+                    Node((source.clone(), d1.clone())),
+                    Node((destination.clone(), d2.clone())),
+                );
+            }
+        }
+    };
+
     for (row, r) in puzzle.iter().enumerate() {
         for (col, t) in r.iter().enumerate() {
             if *t != Tile::Wall {
                 let c = Coordinate { row, col };
                 for neighbor_coordinate in g.cardinal_neighbors(&c) {
                     if puzzle[neighbor_coordinate.row][neighbor_coordinate.col] != Tile::Wall {
-                        (&mut graph_builder).insert(Node(c.clone()), Node(neighbor_coordinate));
+                        insert(&mut graph_builder, c.clone(), neighbor_coordinate);
+                        // (&mut graph_builder).insert(
+                        //     Node((c.clone(), )),
+                        //     Node((neighbor_coordinate, )),
+                        // );
                     }
                 }
             }
