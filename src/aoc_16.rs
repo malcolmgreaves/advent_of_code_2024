@@ -162,8 +162,8 @@ fn all_paths(puzzle: &Puzzle, start: &Coordinate, end: &Coordinate) -> Vec<Path>
     walk(
         &GridMovement::new(puzzle),
         puzzle,
-        start,
-        &Direction::Right,
+        start.clone(),
+        Direction::Right,
         vec![],
         &mut path_accumulator,
     );
@@ -175,8 +175,8 @@ type Path = Vec<Move>;
 fn walk(
     g: &GridMovement,
     puzzle: &Puzzle,
-    loc: &Coordinate,
-    facing: &Direction,
+    loc: Coordinate,
+    facing: Direction,
     current: Path,
     finished_paths: &mut Vec<Path>,
 ) {
@@ -186,19 +186,19 @@ fn walk(
         return;
     }
 
-    let try_advance = |finished_paths: &mut Vec<Path>, current: &Path, d: &Direction| match g
-        .next_advance(loc, d)
+    let try_advance = |finished_paths: &mut Vec<Path>, current: &Path, d: Direction| match g
+        .next_advance(&loc, &d)
     {
         Some(continuing) => match &puzzle[continuing.row][continuing.col] {
             Tile::Empty => {
                 println!("\tadvancing from {loc} to {continuing}!");
                 let mut extended_path = current.clone();
                 extended_path.push(Move::Step(d.clone()));
-                walk(g, puzzle, &continuing, d, extended_path, finished_paths);
+                walk(g, puzzle, continuing, d, extended_path, finished_paths);
             }
             t => {
                 println!(
-                    "\tcannot move into {continuing} because the tile is non-empty: {:?}\n",
+                    "\tcannot move into {continuing} because the tile is non-empty: {:?} -> direction: {d:?}\n",
                     t
                 );
             }
@@ -209,7 +209,7 @@ fn walk(
     };
 
     println!("conituning in direction: {facing:?} from {loc}");
-    try_advance(finished_paths, &current, facing);
+    try_advance(finished_paths, &current, facing.clone());
 
     println!(
         "trying clockwise rotation: {:?} from {loc}",
@@ -222,7 +222,7 @@ fn walk(
             p.push(Move::Rotate90Clockwise);
             p
         },
-        &facing.clockwise(),
+        facing.clockwise(),
     );
 
     // one more clockwise would be going BACKWARDS
@@ -239,7 +239,7 @@ fn walk(
             p.push(Move::Rotate90CounterCW);
             p
         },
-        &facing.clockwise(),
+        facing.clockwise(),
     );
 
     // we ONLY ROTATE TO FACE WHERE WE CAME FROM AT THE START
@@ -257,7 +257,7 @@ fn walk(
                 p.push(Move::Rotate90Clockwise);
                 p
             },
-            &facing.opposite(),
+            facing.opposite(),
         );
     }
 }
