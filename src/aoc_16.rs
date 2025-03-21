@@ -189,7 +189,7 @@ fn walk(
     visisted: &mut HashSet<Coordinate>,
 ) {
     if puzzle[loc.row][loc.col] == Tile::End {
-        println!("FINISHED!");
+        // println!("FINISHED!");
         finished_paths.push(current);
         return;
     }
@@ -202,13 +202,13 @@ fn walk(
         match g.next_advance(&loc, &d) {
             Some(continuing) => {
                 if visisted.contains(&continuing) {
-                    println!("\t\t\talready visisted {continuing} on this run");
+                    // println!("\t\t\talready visisted {continuing} on this run");
                     return;
                 }
 
                 match &puzzle[continuing.row][continuing.col] {
-                    Tile::Empty => {
-                        println!("\tadvancing from {loc} to {continuing} along {d:?}!");
+                    Tile::Empty | Tile::End => {
+                        // println!("\tadvancing from {loc} to {continuing} along {d:?}!");
                         let mut extended_path = current.clone();
                         extended_path.push(Move::Step(d.clone()));
                         let mut new_visisted = visisted.clone();
@@ -227,9 +227,9 @@ fn walk(
                         });
                     }
                     t => {
-                        println!(
-                            "\t\tcannot move {d:?} from {loc} into {continuing} because the tile is non-empty: {t:?}",
-                        );
+                        // println!(
+                        //     "\t\tcannot move {d:?} from {loc} into {continuing} because the tile is non-empty: {t:?}",
+                        // );
                         ();
                     }
                 }
@@ -655,25 +655,51 @@ mod test {
     }
 
     #[test]
-    fn brute_force_all_paths() {
-        // let example: &Puzzle = &EXAMPLE_EXPECTED_1;
-
-        /*
-
-        */
-        let example: &Puzzle = &construct(read_lines_in_memory(indoc! {
+    fn brute_force_paths_one_path_example() {
+        let example: Puzzle = construct(read_lines_in_memory(indoc! {
         "
-            #######
-            #####E#
-            #...#.#
-            #.#.#.#
-            #S#...#
-            #######
-            "}))
+                #######
+                #####E#
+                #...#.#
+                #.#.#.#
+                #S#...#
+                #######
+                "}))
         .unwrap();
+        let expected_moves = vec![
+            Move::Rotate90CounterCW,      // rotate
+            Move::Step(Direction::Up),    // move
+            Move::Step(Direction::Up),    // move
+            Move::Rotate90Clockwise,      // rotate
+            Move::Step(Direction::Right), // move
+            Move::Step(Direction::Right), // move
+            Move::Rotate90Clockwise,      // rotate
+            Move::Step(Direction::Down),  // move
+            Move::Step(Direction::Down),  // move
+            Move::Rotate90CounterCW,      // rotate
+            Move::Step(Direction::Right), // move
+            Move::Step(Direction::Right), // move
+            Move::Rotate90CounterCW,      // rotate
+            Move::Step(Direction::Up),    // move
+            Move::Step(Direction::Up),    // move
+            Move::Step(Direction::Up),    // move
+        ];
+        brute_force_all_paths(&example, None, Some(expected_moves));
+    }
 
-        let (path, cost) = brute_force_lowest_cost(example);
-        println!("minimum cost is: {cost}");
+    #[test]
+    fn brute_force_paths_example_1() {
+        let example: &Puzzle = &EXAMPLE_EXPECTED_1;
+        brute_force_all_paths(example, Some(7036), None);
+    }
+
+    fn brute_force_all_paths(
+        example: &Puzzle,
+        expected_cost: Option<u64>,
+        expected_path: Option<Vec<Move>>,
+    ) {
+        let (path, min_cost) = brute_force_lowest_cost(example);
+        println!("minimum cost is: {min_cost}");
         println!(
             "path has {} members | {} are moves and {} are rotations",
             path.len(),
@@ -689,7 +715,27 @@ mod test {
                     _ => true,
                 })
                 .fold(0, |s, _| s + 1)
-        )
+        );
+
+        let mut both_none = false;
+        match expected_cost {
+            Some(c) => assert_eq!(
+                c, min_cost,
+                "incorrect minimum cost - expecting {min_cost} but got {c}"
+            ),
+            None => both_none = true,
+        }
+        match expected_path {
+            Some(p) => {
+                let c = cost(&p);
+                assert_eq!(
+                    c, min_cost,
+                    "incorrect minimum cost - expecting {min_cost} from supplied expected path but got {c}"
+                );
+                assert_eq!(p, path);
+            }
+            None => assert!(both_none, "can't have expected cost and path both be none!"),
+        }
     }
 
     ///////////////////////////////////////////////
