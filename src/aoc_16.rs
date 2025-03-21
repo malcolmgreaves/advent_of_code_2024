@@ -99,7 +99,10 @@ fn brute_force_lowest_cost(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     let start = locate(puzzle, Tile::Start).unwrap();
     let end = locate(puzzle, Tile::End).unwrap();
 
-    all_paths(puzzle, &start, &end)
+    let results = all_paths(puzzle, &start, &end);
+    println!("results: {results:?}");
+
+    results
         .into_iter()
         .map(|p| {
             let c = cost(&p);
@@ -178,25 +181,85 @@ fn walk(
     finished_paths: &mut Vec<Path>,
 ) {
     if puzzle[loc.row][loc.col] == Tile::End {
+        println!("FINISHED!");
         finished_paths.push(current);
         return;
     }
 
-    let try_advance = |finished_paths: &mut Vec<Path>, d: &Direction| match g.next_advance(loc, d) {
-        Some(continuing) => {
-            let mut extended_path = current.clone();
-            extended_path.push(Move::Step(d.clone()));
-            walk(g, puzzle, &continuing, d, extended_path, finished_paths);
+    let try_advance = |finished_paths: &mut Vec<Path>, current: &Path, d: &Direction| match g
+        .next_advance(loc, d)
+    {
+        Some(continuing) => match &puzzle[continuing.row][continuing.col] {
+            Tile::Empty => {
+                println!("\tadvancing from {loc} to {continuing}!");
+                let mut extended_path = current.clone();
+                extended_path.push(Move::Step(d.clone()));
+                walk(g, puzzle, &continuing, d, extended_path, finished_paths);
+            }
+            t => {
+                println!(
+                    "\tcannot move into {continuing} because the tile is non-empty: {:?}\n",
+                    t
+                );
+            }
+        },
+        None => {
+            println!("\t\tcannot go {d:?} from {loc} as it is out of bounds\n");
         }
-        None => (),
     };
 
-    try_advance(finished_paths, facing);
-    try_advance(finished_paths, &facing.clockwise());
+    println!("conituning in direction: {facing:?} from {loc}");
+    try_advance(finished_paths, &current, facing);
+
+    println!(
+        "trying clockwise rotation: {:?} from {loc}",
+        facing.clockwise()
+    );
+    try_advance(
+        finished_paths,
+        &{
+            let mut p = current.clone();
+            p.push(Move::Rotate90Clockwise);
+            p
+        },
+        &facing.clockwise(),
+    );
+
     // one more clockwise would be going BACKWARDS
     // so we do 2 clockwise rotations
     // ==> this is equivalent to a counter-clockwise rotation from the original direction
-    try_advance(finished_paths, &facing.clockwise());
+    println!(
+        "trying counter-clockwise rotation: {:?} from {loc}",
+        facing.counter_clockwise()
+    );
+    try_advance(
+        finished_paths,
+        &{
+            let mut p = current.clone();
+            p.push(Move::Rotate90CounterCW);
+            p
+        },
+        &facing.clockwise(),
+    );
+
+    // we ONLY ROTATE TO FACE WHERE WE CAME FROM AT THE START
+    // otherwise, if we do this, we will infinite loop!
+    if current.len() == 0 {
+        println!(
+            "initial: turning 180 -> facing {:?} from {loc}",
+            facing.opposite()
+        );
+        try_advance(
+            finished_paths,
+            &{
+                let mut p = current.clone();
+                p.push(Move::Rotate90Clockwise);
+                p.push(Move::Rotate90Clockwise);
+                p
+            },
+            &facing.opposite(),
+        );
+    }
 }
 
 fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
@@ -553,6 +616,29 @@ mod test {
     #[test]
     fn construction_2() {
         panic!();
+    }
+
+    #[test]
+    fn brute_force_all_paths() {
+        let example: &Puzzle = &EXAMPLE_EXPECTED_1;
+        let (path, cost) = brute_force_lowest_cost(example);
+        println!("minimum cost is: {cost}");
+        println!(
+            "path has {} members | {} are moves and {} are rotations",
+            path.len(),
+            path.iter()
+                .filter(|m| match m {
+                    Move::Step(_) => true,
+                    _ => false,
+                })
+                .fold(0, |s, _| s + 1),
+            path.iter()
+                .filter(|m| match m {
+                    Move::Step(_) => false,
+                    _ => true,
+                })
+                .fold(0, |s, _| s + 1)
+        )
     }
 
     ///////////////////////////////////////////////

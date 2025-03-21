@@ -706,6 +706,78 @@ mod test {
     }
 
     #[test]
+    fn next_specific_direction() {
+        let g = GridMovement {
+            max_row: 10,
+            max_col: 15,
+        };
+        // out of bounds
+        assert_eq!(g.next_up(&Coordinate { row: 0, col: 3 }), None);
+        assert_eq!(g.next_down(&Coordinate { row: 10, col: 8 }), None);
+        assert_eq!(g.next_right(&Coordinate { row: 4, col: 15 }), None);
+        assert_eq!(g.next_left(&Coordinate { row: 4, col: 0 }), None);
+        // in-bounds
+        assert_eq!(
+            g.next_up(&Coordinate { row: 5, col: 3 }),
+            Some(Coordinate { row: 4, col: 3 })
+        );
+        assert_eq!(
+            g.next_down(&Coordinate { row: 5, col: 8 }),
+            Some(Coordinate { row: 6, col: 8 })
+        );
+        assert_eq!(
+            g.next_right(&Coordinate { row: 4, col: 10 }),
+            Some(Coordinate { row: 4, col: 11 })
+        );
+        assert_eq!(
+            g.next_left(&Coordinate { row: 4, col: 5 }),
+            Some(Coordinate { row: 4, col: 4 })
+        );
+    }
+
+    #[test]
+    fn advance() {
+        let g = GridMovement {
+            max_row: 10,
+            max_col: 15,
+        };
+        // out of bounds
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 0, col: 3 }, &Direction::Up),
+            None
+        );
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 10, col: 8 }, &Direction::Down),
+            None
+        );
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 4, col: 15 }, &Direction::Right),
+            None
+        );
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 4, col: 0 }, &Direction::Left),
+            None
+        );
+        // in-bounds
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 5, col: 3 }, &Direction::Up),
+            Some(Coordinate { row: 4, col: 3 })
+        );
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 5, col: 8 }, &Direction::Down),
+            Some(Coordinate { row: 6, col: 8 })
+        );
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 4, col: 10 }, &Direction::Right),
+            Some(Coordinate { row: 4, col: 11 })
+        );
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 4, col: 5 }, &Direction::Left),
+            Some(Coordinate { row: 4, col: 4 })
+        );
+    }
+
+    #[test]
     fn try_flip_diagonal_coordinates() {
         let chars = [
             ['X', 'M', 'A', 'S'],
