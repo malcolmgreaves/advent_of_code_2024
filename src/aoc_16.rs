@@ -76,7 +76,7 @@ fn parse_tile(c: char) -> Result<Tile, String> {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub fn solution_pt1() -> Result<u64, String> {
-    let lines = io_help::read_lines("./inputs/???");
+    let lines = io_help::read_lines("./inputs/16");
     let puzzle: Puzzle = construct(lines)?;
     // let (_, cost) = lowest_cost_path_dijkstras(&puzzle);
     let (_, cost) = brute_force_lowest_cost(&puzzle);
@@ -312,7 +312,7 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub fn solution_pt2() -> Result<u64, String> {
-    let lines = io_help::read_lines("./inputs/???");
+    let lines = io_help::read_lines("./inputs/16");
     let puzzle: Puzzle = construct(lines)?;
     let _ = puzzle;
     Err(format!("part 2 is unimplemented!"))
