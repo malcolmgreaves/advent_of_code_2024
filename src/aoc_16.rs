@@ -325,6 +325,8 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     let graph = create_graph(puzzle);
     // create priority queue
 
+    // let mut distance =
+
     let mut priority_queue = BinaryHeap::<Search>::new();
 
     // create cost ("distance") map from start -> each vertx (empty space)
