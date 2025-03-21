@@ -7,12 +7,12 @@ use std::{
 // heap-allocated a rectangular 2D array with runtime-determined size
 pub type Matrix<T> = Vec<Vec<T>>;
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, PartialOrd)]
 pub enum Direction {
     Up,
+    Right,
     Down,
     Left,
-    Right,
 }
 
 impl Direction {
@@ -92,6 +92,18 @@ impl GridMovement {
             self.next_down(loc),
             self.next_left(loc),
             self.next_right(loc),
+        ]
+        .into_iter()
+        .flatten()
+        .collect()
+    }
+
+    pub fn cardinal_neighbor_directions(&self, loc: &Coordinate) -> Vec<(Coordinate, Direction)> {
+        [
+            self.next_up(loc).map(|l| (l, Direction::Up)),
+            self.next_right(loc).map(|l| (l, Direction::Right)),
+            self.next_down(loc).map(|l| (l, Direction::Down)),
+            self.next_left(loc).map(|l| (l, Direction::Left)),
         ]
         .into_iter()
         .flatten()

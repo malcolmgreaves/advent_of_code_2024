@@ -311,6 +311,7 @@ pub fn solution_pt2() -> Result<u64, String> {
 #[derive(Debug, PartialEq, Eq, PartialOrd)]
 struct Search {
     loc: Coordinate,
+    dir: Direction,
     cost: u64,
 }
 
@@ -320,17 +321,20 @@ impl Ord for Search {
     }
 }
 
-fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
+fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> Option<u64> {
     let start = locate(puzzle, Tile::Start).unwrap();
     let end = locate(puzzle, Tile::End).unwrap();
 
     // create graph from Puzzle
-    let graph = create_graph(puzzle);
+    // let graph = create_graph(puzzle);
+
+    let g = GridMovement::new(puzzle);
 
     // create priority queue
     let mut priority_queue = BinaryHeap::<Search>::new();
     priority_queue.push(Search {
         loc: start.clone(),
+        dir: Direction::Right,
         cost: 0,
     });
 
@@ -347,28 +351,52 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     //      v = take lowest cost from queue
     //      if v is end: return cost(v)
 
-    while let Some(Search { loc, cost }) = priority_queue.pop() {
+    while let Some(Search { loc, dir, cost }) = priority_queue.pop() {
         if loc == end {
-            println!("\treached end!");
-            return (vec![], cost);
+            println!("\treached end! cost={cost}");
+            return Some(cost);
         }
         if cost > *distance.get(&loc).unwrap() {
             // lower-cose path to loc has already been found
             continue;
         }
 
-        //    // For each node we can reach, see if we can find a way with
-        // // a lower cost going through this node
-        // for edge in &adj_list[position] {
-        //     let next = State { cost: cost + edge.cost, position: edge.node };
+        // graph.neighbors(node)
+        for (neighbor, new_dir) in g.cardinal_neighbor_directions(&loc) {
+            let is_start = loc == start;
+            if new_dir == dir.opposite() && !is_start {
+                // we only consider rotating backwards if we are at START
+                continue;
+            }
 
-        //     // If so, add it to the frontier and continue
-        //     if next.cost < dist[next.position] {
-        //         heap.push(next);
-        //         // Relaxation, we have now found a better way
-        //         dist[next.position] = next.cost;
-        //     }
-        // }
+            // fold the step + rotation cost into next_cost
+            let next_cost = if new_dir == dir {
+                // we're always stepping, which is cost 1
+                // in this case, we are not rotating
+                1
+            } else {
+                // we're rotating, so we need to incorporate this higher cost
+                // we only allow a 180 rotation if we're at start
+                // that's 2 rotations so 2*1000
+                if is_start { 2001 } else { 1001 }
+            };
+
+            let considering_next = Search {
+                loc: neighbor,
+                cost: cost + next_cost,
+                dir: new_dir,
+            };
+
+            let previous_min_cost = distance.get_mut(&considering_next.loc).unwrap();
+            if considering_next.cost < *previous_min_cost {
+                // the path we took to get here is lower than the minimum cost of
+                // some other path we took to get here!
+                let new_min_cost = considering_next.cost.clone();
+                priority_queue.push(considering_next);
+                // update distance (cost) for the location
+                *previous_min_cost = new_min_cost;
+            }
+        }
     }
 
     panic!()
