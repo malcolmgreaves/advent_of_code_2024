@@ -656,7 +656,22 @@ mod test {
 
     #[test]
     fn brute_force_all_paths() {
-        let example: &Puzzle = &EXAMPLE_EXPECTED_1;
+        // let example: &Puzzle = &EXAMPLE_EXPECTED_1;
+
+        /*
+
+        */
+        let example: &Puzzle = &construct(read_lines_in_memory(indoc! {
+        "
+            #######
+            #####E#
+            #...#.#
+            #.#.#.#
+            #S#...#
+            #######
+            "}))
+        .unwrap();
+
         let (path, cost) = brute_force_lowest_cost(example);
         println!("minimum cost is: {cost}");
         println!(
