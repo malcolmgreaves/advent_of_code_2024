@@ -91,7 +91,7 @@ enum Move {
     Step(Direction),
 }
 
-fn cost(path: &[Move]) -> u64 {
+fn path_cost(path: &[Move]) -> u64 {
     path.iter()
         .map(|m| match m {
             Move::Rotate90Clockwise | Move::Rotate90CounterCW => 1000,
@@ -110,7 +110,7 @@ fn brute_force_lowest_cost(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     results
         .into_iter()
         .map(|p| {
-            let c = cost(&p);
+            let c = path_cost(&p);
             (p, c)
         })
         .min_by_key(|(_, c)| *c)
@@ -326,14 +326,15 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
 
     // create graph from Puzzle
     let graph = create_graph(puzzle);
-    // create priority queue
 
+    // create priority queue
     let mut priority_queue = BinaryHeap::<Search>::new();
     priority_queue.push(Search {
         loc: start.clone(),
         cost: 0,
     });
 
+    // create cost ("distance") map from start -> each vertx (empty space)
     let mut distance: HashMap<Coordinate, u64> = GridMovement::new(puzzle)
         .coordinates()
         .map(|c| {
@@ -342,11 +343,34 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> (Vec<Move>, u64) {
         })
         .collect();
 
-    // create cost ("distance") map from start -> each vertx (empty space)
     // while queue is not empty
     //      v = take lowest cost from queue
     //      if v is end: return cost(v)
-    //
+
+    while let Some(Search { loc, cost }) = priority_queue.pop() {
+        if loc == end {
+            println!("\treached end!");
+            return (vec![], cost);
+        }
+        if cost > *distance.get(&loc).unwrap() {
+            // lower-cose path to loc has already been found
+            continue;
+        }
+
+        //    // For each node we can reach, see if we can find a way with
+        // // a lower cost going through this node
+        // for edge in &adj_list[position] {
+        //     let next = State { cost: cost + edge.cost, position: edge.node };
+
+        //     // If so, add it to the frontier and continue
+        //     if next.cost < dist[next.position] {
+        //         heap.push(next);
+        //         // Relaxation, we have now found a better way
+        //         dist[next.position] = next.cost;
+        //     }
+        // }
+    }
+
     panic!()
 }
 
@@ -818,7 +842,7 @@ mod test {
         }
         match expected_path {
             Some(p) => {
-                let c = cost(&p);
+                let c = path_cost(&p);
                 assert_eq!(
                     c, min_cost,
                     "incorrect minimum cost - expecting {min_cost} from supplied expected path but got {c}"
