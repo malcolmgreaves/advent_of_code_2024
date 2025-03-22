@@ -107,7 +107,7 @@ fn brute_force_lowest_cost(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     let end = locate(puzzle, Tile::End).unwrap();
 
     let results = all_paths(puzzle, &start, &end);
-    println!("results.len()= {:?}", results.len());
+    // println!("results.len()= {:?}", results.len());
 
     results
         .into_iter()
@@ -349,6 +349,11 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> Option<u64> {
         })
         .collect();
 
+    let mut prev_for_best_path: HashMap<Coordinate, Option<Coordinate>> = GridMovement::new(puzzle)
+        .coordinates()
+        .map(|c| (c, None))
+        .collect();
+
     // while queue is not empty
     //      v = take lowest cost from queue
     //      if v is end: return cost(v)
@@ -356,7 +361,7 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> Option<u64> {
     let mut hit_end_once = false;
     while let Some(Search { loc, dir, cost }) = priority_queue.pop() {
         if loc == end {
-            println!("\treached end! cost={cost}, skipping");
+            // println!("\treached end! cost={cost}, skipping");
             // return Some(cost);
             hit_end_once = true;
             continue;
@@ -399,19 +404,22 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> Option<u64> {
             };
 
             let previous_min_cost = distance.get_mut(&considering_next.loc).unwrap();
-            println!(
-                "\t{loc} ->{} next={} vs. min={}",
-                considering_next.loc, considering_next.cost, previous_min_cost
-            );
+            // println!(
+            //     "\t{loc} ->{} next={} vs. min={}",
+            //     considering_next.loc, considering_next.cost, previous_min_cost
+            // );
 
             if considering_next.cost < *previous_min_cost {
                 // the path we took to get here is lower than the minimum cost of
                 // some other path we took to get here!
                 let new_min_cost = considering_next.cost.clone();
-                println!("\t\tsetting to new min={}", considering_next.cost);
+                let neighbor = considering_next.loc.clone();
+                // println!("\t\tsetting to new min={}", considering_next.cost);
                 priority_queue.push(considering_next);
                 // update distance (cost) for the location
                 *previous_min_cost = new_min_cost;
+                // update: we got to <neighbor> via <loc>
+                prev_for_best_path.insert(neighbor, Some(loc.clone()));
             }
         }
     }
@@ -420,6 +428,149 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> Option<u64> {
         .get(&end)
         .filter(|_| hit_end_once)
         .map(|c| c.clone())
+}
+
+struct BestPaths {
+    min_cost: u64,
+    n_tiles: u64,
+}
+
+fn lowest_cost(puzzle: &Puzzle) -> Option<BestPaths> {
+    /*
+
+    problem:
+    - we need to record when we hit minimum
+
+     */
+
+    let start = locate(puzzle, Tile::Start).unwrap();
+    let end = locate(puzzle, Tile::End).unwrap();
+
+    // create graph from Puzzle
+    // let graph = create_graph(puzzle);
+
+    let g = GridMovement::new(puzzle);
+
+    // create priority queue
+    let mut priority_queue = BinaryHeap::<Search>::new();
+    priority_queue.push(Search {
+        loc: start.clone(),
+        dir: Direction::Right,
+        cost: 0,
+    });
+
+    // create cost ("distance") map from start -> each vertx (empty space)
+    let mut distance: HashMap<Coordinate, u64> = GridMovement::new(puzzle)
+        .coordinates()
+        .map(|c| {
+            let cost_from_start = if c == start { 0 } else { u64::MAX };
+            (c, cost_from_start)
+        })
+        .collect();
+
+    let mut prev_for_best_path = GridMovement::new(puzzle)
+        .coordinates()
+        .map(|c| (c, vec![]))
+        .collect::<HashMap<_, _>>();
+
+    // while queue is not empty
+    //      v = take lowest cost from queue
+    //      if v is end: return cost(v)
+
+    let mut hit_end_once = false;
+    while let Some(Search { loc, dir, cost }) = priority_queue.pop() {
+        if loc == end {
+            // println!("\treached end! cost={cost}, skipping");
+            // return Some(cost);
+            hit_end_once = true;
+            continue;
+        }
+        if cost > *distance.get(&loc).unwrap() {
+            // lower-cose path to loc has already been found
+            continue;
+        }
+
+        // graph.neighbors(node)
+        for (neighbor, new_dir) in g.cardinal_neighbor_directions(&loc) {
+            if puzzle[neighbor.row][neighbor.col] == Tile::Wall {
+                // we can't go into a wall!
+                continue;
+            }
+
+            // fold the step + rotation cost into next_cost
+            let (next_cost, moves) = if new_dir == dir {
+                // we're always stepping, which is cost 1
+                // in this case, we are not rotating
+                (1, vec![Move::Step(new_dir.clone())])
+            } else {
+                if new_dir == dir.opposite() {
+                    if loc == start {
+                        // we only consider rotating backwards if we are at START
+                        (
+                            2001,
+                            vec![
+                                Move::Rotate90Clockwise,
+                                Move::Rotate90Clockwise,
+                                Move::Step(new_dir.clone()),
+                            ],
+                        )
+                    } else {
+                        continue;
+                    }
+                } else {
+                    // we're rotating, so we need to incorporate this higher cost
+                    (
+                        1001,
+                        vec![
+                            if new_dir == dir.clockwise() {
+                                Move::Rotate90Clockwise
+                            } else {
+                                Move::Rotate90CounterCW
+                            },
+                            Move::Step(new_dir.clone()),
+                        ],
+                    )
+                }
+            };
+
+            let considering_next = Search {
+                loc: neighbor,
+                cost: cost + next_cost,
+                dir: new_dir,
+            };
+
+            let previous_min_cost = distance.get_mut(&considering_next.loc).unwrap();
+            // println!(
+            //     "\t{loc} ->{} next={} vs. min={}",
+            //     considering_next.loc, considering_next.cost, previous_min_cost
+            // );
+
+            if considering_next.cost < *previous_min_cost {
+                // the path we took to get here is lower than the minimum cost of
+                // some other path we took to get here!
+                let new_min_cost = considering_next.cost.clone();
+                let neighbor = considering_next.loc.clone();
+                // println!("\t\tsetting to new min={}", considering_next.cost);
+                priority_queue.push(considering_next);
+                // update distance (cost) for the location
+                *previous_min_cost = new_min_cost;
+                // update: we got to <neighbor> via <loc>
+                prev_for_best_path
+                    .get_mut(&neighbor)
+                    .unwrap()
+                    .push((loc.clone(), moves));
+            }
+        }
+    }
+
+    distance.get(&end).filter(|_| hit_end_once).map(|min_cost| {
+        let n_tiles = 0;
+
+        BestPaths {
+            min_cost: min_cost.clone(),
+            n_tiles,
+        }
+    })
 }
 
 /// Represents moving into Coorindate and facing Direction.
