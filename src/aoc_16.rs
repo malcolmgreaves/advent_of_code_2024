@@ -566,6 +566,15 @@ fn lowest_cost(puzzle: &Puzzle) -> Option<BestPaths> {
     distance.get(&end).filter(|_| hit_end_once).map(|min_cost| {
         let n_tiles = 0;
 
+
+        let mut queue = vec![end.clone()];
+
+        while let Some(next) = queue.
+
+        for (previous, moves_from_there) in prev_for_best_path.get(&end).unwrap() {
+
+        }
+
         BestPaths {
             min_cost: min_cost.clone(),
             n_tiles,
