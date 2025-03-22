@@ -94,13 +94,12 @@ enum Move {
     Step(Direction),
 }
 
-fn path_cost(path: &[Move]) -> u64 {
-    path.iter()
-        .map(|m| match m {
-            Move::Rotate90Clockwise | Move::Rotate90CounterCW => 1000,
-            Move::Step(_) => 1,
-        })
-        .sum()
+fn path_cost<'a>(path: impl Iterator<Item = &'a Move>) -> u64 {
+    path.map(|m| match m {
+        Move::Rotate90Clockwise | Move::Rotate90CounterCW => 1000,
+        Move::Step(_) => 1,
+    })
+    .sum()
 }
 
 fn brute_force_lowest_cost(puzzle: &Puzzle) -> (Vec<Move>, u64) {
@@ -113,7 +112,7 @@ fn brute_force_lowest_cost(puzzle: &Puzzle) -> (Vec<Move>, u64) {
     results
         .into_iter()
         .map(|p| {
-            let c = path_cost(&p);
+            let c = path_cost(p.iter());
             (p, c)
         })
         .min_by_key(|(_, c)| *c)
@@ -354,10 +353,13 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> Option<u64> {
     //      v = take lowest cost from queue
     //      if v is end: return cost(v)
 
+    let mut hit_end_once = false;
     while let Some(Search { loc, dir, cost }) = priority_queue.pop() {
         if loc == end {
-            println!("\treached end! cost={cost}");
-            return Some(cost);
+            println!("\treached end! cost={cost}, skipping");
+            // return Some(cost);
+            hit_end_once = true;
+            continue;
         }
         if cost > *distance.get(&loc).unwrap() {
             // lower-cose path to loc has already been found
@@ -366,9 +368,8 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> Option<u64> {
 
         // graph.neighbors(node)
         for (neighbor, new_dir) in g.cardinal_neighbor_directions(&loc) {
-            let is_start = loc == start;
-            if new_dir == dir.opposite() && !is_start {
-                // we only consider rotating backwards if we are at START
+            if puzzle[neighbor.row][neighbor.col] == Tile::Wall {
+                // we can't go into a wall!
                 continue;
             }
 
@@ -378,10 +379,17 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> Option<u64> {
                 // in this case, we are not rotating
                 1
             } else {
-                // we're rotating, so we need to incorporate this higher cost
-                // we only allow a 180 rotation if we're at start
-                // that's 2 rotations so 2*1000
-                if is_start { 2001 } else { 1001 }
+                if new_dir == dir.opposite() {
+                    if loc == start {
+                        // we only consider rotating backwards if we are at START
+                        2001
+                    } else {
+                        continue;
+                    }
+                } else {
+                    // we're rotating, so we need to incorporate this higher cost
+                    1001
+                }
             };
 
             let considering_next = Search {
@@ -391,10 +399,16 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> Option<u64> {
             };
 
             let previous_min_cost = distance.get_mut(&considering_next.loc).unwrap();
+            println!(
+                "\t{loc} ->{} next={} vs. min={}",
+                considering_next.loc, considering_next.cost, previous_min_cost
+            );
+
             if considering_next.cost < *previous_min_cost {
                 // the path we took to get here is lower than the minimum cost of
                 // some other path we took to get here!
                 let new_min_cost = considering_next.cost.clone();
+                println!("\t\tsetting to new min={}", considering_next.cost);
                 priority_queue.push(considering_next);
                 // update distance (cost) for the location
                 *previous_min_cost = new_min_cost;
@@ -402,7 +416,10 @@ fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> Option<u64> {
         }
     }
 
-    panic!()
+    distance
+        .get(&end)
+        .filter(|_| hit_end_once)
+        .map(|c| c.clone())
 }
 
 /// Represents moving into Coorindate and facing Direction.
@@ -776,6 +793,36 @@ mod test {
         #################
     "};
 
+    const EXAMPLE_INPUT_STR_ONE_PATH: &str = indoc! {"
+        #######
+        #####E#
+        #...#.#
+        #.#.#.#
+        #S#...#
+        #######
+    "};
+
+    lazy_static! {
+        static ref EXAMPLE_ONLY_ONE_PATH: Path = vec![
+            Move::Rotate90CounterCW,      // rotate
+            Move::Step(Direction::Up),    // move
+            Move::Step(Direction::Up),    // move
+            Move::Rotate90Clockwise,      // rotate
+            Move::Step(Direction::Right), // move
+            Move::Step(Direction::Right), // move
+            Move::Rotate90Clockwise,      // rotate
+            Move::Step(Direction::Down),  // move
+            Move::Step(Direction::Down),  // move
+            Move::Rotate90CounterCW,      // rotate
+            Move::Step(Direction::Right), // move
+            Move::Step(Direction::Right), // move
+            Move::Rotate90CounterCW,      // rotate
+            Move::Step(Direction::Up),    // move
+            Move::Step(Direction::Up),    // move
+            Move::Step(Direction::Up),    // move
+        ];
+    }
+
     ///////////////////////////////////////////////
 
     #[test]
@@ -802,35 +849,18 @@ mod test {
 
     #[test]
     fn brute_force_paths_one_path_example() {
-        let example: Puzzle = construct(read_lines_in_memory(indoc! {
-        "
-                #######
-                #####E#
-                #...#.#
-                #.#.#.#
-                #S#...#
-                #######
-                "}))
-        .unwrap();
-        let expected_moves = vec![
-            Move::Rotate90CounterCW,      // rotate
-            Move::Step(Direction::Up),    // move
-            Move::Step(Direction::Up),    // move
-            Move::Rotate90Clockwise,      // rotate
-            Move::Step(Direction::Right), // move
-            Move::Step(Direction::Right), // move
-            Move::Rotate90Clockwise,      // rotate
-            Move::Step(Direction::Down),  // move
-            Move::Step(Direction::Down),  // move
-            Move::Rotate90CounterCW,      // rotate
-            Move::Step(Direction::Right), // move
-            Move::Step(Direction::Right), // move
-            Move::Rotate90CounterCW,      // rotate
-            Move::Step(Direction::Up),    // move
-            Move::Step(Direction::Up),    // move
-            Move::Step(Direction::Up),    // move
-        ];
+        let example: Puzzle = construct(read_lines_in_memory(EXAMPLE_INPUT_STR_ONE_PATH)).unwrap();
+        let expected_moves: &Path = &EXAMPLE_ONLY_ONE_PATH;
         brute_force_all_paths(&example, None, Some(expected_moves));
+    }
+
+    #[test]
+    fn dijkstras_one_path_example() {
+        let example: Puzzle = construct(read_lines_in_memory(EXAMPLE_INPUT_STR_ONE_PATH)).unwrap();
+        let expected_moves: &Path = &EXAMPLE_ONLY_ONE_PATH;
+        let expected = path_cost(expected_moves.iter());
+        let actual = lowest_cost_path_dijkstras(&example).unwrap();
+        assert_eq!(actual, expected);
     }
 
     #[test]
@@ -842,7 +872,7 @@ mod test {
     fn brute_force_all_paths(
         example: &Puzzle,
         expected_cost: Option<u64>,
-        expected_path: Option<Vec<Move>>,
+        expected_path: Option<&[Move]>,
     ) {
         let (path, min_cost) = brute_force_lowest_cost(example);
         println!("minimum cost is: {min_cost}");
@@ -873,7 +903,7 @@ mod test {
         }
         match expected_path {
             Some(p) => {
-                let c = path_cost(&p);
+                let c = path_cost(p.iter());
                 assert_eq!(
                     c, min_cost,
                     "incorrect minimum cost - expecting {min_cost} from supplied expected path but got {c}"
