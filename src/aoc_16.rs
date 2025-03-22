@@ -908,7 +908,6 @@ mod test {
         }
     }
 
-
     #[test]
     fn dijkstras_one_path_example() {
         let example: Puzzle = construct(read_lines_in_memory(EXAMPLE_INPUT_STR_ONE_PATH)).unwrap();
@@ -918,11 +917,18 @@ mod test {
         assert_eq!(actual, expected);
     }
 
-
     #[test]
     fn dijkstras_example_1() {
         let example: Puzzle = construct(read_lines_in_memory(EXAMPLE_INPUT_STR_1)).unwrap();
         let expected = 7036;
+        let actual = lowest_cost_path_dijkstras(&example).unwrap();
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn dijkstras_example_2() {
+        let example: Puzzle = construct(read_lines_in_memory(EXAMPLE_INPUT_STR_2)).unwrap();
+        let expected = 11048;
         let actual = lowest_cost_path_dijkstras(&example).unwrap();
         assert_eq!(actual, expected);
     }
