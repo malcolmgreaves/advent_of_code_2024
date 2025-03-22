@@ -855,15 +855,6 @@ mod test {
     }
 
     #[test]
-    fn dijkstras_one_path_example() {
-        let example: Puzzle = construct(read_lines_in_memory(EXAMPLE_INPUT_STR_ONE_PATH)).unwrap();
-        let expected_moves: &Path = &EXAMPLE_ONLY_ONE_PATH;
-        let expected = path_cost(expected_moves.iter());
-        let actual = lowest_cost_path_dijkstras(&example).unwrap();
-        assert_eq!(actual, expected);
-    }
-
-    #[test]
     fn brute_force_paths_example_1() {
         let example: &Puzzle = &EXAMPLE_EXPECTED_1;
         brute_force_all_paths(example, Some(7036), None);
@@ -915,6 +906,25 @@ mod test {
                 "can't have expected cost and path both be none!"
             ),
         }
+    }
+
+
+    #[test]
+    fn dijkstras_one_path_example() {
+        let example: Puzzle = construct(read_lines_in_memory(EXAMPLE_INPUT_STR_ONE_PATH)).unwrap();
+        let expected_moves: &Path = &EXAMPLE_ONLY_ONE_PATH;
+        let expected = path_cost(expected_moves.iter());
+        let actual = lowest_cost_path_dijkstras(&example).unwrap();
+        assert_eq!(actual, expected);
+    }
+
+
+    #[test]
+    fn dijkstras_example_1() {
+        let example: Puzzle = construct(read_lines_in_memory(EXAMPLE_INPUT_STR_1)).unwrap();
+        let expected = 7036;
+        let actual = lowest_cost_path_dijkstras(&example).unwrap();
+        assert_eq!(actual, expected);
     }
 
     ///////////////////////////////////////////////
