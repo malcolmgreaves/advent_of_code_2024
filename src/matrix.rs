@@ -7,12 +7,12 @@ use std::{
 // heap-allocated a rectangular 2D array with runtime-determined size
 pub type Matrix<T> = Vec<Vec<T>>;
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, PartialOrd)]
 pub enum Direction {
     Up,
+    Right,
     Down,
     Left,
-    Right,
 }
 
 impl Direction {
@@ -22,6 +22,15 @@ impl Direction {
             Direction::Right => Direction::Down,
             Direction::Down => Direction::Left,
             Direction::Left => Direction::Up,
+        }
+    }
+
+    pub fn counter_clockwise(&self) -> Direction {
+        match self {
+            Direction::Up => Direction::Left,
+            Direction::Right => Direction::Up,
+            Direction::Down => Direction::Right,
+            Direction::Left => Direction::Down,
         }
     }
 
@@ -75,6 +84,31 @@ impl GridMovement {
             (self.add_row(row), Some(col)),
             (self.add_row(row), self.add_col(col)),
         ]
+    }
+
+    #[allow(dead_code)]
+    pub fn cardinal_neighbors(&self, loc: &Coordinate) -> Vec<Coordinate> {
+        [
+            self.next_up(loc),
+            self.next_down(loc),
+            self.next_left(loc),
+            self.next_right(loc),
+        ]
+        .into_iter()
+        .flatten()
+        .collect()
+    }
+
+    pub fn cardinal_neighbor_directions(&self, loc: &Coordinate) -> Vec<(Coordinate, Direction)> {
+        [
+            self.next_up(loc).map(|l| (l, Direction::Up)),
+            self.next_right(loc).map(|l| (l, Direction::Right)),
+            self.next_down(loc).map(|l| (l, Direction::Down)),
+            self.next_left(loc).map(|l| (l, Direction::Left)),
+        ]
+        .into_iter()
+        .flatten()
+        .collect()
     }
 
     #[allow(dead_code)]
@@ -250,6 +284,11 @@ impl GridMovement {
             };
         }
         v
+    }
+
+    pub fn coordinates(&self) -> impl Iterator<Item = Coordinate> {
+        (0..=self.max_row)
+            .flat_map(|row| (0..=self.max_col).map(move |col| Coordinate { row, col }))
     }
 }
 
@@ -671,6 +710,89 @@ mod test {
         assert_eq!(g.wrap_increment_row(3, -4), 5, "sub: underflow");
         assert_eq!(g.wrap_increment_row(3, -8), 1, "sub: underflow");
         assert_eq!(g.wrap_increment_col(5, -10), 6, "sub: underflow");
+    }
+
+    #[test]
+    fn direction_rotation_clock() {
+        let check = |d: &Direction| {
+            assert_eq!(&(&d).clockwise().counter_clockwise(), d);
+        };
+        check(&Direction::Up);
+        check(&Direction::Down);
+        check(&Direction::Left);
+        check(&Direction::Right);
+    }
+
+    #[test]
+    fn next_specific_direction() {
+        let g = GridMovement {
+            max_row: 10,
+            max_col: 15,
+        };
+        // out of bounds
+        assert_eq!(g.next_up(&Coordinate { row: 0, col: 3 }), None);
+        assert_eq!(g.next_down(&Coordinate { row: 10, col: 8 }), None);
+        assert_eq!(g.next_right(&Coordinate { row: 4, col: 15 }), None);
+        assert_eq!(g.next_left(&Coordinate { row: 4, col: 0 }), None);
+        // in-bounds
+        assert_eq!(
+            g.next_up(&Coordinate { row: 5, col: 3 }),
+            Some(Coordinate { row: 4, col: 3 })
+        );
+        assert_eq!(
+            g.next_down(&Coordinate { row: 5, col: 8 }),
+            Some(Coordinate { row: 6, col: 8 })
+        );
+        assert_eq!(
+            g.next_right(&Coordinate { row: 4, col: 10 }),
+            Some(Coordinate { row: 4, col: 11 })
+        );
+        assert_eq!(
+            g.next_left(&Coordinate { row: 4, col: 5 }),
+            Some(Coordinate { row: 4, col: 4 })
+        );
+    }
+
+    #[test]
+    fn advance() {
+        let g = GridMovement {
+            max_row: 10,
+            max_col: 15,
+        };
+        // out of bounds
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 0, col: 3 }, &Direction::Up),
+            None
+        );
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 10, col: 8 }, &Direction::Down),
+            None
+        );
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 4, col: 15 }, &Direction::Right),
+            None
+        );
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 4, col: 0 }, &Direction::Left),
+            None
+        );
+        // in-bounds
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 5, col: 3 }, &Direction::Up),
+            Some(Coordinate { row: 4, col: 3 })
+        );
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 5, col: 8 }, &Direction::Down),
+            Some(Coordinate { row: 6, col: 8 })
+        );
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 4, col: 10 }, &Direction::Right),
+            Some(Coordinate { row: 4, col: 11 })
+        );
+        assert_eq!(
+            g.next_advance(&Coordinate { row: 4, col: 5 }, &Direction::Left),
+            Some(Coordinate { row: 4, col: 4 })
+        );
     }
 
     #[test]

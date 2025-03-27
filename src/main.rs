@@ -5,6 +5,7 @@ mod aoc_12;
 mod aoc_13;
 mod aoc_14;
 mod aoc_15;
+mod aoc_16;
 mod aoc_2;
 mod aoc_3;
 mod aoc_4;
@@ -15,10 +16,12 @@ mod aoc_8;
 mod aoc_9;
 mod fun_list;
 mod geometry;
+mod graph;
 mod io_help;
 mod matrix;
 mod nums;
 mod set_ops;
+mod testing_utilities;
 mod utils;
 
 use std::cmp::Ordering;
@@ -185,6 +188,8 @@ pub fn main() {
         Aoc::new(14, 2, aoc_14::solution_pt2),
         Aoc::new(15, 1, aoc_15::solution_pt1),
         Aoc::new(15, 2, aoc_15::solution_pt2),
+        Aoc::new(16, 1, aoc_16::solution_pt1),
+        Aoc::new(16, 2, aoc_16::solution_pt2),
     ];
 
     let args = Args::parse();
