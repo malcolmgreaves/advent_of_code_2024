@@ -6,6 +6,7 @@ mod aoc_13;
 mod aoc_14;
 mod aoc_15;
 mod aoc_16;
+mod aoc_17;
 mod aoc_2;
 mod aoc_3;
 mod aoc_4;
