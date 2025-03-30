@@ -1,4 +1,9 @@
-use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
+use core::hash;
+use std::{
+    collections::{BinaryHeap, HashMap, HashSet, VecDeque},
+    hash::{DefaultHasher, Hash, Hasher},
+    thread::current,
+};
 
 use crate::{
     graph::{Graph, GraphBuilder, Node, SparseBuilder},
@@ -322,11 +327,52 @@ struct Search {
     cost: u64,
 }
 
+type HashKey = u64;
+
+fn hashkey(loc: &Coordinate, dir: &Direction) -> u64 {
+    let mut h = DefaultHasher::new();
+    loc.hash(&mut h);
+    dir.hash(&mut h);
+    h.finish()
+}
+
+impl Search {
+    fn hashkey(&self) -> u64 {
+        hashkey(&self.loc, &self.dir)
+    }
+
+    fn rotate_opposite(&self) -> Self {
+        Self {
+            loc: self.loc.clone(),
+            dir: self.dir.opposite(),
+            cost: self.cost.clone(),
+        }
+    }
+
+    fn rotate_clockwise(&self) -> Self {
+        Self {
+            loc: self.loc.clone(),
+            dir: self.dir.clockwise(),
+            cost: self.cost.clone(),
+        }
+    }
+
+    fn rotate_counter_clockwise(&self) -> Self {
+        Self {
+            loc: self.loc.clone(),
+            dir: self.dir.counter_clockwise(),
+            cost: self.cost.clone(),
+        }
+    }
+}
+
 impl Ord for Search {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.cost.cmp(&other.cost)
     }
 }
+
+const DEBUG_PRINT_PATHS_TAKEN_PT2: bool = false;
 
 fn lowest_cost_path_dijkstras(puzzle: &Puzzle) -> Option<u64> {
     let start = locate(puzzle, Tile::Start).unwrap();
@@ -470,56 +516,91 @@ fn number_tiles_in_all_lowest_cost_paths(puzzle: &Puzzle) -> Option<BestPaths> {
     });
 
     // create cost ("distance") map from start -> each vertx (empty space)
-    let mut distance: HashMap<Coordinate, u64> = GridMovement::new(puzzle)
+    let mut distance: HashMap<HashKey, u64> = GridMovement::new(puzzle)
         .coordinates()
-        .map(|c| {
+        .flat_map(|c| {
             let cost_from_start = if c == start { 0 } else { u64::MAX };
-            (c, cost_from_start)
+            Direction::ALL.map(|d| {
+                let k = hashkey(&c, &d);
+                (k, cost_from_start)
+            })
         })
         .collect();
 
-    const S_ROW: usize = 4;
+    const S_ROW: usize = 6;
     const S_COL: usize = 3;
 
-    let mut prev_for_best_path = GridMovement::new(puzzle)
-        .coordinates()
-        .map(|c| (c, vec![]))
-        .collect::<HashMap<_, _>>();
+    let is_higher_than_min = |distance: &HashMap<HashKey, u64>, current: &Search| -> bool {
+        // check if lower-cose path to loc has already been found
+        if current.cost > *distance.get(&current.hashkey()).unwrap() {
+            if DEBUG_PRINT_PATHS_TAKEN_PT2 && current.loc.row == S_ROW && current.loc.col == S_COL {
+                println!(
+                    "no longer considering ({S_ROW},{S_COL}) in Search because we have a lower cost ({}) already found!",
+                    distance.get(&current.hashkey()).unwrap()
+                );
+            }
+
+            return true;
+        }
+
+        // if not, check if there is one going in the OPPOSITE direction
+        // => means that we are now backtracking from whence we came and thus
+        // => are going to be higher cost!
+        if current.cost > *distance.get(&current.rotate_opposite().hashkey()).unwrap() {
+            if DEBUG_PRINT_PATHS_TAKEN_PT2 && current.loc.row == S_ROW && current.loc.col == S_COL {
+                println!(
+                    "[BACKTRACK DETECTED] no longer considering ({S_ROW},{S_COL}) in Search because we have a lower cost ({}) already found!",
+                    distance.get(&current.rotate_opposite().hashkey()).unwrap()
+                );
+            }
+            return true;
+        }
+
+        false
+    };
+
+    let mut prev_for_best_path: HashMap<HashKey, Vec<(u64, Coordinate, Direction)>> =
+        GridMovement::new(puzzle)
+            .coordinates()
+            .flat_map(|c| {
+                Direction::ALL.map(|d| {
+                    let k = hashkey(&c, &d);
+                    (k, vec![])
+                })
+            })
+            .collect::<HashMap<_, _>>();
 
     // while queue is not empty
     //      v = take lowest cost from queue
     //      if v is end: return cost(v)
 
     let mut hit_end_once = false;
-    while let Some(Search { loc, dir, cost }) = priority_queue.pop() {
-        if loc == end {
+    while let Some(current_search) = priority_queue.pop() {
+        if current_search.loc == end {
             // println!("\treached end! cost={cost}, skipping");
             // return Some(cost);
             hit_end_once = true;
             continue;
         }
 
+        let current_search_key = current_search.hashkey();
+        let too_high = is_higher_than_min(&distance, &current_search);
+        let Search { loc, dir, cost } = current_search;
+
         // println!("\tSEARCH: loc={loc}, dir={dir:?}, cost={cost}");
 
-        if cost > *distance.get(&loc).unwrap() {
-            // lower-cose path to loc has already been found
-            // if loc.row == S_ROW && loc.col == S_COL {
-            //     println!(
-            //         "no longer considering ({S_ROW},{S_COL}) in Search because we have a lower cost ({}) already found!",
-            //         distance.get(&loc).unwrap()
-            //     );
-            // }
+        if too_high {
             continue;
         }
 
-        // if loc.row == S_ROW && loc.col == S_COL {
-        //     println!(
-        //         "OK for ({S_ROW},{S_COL}) in search({:?}, {})! prev min cost={}",
-        //         dir,
-        //         cost,
-        //         distance.get(&loc).unwrap()
-        //     );
-        // }
+        if DEBUG_PRINT_PATHS_TAKEN_PT2 && loc.row == S_ROW && loc.col == S_COL {
+            println!(
+                "OK for ({S_ROW},{S_COL}) in search({:?}, {})! prev min cost={}",
+                dir,
+                cost,
+                distance.get(&current_search_key).unwrap()
+            );
+        }
 
         // < or = is ok!
 
@@ -551,31 +632,31 @@ fn number_tiles_in_all_lowest_cost_paths(puzzle: &Puzzle) -> Option<BestPaths> {
             let considering_next = Search {
                 // loc: neighbor.clone(),
                 loc: neighbor,
-                cost: {
-                    let base_cost = cost + next_cost;
-                    // if current direction puts it into a wall, then need to rotate
+                cost: cost + next_cost,
+                // cost: {
+                //     let base_cost = cost + next_cost;
+                //     if current direction puts it into a wall, then need to rotate
 
-                    // let wall_in_next_step_in_dir = match g.next_advance(&neighbor, &new_dir) {
-                    //     Some(Coordinate {
-                    //         row: next_row,
-                    //         col: next_col,
-                    //     }) => match puzzle[next_row][next_col] {
-                    //         Tile::Wall => true,
-                    //         _ => false,
-                    //     },
-                    //     None => false,
-                    // };
+                //     let wall_in_next_step_in_dir = match g.next_advance(&neighbor, &new_dir) {
+                //         Some(Coordinate {
+                //             row: next_row,
+                //             col: next_col,
+                //         }) => match puzzle[next_row][next_col] {
+                //             Tile::Wall => true,
+                //             _ => false,
+                //         },
+                //         None => false,
+                //     };
 
-                    // if wall_in_next_step_in_dir {
-                    //     if neighbor.row == S_ROW && neighbor.col == S_COL {
-                    //         println!("\t\tfrom {neighbor} facing {new_dir:?} we will hit a wall, so we must rotate! new_cost={}", base_cost+1000);
-                    //     }
-                    //     base_cost + 1000
-                    // } else {
-                    //     base_cost
-                    // }
-                    base_cost
-                },
+                //     if wall_in_next_step_in_dir {
+                //         if neighbor.row == S_ROW && neighbor.col == S_COL {
+                //             println!("\t\tfrom {neighbor} facing {new_dir:?} we will hit a wall, so we must rotate! new_cost={}", base_cost+1000);
+                //         }
+                //         base_cost + 1000
+                //     } else {
+                //         base_cost
+                //     }
+                // },
                 dir: new_dir,
             };
 
@@ -607,20 +688,21 @@ fn number_tiles_in_all_lowest_cost_paths(puzzle: &Puzzle) -> Option<BestPaths> {
             } else {
                 vec![considering_next]
             };
+            // let in_consideration = [considering_next];
 
             for considering_next in in_consideration {
-                let previous_min_cost = distance.get_mut(&considering_next.loc).unwrap();
+                let previous_min_cost = distance.get_mut(&considering_next.hashkey()).unwrap();
                 // println!(
                 //     "\t{loc} ->{} next={} vs. min={}",
                 //     considering_next.loc, considering_next.cost, previous_min_cost
                 // );
 
-                // if considering_next.loc.col == S_COL && considering_next.loc.row == S_ROW {
-                //     println!(
-                //         "CONSIDERING ({S_ROW},{S_COL}) as neighbor from {loc}!! => cost={} | previous={}",
-                //         considering_next.cost, previous_min_cost
-                //     );
-                // }
+                if DEBUG_PRINT_PATHS_TAKEN_PT2 && considering_next.loc.col == S_COL && considering_next.loc.row == S_ROW {
+                    println!(
+                        "CONSIDERING ({S_ROW},{S_COL})->{:?} as neighbor from {loc}->{dir:?}!! => cost={} | previous={}",
+                        considering_next.dir, considering_next.cost, previous_min_cost
+                    );
+                }
 
                 /*
                 if considering_next.cost < *previous_min_cost {
@@ -635,33 +717,29 @@ fn number_tiles_in_all_lowest_cost_paths(puzzle: &Puzzle) -> Option<BestPaths> {
                 if considering_next.cost <= *previous_min_cost {
                     // either a new minimum OR just equal to the existing minimum
 
-                    let new_min_cost = considering_next.cost.clone();
-                    let neighbor = considering_next.loc.clone();
+                    // let neighbor = considering_next.loc.clone();
                     // println!("\t\tsetting to new min={}", considering_next.cost);
 
                     // update: we got to <neighbor> via <loc>
                     // TODO: does this also mean we need to ignore any paths
                     //       in the value that are LESS than the min we just found?
-                    let existing = prev_for_best_path.get_mut(&neighbor).unwrap();
+                    let existing = prev_for_best_path
+                        .get_mut(&considering_next.hashkey())
+                        .unwrap();
 
                     if considering_next.cost < *previous_min_cost {
                         // the path we took to get here is lower than the minimum cost of
                         // some other path we took to get here!
                         //
                         // update distance (cost) for the location => de-reference & write
-                        *previous_min_cost = new_min_cost;
+                        *previous_min_cost = considering_next.cost.clone();
                         // ignore all other prior paths that got to the *OLD* min cost
                         // since we are now at a **NEW** min cost
                         // existing.clear();
                         let new_existing = existing
                             .iter()
-                            .flat_map(|(c, l): &(u64, Coordinate)| {
-                                if *c < considering_next.cost {
-                                    Some((c.clone(), l.clone()))
-                                } else {
-                                    None
-                                }
-                            })
+                            .filter(|(c, _, _)| *c <= considering_next.cost)
+                            .map(|(c, l, d)| (c.clone(), l.clone(), d.clone()))
                             .collect::<Vec<_>>();
                         *existing = new_existing;
                     } else {
@@ -670,63 +748,94 @@ fn number_tiles_in_all_lowest_cost_paths(puzzle: &Puzzle) -> Option<BestPaths> {
                         // we don't need to do anything since we only clear in the true minimum case
                     }
 
-                    let c = considering_next.cost.clone();
+                    let nc = considering_next.cost.clone();
                     priority_queue.push(considering_next);
                     // existing.push((loc.clone(), moves));
-                    existing.push((c, loc.clone()));
+                    existing.push((nc, loc.clone(), dir.clone()));
                 }
             }
         }
     }
 
     // BACKTRACK
+    Direction::ALL
+        .map(|d| Search {
+            loc: end.clone(),
+            dir: d,
+            cost: u64::MAX,
+        })
+        .into_iter()
+        .flat_map(|s| distance.get(&s.hashkey()))
+        .min()
+        .filter(|_| hit_end_once)
+        .map(|min_cost| {
+            let mut visited = HashSet::new();
 
-    distance.get(&end).filter(|_| hit_end_once).map(|min_cost| {
-        let mut visited = HashSet::new();
-
-        let mut queue = VecDeque::new();
-        queue.push_back(end.clone());
-
-        while let Some(location) = queue.pop_front() {
-            // add each next (_"previous" direction_) step
-            // in every path that took us to `location`
-            match prev_for_best_path.remove(&location) {
-                Some(paths_to_location) => {
-                    for (_, prev) in paths_to_location {
-                        queue.push_back(prev);
-                    }
-                }
-                None => (), //println!("WARNING: expected {location} to be in prev_for_best_path !!"),
+            let dir_of_min_cost = |loc: &Coordinate| -> (Direction, HashKey) {
+                let (min_dir, _, key) = Direction::ALL
+                    .map(|d| {
+                        let k = hashkey(loc, &d);
+                        (d, distance.get(&k).unwrap(), k)
+                    })
+                    .into_iter()
+                    .min_by_key(|(_, cost, _)| *cost)
+                    .unwrap();
+                (min_dir, key)
             };
 
-            // record that we have visited this tile
-            visited.insert(location);
-        }
+            let mut queue = VecDeque::new();
+            let (min_dir, _) = dir_of_min_cost(&end);
+            queue.push_back((end.clone(), min_dir));
 
-        // for row in 0..puzzle.len() {
-        //     for col in 0..puzzle[0].len() {
-        //         let loc = Coordinate { row, col };
-        //         match puzzle[row][col] {
-        //             Tile::Wall => print!("#"),
-        //             Tile::End => print!("E"),
-        //             Tile::Start => print!("S"),
-        //             _ => {
-        //                 if visited.contains(&loc) {
-        //                     print!("O");
-        //                 } else {
-        //                     print!(".");
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     print!("\n");
-        // }
+            while let Some((location, dir)) = queue.pop_front() {
+                // add each next (_"previous" direction_) step
+                // in every path that took us to `location`
 
-        BestPaths {
-            min_cost: *min_cost,
-            n_tiles: visited.len() as u64,
-        }
-    })
+                // select direction in which min path came from
+                // let (min_dir, key) =
+                // let key = dir_of_min_cost(&location);
+                let key = hashkey(&location, &dir);
+
+                // take that one's path and push onto queue
+                match prev_for_best_path.remove(&key) {
+                    Some(paths_to_location) => {
+                        for (_, prev_loc, prev_dir) in paths_to_location {
+                            queue.push_back((prev_loc, prev_dir));
+                        }
+                    }
+                    None => (), //println!("WARNING: expected {location} to be in prev_for_best_path !!"),
+                };
+
+                // record that we have visited this tile
+                visited.insert(location);
+            }
+
+            if DEBUG_PRINT_PATHS_TAKEN_PT2 {
+                for row in 0..puzzle.len() {
+                    for col in 0..puzzle[0].len() {
+                        let loc = Coordinate { row, col };
+                        match puzzle[row][col] {
+                            Tile::Wall => print!("#"),
+                            Tile::End => print!("E"),
+                            Tile::Start => print!("S"),
+                            _ => {
+                                if visited.contains(&loc) {
+                                    print!("O");
+                                } else {
+                                    print!(".");
+                                }
+                            }
+                        }
+                    }
+                    print!("\n");
+                }
+            }
+
+            BestPaths {
+                min_cost: *min_cost,
+                n_tiles: visited.len() as u64,
+            }
+        })
 }
 
 // fn rotation_is_inevitable(g: &GridMovement, puzzle: &Puzzle, loc: &Coordinate, prior_dir: &Direction) -> bool {
@@ -1284,7 +1393,7 @@ mod test {
     }
 
     #[test]
-    fn backtracing_example_micro() {
+    fn backtracking_example_micro() {
         let example_input = indoc! {"
             ###############
             #############E#
@@ -1326,9 +1435,8 @@ mod test {
     ///////////////////////////////////////////////
 
     #[test]
-    #[ignore]
     fn pt2_soln_example() {
         let _ = solution_pt2();
-        assert!(false);
+        assert_eq!(solution_pt2().unwrap(), 471);
     }
 }

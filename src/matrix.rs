@@ -16,6 +16,13 @@ pub enum Direction {
 }
 
 impl Direction {
+    pub const ALL: [Direction; 4] = [
+        Direction::Up,
+        Direction::Right,
+        Direction::Down,
+        Direction::Left,
+    ];
+
     pub fn clockwise(&self) -> Direction {
         match self {
             Direction::Up => Direction::Right,
