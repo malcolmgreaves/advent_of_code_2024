@@ -328,7 +328,7 @@ fn combo_operand_value(computer: &Computer, combo: Operand) -> u32 {
 }
 
 pub fn solution_pt1() -> Result<String, String> {
-    let lines = io_help::read_lines("./inputs/???");
+    let lines = io_help::read_lines("./inputs/17");
     let (computer, program) = construct(lines)?;
     let mut exe = Executable::new(&computer, &program);
     let output = exe.execute();
@@ -338,7 +338,7 @@ pub fn solution_pt1() -> Result<String, String> {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub fn solution_pt2() -> Result<String, String> {
-    let lines = io_help::read_lines("./inputs/???");
+    let lines = io_help::read_lines("./inputs/17");
     let _ = lines;
     Err(format!("part 2 is unimplemented!"))
 }
