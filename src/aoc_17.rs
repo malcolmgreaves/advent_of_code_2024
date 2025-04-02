@@ -406,26 +406,6 @@ fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> u32 {
     // high
 }
 
-/*
-
-Procedure binary_search
-A ← sorted array
-n ← size of array
-x ← value to be searched
-Set low = 1
-Set high = n
-while x not found
-if high < low
-EXIT: x does not exist.
-set mid = low + ( high - low ) / 2
-if A[mid] < x set low = mid + 1 if A[mid]> x
-set high = mid - 1
-if A[mid] = x
-EXIT: x found at location mid
-end while
-end procedure
-*/
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #[cfg(test)]
