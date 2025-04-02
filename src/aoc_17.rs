@@ -337,11 +337,14 @@ pub fn solution_pt1() -> Result<String, String> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt2() -> Result<String, String> {
+pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/17");
-    let _ = lines;
-    Err(format!("part 2 is unimplemented!"))
+    let (computer, program) = construct(lines)?;
+    Ok(minimum_register_a_for_quine(&computer, &program) as u64)
 }
+
+/// binary_search_on_answer
+fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> u32 {}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
