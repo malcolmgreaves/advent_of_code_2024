@@ -4,7 +4,7 @@ use crate::{io_help, utils::collect_results};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-type Register = u32;
+type Register = u64;
 
 #[allow(non_snake_case)]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -216,7 +216,7 @@ fn parse_computer(lines: &[String]) -> Result<Computer, String> {
                         "Expecting each register to list its label and value with ':'. Failed to parse: {line}"
                     ))
                 } else {
-                    bits.swap_remove(1).parse::<u32>().map_err(|e| format!("{e}"))
+                    bits.swap_remove(1).parse::<Register>().map_err(|e| format!("{e}"))
                 }
             })
     );
@@ -293,7 +293,7 @@ fn run_step(computer: &mut Computer, instruction: &Instruction) -> (Option<usize
         }
         Instruction::bxl(literal) => {
             // ^ is bitwise XOR: https://doc.rust-lang.org/std/ops/trait.BitXor.html
-            let val = computer.B ^ *literal as u32;
+            let val = computer.B ^ *literal as Register;
             computer.B = val;
         }
         Instruction::bst(combo) => {
@@ -326,13 +326,13 @@ fn run_step(computer: &mut Computer, instruction: &Instruction) -> (Option<usize
     (None, None)
 }
 
-fn div(computer: &Computer, combo: Operand) -> u32 {
-    computer.A / 2_u32.pow(combo_operand_value(computer, combo))
+fn div(computer: &Computer, combo: Operand) -> Register {
+    computer.A / (2 as Register).pow(combo_operand_value(computer, combo).try_into().unwrap())
 }
 
-fn combo_operand_value(computer: &Computer, combo: Operand) -> u32 {
+fn combo_operand_value(computer: &Computer, combo: Operand) -> Register {
     match combo {
-        0..=3 => combo as u32,
+        0..=3 => combo as Register,
         4 => computer.A,
         5 => computer.B,
         6 => computer.C,
@@ -354,8 +354,11 @@ pub fn solution_pt1() -> Result<String, String> {
 pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/17");
     let (computer, program) = construct(lines)?;
+
+    println!("program: {:?}", program);
+
     match minimum_register_a_for_quine(&computer, &program) {
-        Some(register_a) => Ok(register_a as u64),
+        Some(register_a) => Ok(register_a as Register),
         None => Err(format!(
             "could not find a u32 value for register A that makes this program a quine: '{}'",
             stringify_program(&program),
@@ -379,7 +382,7 @@ fn stringify_program(program: &Program) -> String {
         .join(",")
 }
 
-fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> Option<u32> {
+fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> Option<Register> {
     // binary_search_on_answer(u32::MIN, u32::MAX, {
     //     let program_str = stringify_program(program);
     //     move |register_a: u32| -> bool {
@@ -394,24 +397,25 @@ fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> Optio
     // })
     let program_str = stringify_program(program);
 
-    let is_found = |register_a: u32| -> bool {
+    let is_found = |register_a: Register| -> bool {
         let mut exe = {
             let mut c = computer.clone();
             c.A = register_a;
             Executable::new(&c, program)
         };
         let output = exe.execute().join(",");
+        println!("[{register_a}] {output} =?= {program_str}");
         output == program_str
     };
 
     let mut queue = VecDeque::new();
-    queue.push_back((u32::MIN, u32::MAX));
+    queue.push_back((Register::MIN, Register::MAX));
     while let Some((low, high)) = queue.pop_front() {
         if high < low + 1 {
             return None;
         }
 
-        if (high - low) < u16::MAX as u32 {
+        if (high - low) < u16::MAX as Register {
             // switch to iterative: it is very fast to go through 2^16 values
             for i in low..=high {
                 if is_found(i) {
@@ -579,6 +583,7 @@ mod test {
     #[ignore]
     #[test]
     fn pt2_soln_example() {
-        panic!();
+        // TODO
+        assert_eq!(solution_pt2().unwrap(), 0)
     }
 }
