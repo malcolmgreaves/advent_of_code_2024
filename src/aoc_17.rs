@@ -213,9 +213,20 @@ fn parse_computer(lines: &[String]) -> Result<Computer, String> {
 }
 
 fn parse_raw_program(line: String) -> Result<RawProgram, String> {
-    let mut bits = line.split("Program: ").collect::<Vec<_>>();
+    let raw_program = {
+        let mut bits = line.split("Program: ").collect::<Vec<_>>();
+        match bits.len() {
+            1 => bits.swap_remove(0),
+            2 => bits.swap_remove(1),
+            _ => {
+                return Err(format!(
+                    "expecting raw program to be 'Program: <raw>' or just '<raw>' -- invalid format: '{line}'"
+                ));
+            }
+        }
+    };
     let (ops, errors) = collect_results(
-        bits.swap_remove(1)
+        raw_program
             .split(",")
             .map(|x| x.parse::<u8>().map_err(|e| format!("{e}"))),
     );
