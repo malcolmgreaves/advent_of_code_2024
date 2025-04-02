@@ -447,6 +447,13 @@ mod test {
         assert_eq!(computer.B, 44354);
     }
 
+    #[test]
+    fn execute_example() {
+        let mut exe = Executable::new(&EXAMPLE_EXPECTED_COMPUTER, &EXAMPLE_EXPECTED_PROGRAM);
+        let output = exe.execute();
+        assert_eq!(output.join(","), "4,6,3,5,6,3,5,2,1,0");
+    }
+
     #[ignore]
     #[test]
     fn pt1_soln_example() {
