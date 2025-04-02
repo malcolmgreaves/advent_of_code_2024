@@ -79,13 +79,16 @@ impl Executable {
     }
 
     pub fn increment(&mut self) {
-        self.pc += 2;
+        // since program is compiled into instructions, incrementing the
+        // instruction pointer by 1 means we're jumping over 2 in the raw format
+        self.pc += 1;
     }
 
     pub fn jump(&mut self, instruction_pointer: usize) {
         self.pc = instruction_pointer;
     }
 
+    #[allow(dead_code)]
     pub fn current_instruction(&self) -> Option<&Instruction> {
         if self.is_ready() {
             Some(&self.program[self.pc])
@@ -100,14 +103,22 @@ impl Executable {
 
     fn execute(&mut self) -> Vec<String> {
         let mut output = Vec::new();
+        println!("program: {:?}", self.program);
         while self.is_ready() {
+            println!("\tpc: {} {:?}", self.pc, self.program[self.pc]);
             let (pc, maybe_output) = run_step(&mut self.computer, &self.program[self.pc]);
             match pc {
-                Some(instruction_pointer) => self.jump(instruction_pointer),
+                Some(instruction_pointer) => {
+                    println!("\t\tjumping to: {instruction_pointer}");
+                    self.jump(instruction_pointer)
+                }
                 None => self.increment(),
             };
             match maybe_output {
-                Some(o) => output.push(o),
+                Some(o) => {
+                    println!("\t\toutputting: {o}");
+                    output.push(o);
+                }
                 None => (),
             };
         }
