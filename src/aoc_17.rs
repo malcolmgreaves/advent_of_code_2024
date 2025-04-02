@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::{io_help, utils::collect_results};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -401,10 +403,31 @@ fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> Optio
         let output = exe.execute().join(",");
         output == program_str
     };
-    for i in u32::MIN..=u32::MAX {
-        if is_found(i) {
-            return Some(i);
+
+    let mut queue = VecDeque::new();
+    queue.push_back((u32::MIN, u32::MAX));
+    while let Some((low, high)) = queue.pop_front() {
+        if high < low + 1 {
+            return None;
         }
+
+        if (high - low) < u16::MAX as u32 {
+            // switch to iterative: it is very fast to go through 2^16 values
+            for i in low..=high {
+                if is_found(i) {
+                    return Some(i);
+                }
+            }
+            // didn't work -> discard this whole range
+            continue;
+        }
+
+        let midpoint = low + ((high - low) / 2);
+        if is_found(midpoint) {
+            return Some(midpoint);
+        }
+        queue.push_back((low, midpoint));
+        queue.push_back((midpoint, high));
     }
     return None;
 }
