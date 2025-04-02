@@ -1,6 +1,4 @@
-use std::fmt::format;
-
-use crate::{io_help, search::binary_search_on_answer, utils::collect_results};
+use crate::{io_help, utils::collect_results};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -354,36 +352,35 @@ pub fn solution_pt1() -> Result<String, String> {
 pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/17");
     let (computer, program) = construct(lines)?;
-    Ok(minimum_register_a_for_quine(&computer, &program) as u64)
+    match minimum_register_a_for_quine(&computer, &program) {
+        Some(register_a) => Ok(register_a as u64),
+        None => Err(format!(
+            "could not find a u32 value for register A that makes this program a quine: '{}'",
+            stringify_program(&program),
+        )),
+    }
 }
 
-/// binary_search_on_answer
-fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> u32 {
-    binary_search_on_answer(u32::MIN, u32::MAX, {
-        let program_str = program
-            .iter()
-            .map(|instr| format!("{},{}", instr.opcode(), instr.operand()))
-            .collect::<Vec<_>>()
-            .join(",");
+#[allow(dead_code)]
+fn raw_program(program: &Program) -> RawProgram {
+    program
+        .iter()
+        .map(|instr| (instr.opcode(), instr.operand()))
+        .collect::<Vec<_>>()
+}
 
-        move |register_a: u32| -> bool {
-            let mut exe = {
-                let mut c = computer.clone();
-                c.A = register_a;
-                Executable::new(&c, program)
-            };
-            let output = exe.execute().join(",");
-            output == program_str
-        }
-    })
-    // let program_str = program
-    //     .iter()
-    //     .map(|instr| format!("{},{}", instr.opcode(), instr.operand()))
-    //     .collect::<Vec<_>>()
-    //     .join(",");
+fn stringify_program(program: &Program) -> String {
+    program
+        .iter()
+        .map(|instr| format!("{},{}", instr.opcode(), instr.operand()))
+        .collect::<Vec<_>>()
+        .join(",")
+}
 
-    // let is_found = {
-    //     |register_a: u32| -> bool {
+fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> Option<u32> {
+    // binary_search_on_answer(u32::MIN, u32::MAX, {
+    //     let program_str = stringify_program(program);
+    //     move |register_a: u32| -> bool {
     //         let mut exe = {
     //             let mut c = computer.clone();
     //             c.A = register_a;
@@ -392,18 +389,24 @@ fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> u32 {
     //         let output = exe.execute().join(",");
     //         output == program_str
     //     }
-    // };
-    // let mut low = u32::MIN;
-    // let mut high = u32::MAX;
-    // // while (high > low + 1) {
-    //     let midpoint = low + (high.checked_sub(low).unwrap() / 2);
-    //     if is_found(midpoint) {
-    //         high = midpoint;
-    //     } else {
-    //         low = midpoint;
-    //     }
-    // }
-    // high
+    // })
+    let program_str = stringify_program(program);
+
+    let is_found = |register_a: u32| -> bool {
+        let mut exe = {
+            let mut c = computer.clone();
+            c.A = register_a;
+            Executable::new(&c, program)
+        };
+        let output = exe.execute().join(",");
+        output == program_str
+    };
+    for i in u32::MIN..=u32::MAX {
+        if is_found(i) {
+            return Some(i);
+        }
+    }
+    return None;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -541,11 +544,12 @@ mod test {
     }
 
     #[test]
-    fn binary_search_quine() {
+    fn search_for_quine() {
         let actual = minimum_register_a_for_quine(
             &Computer { A: 0, B: 0, C: 0 },
             &compile(parse_raw_program("0,3,5,4,3,0".to_string()).unwrap()).unwrap(),
-        );
+        )
+        .unwrap();
         assert_eq!(actual, 117440);
     }
 
