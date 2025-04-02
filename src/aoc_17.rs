@@ -7,7 +7,7 @@ use crate::{io_help, utils::collect_results};
 type Register = u32;
 
 #[allow(non_snake_case)]
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Computer {
     A: Register,
     B: Register,
@@ -21,7 +21,7 @@ type RawProgram = Vec<(Opcode, Operand)>;
 type Program = Vec<Instruction>;
 
 #[allow(non_camel_case_types)]
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum Instruction {
     adv(Operand),
     bxl(Operand),
@@ -62,6 +62,7 @@ impl Instruction {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Executable {
     pc: usize,
     computer: Computer,
@@ -335,17 +336,31 @@ mod test {
     ///////////////////////////////////////////////
 
     const EXAMPLE_INPUT_STR: &str = indoc! {"
+        Register A: 729
+        Register B: 0
+        Register C: 0
+
+        Program: 0,1,5,4,3,0
     "};
 
     lazy_static! {
-        static ref EXAMPLE_EXPECTED: Option<u8> = None;
+        static ref EXAMPLE_EXPECTED_COMPUTER: Computer = Computer { A: 729, B: 0, C: 0 };
+        static ref EXAMPLE_EXPECTED_PROGRAM: Program = vec![
+            Instruction::adv(1),
+            Instruction::out(4),
+            Instruction::jnz(0),
+        ];
     }
 
     ///////////////////////////////////////////////
 
     #[test]
     fn construction() {
-        panic!();
+        let expected_computer: &Computer = &EXAMPLE_EXPECTED_COMPUTER;
+        let expected_program: &Program = &EXAMPLE_EXPECTED_PROGRAM;
+        let (computer, program) = construct(read_lines_in_memory(EXAMPLE_INPUT_STR)).unwrap();
+        assert_eq!(computer, *expected_computer);
+        assert_eq!(program, *expected_program);
     }
 
     ///////////////////////////////////////////////
