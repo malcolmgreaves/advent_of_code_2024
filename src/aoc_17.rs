@@ -103,20 +103,20 @@ impl Executable {
 
     fn execute(&mut self) -> Vec<String> {
         let mut output = Vec::new();
-        println!("program: {:?}", self.program);
+        // println!("program: {:?}", self.program);
         while self.is_ready() {
-            println!("\tpc: {} {:?}", self.pc, self.program[self.pc]);
+            // println!("\tpc: {} {:?}", self.pc, self.program[self.pc]);
             let (pc, maybe_output) = run_step(&mut self.computer, &self.program[self.pc]);
             match pc {
                 Some(instruction_pointer) => {
-                    println!("\t\tjumping to: {instruction_pointer}");
+                    // println!("\t\tjumping to: {instruction_pointer}");
                     self.jump(instruction_pointer)
                 }
                 None => self.increment(),
             };
             match maybe_output {
                 Some(o) => {
-                    println!("\t\toutputting: {o}");
+                    // println!("\t\toutputting: {o}");
                     output.push(o);
                 }
                 None => (),
@@ -454,10 +454,9 @@ mod test {
         assert_eq!(output.join(","), "4,6,3,5,6,3,5,2,1,0");
     }
 
-    #[ignore]
     #[test]
     fn pt1_soln_example() {
-        panic!();
+        assert_eq!(solution_pt1().unwrap(), "2,0,7,3,0,3,1,3,7");
     }
 
     ///////////////////////////////////////////////
