@@ -69,17 +69,43 @@ struct Args {
 
 type PosInt = usize;
 
-type Return = Result<u64, String>;
+type Return<R: std::fmt::Display> = Result<R, String>;
 
-#[derive(Debug, Clone, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
+enum Fn {
+    FnU64(fn() -> Return<u64>),
+    FnStr(fn() -> Return<String>),
+}
+
+impl Fn {
+    fn call(&self) -> Return<String> {
+        match self {
+            Self::FnU64(f) => f().map(|x| format!("{x}")),
+            Self::FnStr(f) => f(),
+        }
+    }
+}
+
+impl Ord for Fn {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (Self::FnU64(_), Self::FnU64(_)) => Ordering::Equal,
+            (Self::FnU64(_), Self::FnStr(_)) => Ordering::Less,
+            (Self::FnStr(_), Self::FnU64(_)) => Ordering::Greater,
+            (Self::FnStr(_), Self::FnStr(_)) => Ordering::Equal,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
 struct Aoc {
     problem: PosInt,
     part: PosInt,
-    func: fn() -> Return,
+    func: Fn,
 }
 
 impl Aoc {
-    fn new(problem: PosInt, part: PosInt, func: fn() -> Return) -> Aoc {
+    fn new(problem: PosInt, part: PosInt, func: Fn) -> Aoc {
         if problem == 0 {
             panic!("problem number must be positive!");
         }
@@ -98,17 +124,17 @@ impl Aoc {
     }
 }
 
-impl PartialOrd for Aoc {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self.problem.partial_cmp(&other.problem) {
-            Some(Ordering::Equal) => {}
+impl Ord for Aoc {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.problem.cmp(&other.problem) {
+            Ordering::Equal => {}
             ord => return ord,
         }
-        match self.part.partial_cmp(&other.part) {
-            Some(Ordering::Equal) => {}
+        match self.part.cmp(&other.part) {
+            Ordering::Equal => {}
             ord => return ord,
         }
-        Some(Ordering::Equal)
+        Ordering::Equal
     }
 }
 
@@ -118,14 +144,14 @@ impl Display for Aoc {
     }
 }
 
-struct FutureResults<T> {
-    r: Receiver<(Aoc, T)>,
+struct FutureResults<T: std::fmt::Display> {
+    r: Receiver<(Aoc, Return<T>)>,
     n_expected: usize,
 }
 
 // impl <T: 'static> FutureResults<T> {
-impl<T> FutureResults<T> {
-    fn collect(self) -> BTreeMap<Aoc, T> {
+impl<T: std::fmt::Display> FutureResults<T> {
+    fn collect(self) -> BTreeMap<Aoc, Return<T>> {
         self.r.iter().take(self.n_expected).collect()
     }
 
@@ -135,16 +161,16 @@ impl<T> FutureResults<T> {
     // }
 }
 
-fn concurrently_run(problems: &[Aoc]) -> FutureResults<Return> {
-    let (s, r) = channel::<(Aoc, Return)>();
+fn concurrently_run(problems: &[Aoc]) -> FutureResults<impl std::fmt::Display> {
+    let (s, r) = channel::<(Aoc, Return<String>)>();
     let tx = Arc::new(Mutex::new(s));
 
     problems.iter().for_each(|aoc| {
         let tx = tx.clone();
-        let f = aoc.func;
+        let f = aoc.func.clone();
         let aoc = aoc.clone();
         thread::spawn(move || {
-            let result = f();
+            let result = f.call();
             tx.lock().unwrap().send((aoc, result)).unwrap(); //.expect(format!("Could not compute result for: {name}!").as_str());
         });
     });
@@ -155,41 +181,45 @@ fn concurrently_run(problems: &[Aoc]) -> FutureResults<Return> {
     }
 }
 
+fn wrap_u64(f: fn() -> Return<u64>) -> Box<dyn std::fmt::Display> {
+    panic!();
+}
+
 pub fn main() {
     // let problems: BTreeMap<&str, fn() -> u64> = BTreeMap::from([
     let all_problems = [
-        Aoc::new(1, 1, aoc_1::solution_pt1),
-        Aoc::new(1, 2, aoc_1::solution_pt2),
-        Aoc::new(2, 1, aoc_2::solution_pt1),
-        Aoc::new(2, 2, aoc_2::solution_pt2),
-        Aoc::new(3, 1, aoc_3::solution_pt1),
-        Aoc::new(3, 2, aoc_3::solution_pt2),
-        Aoc::new(4, 1, aoc_4::solution_pt1),
-        Aoc::new(4, 2, aoc_4::solution_pt2),
-        Aoc::new(5, 1, aoc_5::solution_pt1),
-        Aoc::new(5, 2, aoc_5::solution_pt2),
-        Aoc::new(6, 1, aoc_6::solution_pt1),
-        Aoc::new(6, 2, aoc_6::solution_pt2),
-        Aoc::new(7, 1, aoc_7::solution_pt1),
-        Aoc::new(7, 2, aoc_7::solution_pt2),
-        Aoc::new(8, 1, aoc_8::solution_pt1),
-        Aoc::new(8, 2, aoc_8::solution_pt2),
-        Aoc::new(9, 1, aoc_9::solution_pt1),
-        Aoc::new(9, 2, aoc_9::solution_pt2),
-        Aoc::new(10, 1, aoc_10::solution_pt1),
-        Aoc::new(10, 2, aoc_10::solution_pt2),
-        Aoc::new(11, 1, aoc_11::solution_pt1),
-        Aoc::new(11, 2, aoc_11::solution_pt2),
-        Aoc::new(12, 1, aoc_12::solution_pt1),
-        Aoc::new(12, 2, aoc_12::solution_pt2),
-        Aoc::new(13, 1, aoc_13::solution_pt1),
-        Aoc::new(13, 2, aoc_13::solution_pt2),
-        Aoc::new(14, 1, aoc_14::solution_pt1),
-        Aoc::new(14, 2, aoc_14::solution_pt2),
-        Aoc::new(15, 1, aoc_15::solution_pt1),
-        Aoc::new(15, 2, aoc_15::solution_pt2),
-        Aoc::new(16, 1, aoc_16::solution_pt1),
-        Aoc::new(16, 2, aoc_16::solution_pt2),
+        Aoc::new(1, 1, Fn::FnU64(aoc_1::solution_pt1)),
+        Aoc::new(1, 2, Fn::FnU64(aoc_1::solution_pt2)),
+        Aoc::new(2, 1, Fn::FnU64(aoc_2::solution_pt1)),
+        Aoc::new(2, 2, Fn::FnU64(aoc_2::solution_pt2)),
+        Aoc::new(3, 1, Fn::FnU64(aoc_3::solution_pt1)),
+        Aoc::new(3, 2, Fn::FnU64(aoc_3::solution_pt2)),
+        Aoc::new(4, 1, Fn::FnU64(aoc_4::solution_pt1)),
+        Aoc::new(4, 2, Fn::FnU64(aoc_4::solution_pt2)),
+        Aoc::new(5, 1, Fn::FnU64(aoc_5::solution_pt1)),
+        Aoc::new(5, 2, Fn::FnU64(aoc_5::solution_pt2)),
+        Aoc::new(6, 1, Fn::FnU64(aoc_6::solution_pt1)),
+        Aoc::new(6, 2, Fn::FnU64(aoc_6::solution_pt2)),
+        Aoc::new(7, 1, Fn::FnU64(aoc_7::solution_pt1)),
+        Aoc::new(7, 2, Fn::FnU64(aoc_7::solution_pt2)),
+        Aoc::new(8, 1, Fn::FnU64(aoc_8::solution_pt1)),
+        Aoc::new(8, 2, Fn::FnU64(aoc_8::solution_pt2)),
+        Aoc::new(9, 1, Fn::FnU64(aoc_9::solution_pt1)),
+        Aoc::new(9, 2, Fn::FnU64(aoc_9::solution_pt2)),
+        Aoc::new(10, 1, Fn::FnU64(aoc_10::solution_pt1)),
+        Aoc::new(10, 2, Fn::FnU64(aoc_10::solution_pt2)),
+        Aoc::new(11, 1, Fn::FnU64(aoc_11::solution_pt1)),
+        Aoc::new(11, 2, Fn::FnU64(aoc_11::solution_pt2)),
+        Aoc::new(12, 1, Fn::FnU64(aoc_12::solution_pt1)),
+        Aoc::new(12, 2, Fn::FnU64(aoc_12::solution_pt2)),
+        Aoc::new(13, 1, Fn::FnU64(aoc_13::solution_pt1)),
+        Aoc::new(13, 2, Fn::FnU64(aoc_13::solution_pt2)),
+        Aoc::new(14, 1, Fn::FnU64(aoc_14::solution_pt1)),
+        Aoc::new(14, 2, Fn::FnU64(aoc_14::solution_pt2)),
+        Aoc::new(15, 1, Fn::FnU64(aoc_15::solution_pt1)),
+        Aoc::new(15, 2, Fn::FnU64(aoc_15::solution_pt2)),
+        Aoc::new(16, 1, Fn::FnU64(aoc_16::solution_pt1)),
+        Aoc::new(16, 2, Fn::FnU64(aoc_16::solution_pt2)),
     ];
 
     let args = Args::parse();
@@ -233,11 +263,11 @@ pub fn main() {
             exit(1);
         }
         1 => {
-            let name = problems[0].stringify();
-            let func = problems[0].func;
+            let aoc = &problems[0];
+            let name = aoc.stringify();
             print!("{name}: ");
             io::stdout().flush().expect("Could not flush STDOUT.");
-            let r = func();
+            let r = aoc.func.call();
             println!("{}", display_return(r));
         }
         _ => {
@@ -254,7 +284,7 @@ pub fn main() {
     }
 }
 
-fn display_return(r: Return) -> String {
+fn display_return<R: std::fmt::Display>(r: Return<R>) -> String {
     match r {
         Ok(val) => format!("{val}"),
         Err(err) => format!("[ERROR] {err}"),
