@@ -461,6 +461,22 @@ mod test {
 
     ///////////////////////////////////////////////
 
+    #[test]
+    fn quine_example() {
+        let raw = "0,3,5,4,3,0";
+        let mut exe = Executable {
+            pc: 0,
+            computer: Computer {
+                A: 117440,
+                B: 0,
+                C: 0,
+            },
+            program: compile(parse_raw_program(raw.to_string()).unwrap()).unwrap(),
+        };
+        let output = exe.execute().join(",");
+        assert_eq!(output, raw);
+    }
+
     #[ignore]
     #[test]
     fn pt2_soln_example() {
