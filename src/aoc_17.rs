@@ -4,7 +4,7 @@ use crate::{io_help, utils::collect_results};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-type Register = i32;
+type Register = u32;
 
 #[allow(non_snake_case)]
 struct Computer {
@@ -19,33 +19,8 @@ type Operand = u8;
 type RawProgram = Vec<(Opcode, Operand)>;
 type Program = Vec<Instruction>;
 
-struct Executable {
-    pc: usize,
-    program: Program,
-}
-
-impl Executable {
-    pub fn increment(mut self) {
-        self.pc += 2;
-    }
-
-    pub fn jump(mut self, instruction_pointer: usize) {
-        self.pc = instruction_pointer;
-    }
-
-    /// None if program has halted.
-    /// This occurs if the instruction pointer is past the end of the program.
-    pub fn instruction(&self) -> Option<&Instruction> {
-        if self.pc >= self.program.len() {
-            None
-            // return Err(format!("HALT: Execution reached end of program. Instruction pointer: {} | Program length: {}", self.pc, self.program.len()));
-        } else {
-            Some(&self.program[self.pc])
-        }
-    }
-}
-
 #[allow(non_camel_case_types)]
+#[derive(Clone, PartialEq, Eq)]
 enum Instruction {
     adv(Operand),
     bxl(Operand),
@@ -82,6 +57,59 @@ impl Instruction {
             Self::out(_) => 5,
             Self::bdv(_) => 6,
             Self::cdv(_) => 7,
+        }
+    }
+}
+
+struct Executable {
+    pc: usize,
+    computer: Computer,
+    program: Program,
+}
+
+enum Step {
+    Work,
+    Output(String),
+    Halt,
+}
+
+impl Executable {
+    pub fn new(computer: &Computer, program: &Program) -> Executable {
+        Executable {
+            pc: 0,
+            computer: computer.clone(),
+            program: program.clone(),
+        }
+    }
+
+    pub fn increment(mut self) {
+        self.pc += 2;
+    }
+
+    pub fn jump(mut self, instruction_pointer: usize) {
+        self.pc = instruction_pointer;
+    }
+
+    pub fn is_ready(&self) -> bool {
+        self.pc < self.program.len()
+    }
+
+    /// None if program has halted.
+    /// This occurs if the instruction pointer is past the end of the program.
+    pub fn instruction(&self) -> Option<&Instruction> {
+        if self.is_ready() {
+            Some(&self.program[self.pc])
+        } else {
+            None
+        }
+    }
+
+    pub fn run_step(mut self) -> Step {
+        match self.instruction() {
+            Some(instruction) => {
+                panic!("Step::Output(_) or Step::Work")
+            }
+            None => Step::Halt,
         }
     }
 }
@@ -163,7 +191,7 @@ fn parse_computer(lines: &[String]) -> Result<Computer, String> {
                         "Expecting each register to list its label and value with ':'. Failed to parse: {line}"
                     ))
                 } else {
-                    bits.swap_remove(1).parse::<i32>().map_err(|e| format!("{e}"))
+                    bits.swap_remove(1).parse::<u32>().map_err(|e| format!("{e}"))
                 }
             })
     );
@@ -217,6 +245,49 @@ fn parse_raw_program(line: String) -> Result<RawProgram, String> {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+fn execute(c: Computer, p: Program) -> Vec<Output> {
+    let mut exe = Executable::new(&c, &p);
+    let mut output = Vec::new();
+    while let Some(instruction) = exe.instruction() {}
+    output
+}
+
+fn run_step(computer: &mut Computer, instruction: Instruction) -> Option<String> {
+    match instruction {
+        Instruction::adv(combo) => {
+            let demoniator = 2_u32.pow(combo_operand_value(computer, combo));
+            let result = computer.A / demoniator;
+            computer.A = result;
+        }
+        Instruction::bxl(literal) => {
+            // ^ is bitwise XOR: https://doc.rust-lang.org/std/ops/trait.BitXor.html
+            let val = computer.B ^ literal as u32;
+            computer.B = val;
+        }
+        Instruction::bst(combo) => todo!(),
+        Instruction::jnz(literal) => todo!(),
+        Instruction::bxc => todo!(),
+        Instruction::out(combo) => {
+            let val = combo_operand_value(computer, combo) % 8;
+            return Some(format!("{val}"));
+        }
+        Instruction::bdv(combo) => todo!(),
+        Instruction::cdv(combo) => todo!(),
+    }
+    None
+}
+
+fn combo_operand_value(computer: &Computer, combo: Operand) -> u32 {
+    match combo {
+        0..=3 => combo as u32,
+        4 => computer.A,
+        5 => computer.B,
+        6 => computer.C,
+        7 => panic!("Combo operand 7 is reserved and will not appear in valid programs."),
+        _ => panic!("unrecognized Operand value: {combo}"),
+    }
+}
 
 pub fn solution_pt1() -> Result<String, String> {
     let lines = io_help::read_lines("./inputs/???");
