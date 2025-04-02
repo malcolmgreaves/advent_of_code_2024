@@ -21,6 +21,7 @@ mod graph;
 mod io_help;
 mod matrix;
 mod nums;
+mod search;
 mod set_ops;
 mod testing_utilities;
 mod utils;
@@ -222,7 +223,7 @@ pub fn main() {
         Aoc::new(16, 1, Fn::FnU64(aoc_16::solution_pt1)),
         Aoc::new(16, 2, Fn::FnU64(aoc_16::solution_pt2)),
         Aoc::new(17, 1, Fn::FnStr(aoc_17::solution_pt1)),
-        Aoc::new(17, 2, Fn::FnStr(aoc_17::solution_pt2)),
+        Aoc::new(17, 2, Fn::FnU64(aoc_17::solution_pt2)),
     ];
 
     let args = Args::parse();

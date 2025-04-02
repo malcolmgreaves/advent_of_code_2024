@@ -1,6 +1,6 @@
 use std::fmt::format;
 
-use crate::{io_help, utils::collect_results};
+use crate::{io_help, search::binary_search_on_answer, utils::collect_results};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -359,34 +359,53 @@ pub fn solution_pt2() -> Result<u64, String> {
 
 /// binary_search_on_answer
 fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> u32 {
-    let program_str = program
-        .iter()
-        .map(|instr| format!("{},{}", instr.opcode(), instr.operand()))
-        .collect::<Vec<_>>()
-        .join(",");
-    let mut low = u32::MIN;
-    let mut high = u32::MAX;
+    binary_search_on_answer(u32::MIN, u32::MAX, {
+        let program_str = program
+            .iter()
+            .map(|instr| format!("{},{}", instr.opcode(), instr.operand()))
+            .collect::<Vec<_>>()
+            .join(",");
 
-    let is_found = |register_a: u32| -> bool {
-        let mut exe = {
-            let mut c = computer.clone();
-            c.A = register_a;
-            Executable::new(&c, program)
-        };
-        let output = exe.execute().join(",");
-        output == program_str
-    };
-
-    while (high > low + 1) {
-        let midpoint = low + (high.checked_sub(low).unwrap() / 2);
-        if is_found(midpoint) {
-            high = midpoint;
-        } else {
-            low = midpoint;
+        move |register_a: u32| -> bool {
+            let mut exe = {
+                let mut c = computer.clone();
+                c.A = register_a;
+                Executable::new(&c, program)
+            };
+            let output = exe.execute().join(",");
+            output == program_str
         }
-    }
-    high
+    })
+    // let program_str = program
+    //     .iter()
+    //     .map(|instr| format!("{},{}", instr.opcode(), instr.operand()))
+    //     .collect::<Vec<_>>()
+    //     .join(",");
+
+    // let is_found = {
+    //     |register_a: u32| -> bool {
+    //         let mut exe = {
+    //             let mut c = computer.clone();
+    //             c.A = register_a;
+    //             Executable::new(&c, program)
+    //         };
+    //         let output = exe.execute().join(",");
+    //         output == program_str
+    //     }
+    // };
+    // let mut low = u32::MIN;
+    // let mut high = u32::MAX;
+    // // while (high > low + 1) {
+    //     let midpoint = low + (high.checked_sub(low).unwrap() / 2);
+    //     if is_found(midpoint) {
+    //         high = midpoint;
+    //     } else {
+    //         low = midpoint;
+    //     }
+    // }
+    // high
 }
+
 /*
 
 Procedure binary_search
