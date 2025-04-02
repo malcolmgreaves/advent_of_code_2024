@@ -7,6 +7,7 @@ use crate::{io_help, utils::collect_results};
 type Register = u32;
 
 #[allow(non_snake_case)]
+#[derive(Clone, PartialEq, Eq)]
 struct Computer {
     A: Register,
     B: Register,
@@ -67,12 +68,6 @@ struct Executable {
     program: Program,
 }
 
-enum Step {
-    Work,
-    Output(String),
-    Halt,
-}
-
 impl Executable {
     pub fn new(computer: &Computer, program: &Program) -> Executable {
         Executable {
@@ -82,21 +77,15 @@ impl Executable {
         }
     }
 
-    pub fn increment(mut self) {
+    pub fn increment(&mut self) {
         self.pc += 2;
     }
 
-    pub fn jump(mut self, instruction_pointer: usize) {
+    pub fn jump(&mut self, instruction_pointer: usize) {
         self.pc = instruction_pointer;
     }
 
-    pub fn is_ready(&self) -> bool {
-        self.pc < self.program.len()
-    }
-
-    /// None if program has halted.
-    /// This occurs if the instruction pointer is past the end of the program.
-    pub fn instruction(&self) -> Option<&Instruction> {
+    pub fn current_instruction(&self) -> Option<&Instruction> {
         if self.is_ready() {
             Some(&self.program[self.pc])
         } else {
@@ -104,13 +93,24 @@ impl Executable {
         }
     }
 
-    pub fn run_step(mut self) -> Step {
-        match self.instruction() {
-            Some(instruction) => {
-                panic!("Step::Output(_) or Step::Work")
-            }
-            None => Step::Halt,
+    pub fn is_ready(&self) -> bool {
+        self.pc < self.program.len()
+    }
+
+    fn execute(&mut self) -> Vec<String> {
+        let mut output = Vec::new();
+        while self.is_ready() {
+            let (pc, maybe_output) = run_step(&mut self.computer, &self.program[self.pc]);
+            match pc {
+                Some(instruction_pointer) => self.jump(instruction_pointer),
+                None => self.increment(),
+            };
+            match maybe_output {
+                Some(o) => output.push(o),
+                None => (),
+            };
         }
+        output
     }
 }
 
@@ -246,36 +246,51 @@ fn parse_raw_program(line: String) -> Result<RawProgram, String> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-fn execute(c: Computer, p: Program) -> Vec<Output> {
-    let mut exe = Executable::new(&c, &p);
-    let mut output = Vec::new();
-    while let Some(instruction) = exe.instruction() {}
-    output
-}
-
-fn run_step(computer: &mut Computer, instruction: Instruction) -> Option<String> {
+// Updates computer's registers with the result of the instruction.
+// Returns the possibly new program counter and possible output.
+//
+// If the optional PC is None, then instruction advancement should continue as normal.
+fn run_step(computer: &mut Computer, instruction: &Instruction) -> (Option<usize>, Option<String>) {
     match instruction {
         Instruction::adv(combo) => {
-            let demoniator = 2_u32.pow(combo_operand_value(computer, combo));
-            let result = computer.A / demoniator;
-            computer.A = result;
+            computer.A = div(&computer, *combo);
         }
         Instruction::bxl(literal) => {
             // ^ is bitwise XOR: https://doc.rust-lang.org/std/ops/trait.BitXor.html
-            let val = computer.B ^ literal as u32;
+            let val = computer.B ^ *literal as u32;
             computer.B = val;
         }
-        Instruction::bst(combo) => todo!(),
-        Instruction::jnz(literal) => todo!(),
-        Instruction::bxc => todo!(),
-        Instruction::out(combo) => {
-            let val = combo_operand_value(computer, combo) % 8;
-            return Some(format!("{val}"));
+        Instruction::bst(combo) => {
+            let val = combo_operand_value(computer, *combo) % 8;
+            computer.B = val;
         }
-        Instruction::bdv(combo) => todo!(),
-        Instruction::cdv(combo) => todo!(),
+        Instruction::jnz(literal) => {
+            // do nothing if register A is zero
+            if computer.A != 0 {
+                return (Some(*literal as usize), None);
+            }
+        }
+        Instruction::bxc => {
+            let val = computer.B ^ computer.C;
+            computer.B = val;
+        }
+        Instruction::out(combo) => {
+            let val = combo_operand_value(computer, *combo) % 8;
+            return (None, Some(format!("{val}")));
+        }
+        Instruction::bdv(combo) => {
+            computer.B = div(&computer, *combo);
+        }
+        Instruction::cdv(combo) => {
+            computer.C = div(&computer, *combo);
+        }
     }
-    None
+
+    (None, None)
+}
+
+fn div(computer: &Computer, combo: Operand) -> u32 {
+    computer.A / 2_u32.pow(combo_operand_value(computer, combo))
 }
 
 fn combo_operand_value(computer: &Computer, combo: Operand) -> u32 {
@@ -292,7 +307,9 @@ fn combo_operand_value(computer: &Computer, combo: Operand) -> u32 {
 pub fn solution_pt1() -> Result<String, String> {
     let lines = io_help::read_lines("./inputs/???");
     let (computer, program) = construct(lines)?;
-    Err(format!("part 1 is unimplemented!"))
+    let mut exe = Executable::new(&computer, &program);
+    let output = exe.execute();
+    Ok(output.join(","))
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
