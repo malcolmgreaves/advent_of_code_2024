@@ -27,7 +27,7 @@ enum Instruction {
     bxl(Operand),
     bst(Operand),
     jnz(Operand),
-    bxc,
+    bxc(Operand),
     out(Operand),
     bdv(Operand),
     cdv(Operand),
@@ -40,7 +40,7 @@ impl Instruction {
             1 => Ok(Self::bxl(operand)),
             2 => Ok(Self::bst(operand)),
             3 => Ok(Self::jnz(operand)),
-            4 => Ok(Self::bxc), // ignores operand: only there for "legacy" reasons :)
+            4 => Ok(Self::bxc(operand)),
             5 => Ok(Self::out(operand)),
             6 => Ok(Self::bdv(operand)),
             7 => Ok(Self::cdv(operand)),
@@ -54,10 +54,23 @@ impl Instruction {
             Self::bxl(_) => 1,
             Self::bst(_) => 2,
             Self::jnz(_) => 3,
-            Self::bxc => 4,
+            Self::bxc(_) => 4,
             Self::out(_) => 5,
             Self::bdv(_) => 6,
             Self::cdv(_) => 7,
+        }
+    }
+
+    fn operand(&self) -> Operand {
+        match self {
+            Self::adv(operand) => *operand,
+            Self::bxl(operand) => *operand,
+            Self::bst(operand) => *operand,
+            Self::jnz(operand) => *operand,
+            Self::bxc(operand) => *operand,
+            Self::out(operand) => *operand,
+            Self::bdv(operand) => *operand,
+            Self::cdv(operand) => *operand,
         }
     }
 }
@@ -293,7 +306,8 @@ fn run_step(computer: &mut Computer, instruction: &Instruction) -> (Option<usize
                 return (Some(*literal as usize), None);
             }
         }
-        Instruction::bxc => {
+        Instruction::bxc(_) => {
+            // ignores operand: only there for "legacy" reasons :)
             let val = computer.B ^ computer.C;
             computer.B = val;
         }
@@ -344,7 +358,54 @@ pub fn solution_pt2() -> Result<u64, String> {
 }
 
 /// binary_search_on_answer
-fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> u32 {}
+fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> u32 {
+    let program_str = program
+        .iter()
+        .map(|instr| format!("{},{}", instr.opcode(), instr.operand()))
+        .collect::<Vec<_>>()
+        .join(",");
+    let mut low = u32::MIN;
+    let mut high = u32::MAX;
+
+    let is_found = |register_a: u32| -> bool {
+        let mut exe = {
+            let mut c = computer.clone();
+            c.A = register_a;
+            Executable::new(&c, program)
+        };
+        let output = exe.execute().join(",");
+        output == program_str
+    };
+
+    while (high > low + 1) {
+        let midpoint = low + (high.checked_sub(low).unwrap() / 2);
+        if is_found(midpoint) {
+            high = midpoint;
+        } else {
+            low = midpoint;
+        }
+    }
+    high
+}
+/*
+
+Procedure binary_search
+A ← sorted array
+n ← size of array
+x ← value to be searched
+Set low = 1
+Set high = n
+while x not found
+if high < low
+EXIT: x does not exist.
+set mid = low + ( high - low ) / 2
+if A[mid] < x set low = mid + 1 if A[mid]> x
+set high = mid - 1
+if A[mid] = x
+EXIT: x found at location mid
+end while
+end procedure
+*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
