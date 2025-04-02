@@ -1,6 +1,6 @@
-use std::collections::VecDeque;
+use std::{cmp::Ordering, collections::VecDeque};
 
-use crate::{io_help, utils::collect_results};
+use crate::{io_help, search::binary_search_on_answer, utils::collect_results};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -357,10 +357,10 @@ pub fn solution_pt2() -> Result<u64, String> {
 
     println!("program: {:?}", program);
 
-    match minimum_register_a_for_quine(&computer, &program) {
+    match minimum_register_a_for_quine(&computer, &program, Algo::BinarySearchLen) {
         Some(register_a) => Ok(register_a as Register),
         None => Err(format!(
-            "could not find a u32 value for register A that makes this program a quine: '{}'",
+            "could not find a value for register A that makes this program a quine: '{}'",
             stringify_program(&program),
         )),
     }
@@ -382,58 +382,165 @@ fn stringify_program(program: &Program) -> String {
         .join(",")
 }
 
-fn minimum_register_a_for_quine(computer: &Computer, program: &Program) -> Option<Register> {
-    // binary_search_on_answer(u32::MIN, u32::MAX, {
-    //     let program_str = stringify_program(program);
-    //     move |register_a: u32| -> bool {
-    //         let mut exe = {
-    //             let mut c = computer.clone();
-    //             c.A = register_a;
-    //             Executable::new(&c, program)
-    //         };
-    //         let output = exe.execute().join(",");
-    //         output == program_str
-    //     }
-    // })
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Algo {
+    BruteForce,
+    BinaryBrute,
+    BinarySearchLen,
+    Special,
+}
+
+fn minimum_register_a_for_quine(
+    computer: &Computer,
+    program: &Program,
+    choice: Algo,
+) -> Option<Register> {
     let program_str = stringify_program(program);
 
-    let is_found = |register_a: Register| -> bool {
+    let run_output_for_a = |register_a: Register| -> String {
         let mut exe = {
             let mut c = computer.clone();
             c.A = register_a;
             Executable::new(&c, program)
         };
         let output = exe.execute().join(",");
-        println!("[{register_a}] {output} =?= {program_str}");
-        output == program_str
+        // println!("[{register_a}] {output} =?= {program_str}");
+        // println!("[{register_a}] len(output)={} =?= len(program)={}", output.len(), program_str.len());
+        // println!("[{register_a}] {output} ({}) =?= ({}) {program_str}", output.len(), program_str.len());
+        output
     };
 
-    let mut queue = VecDeque::new();
-    queue.push_back((Register::MIN, Register::MAX));
-    while let Some((low, high)) = queue.pop_front() {
-        if high < low + 1 {
-            return None;
-        }
+    let is_found = |register_a: Register| -> bool { run_output_for_a(register_a) == program_str };
 
-        if (high - low) < u16::MAX as Register {
-            // switch to iterative: it is very fast to go through 2^16 values
-            for i in low..=high {
-                if is_found(i) {
-                    return Some(i);
+    match choice {
+        Algo::BruteForce => {
+            for a in Register::MIN..=Register::MAX {
+                if is_found(a) {
+                    return Some(a);
                 }
             }
-            // didn't work -> discard this whole range
-            continue;
         }
+        Algo::BinaryBrute => {
+            let mut queue = VecDeque::new();
+            queue.push_back((Register::MIN, Register::MAX));
+            while let Some((low, high)) = queue.pop_front() {
+                if high < low + 1 {
+                    return None;
+                }
 
-        let midpoint = low + ((high - low) / 2);
-        if is_found(midpoint) {
-            return Some(midpoint);
+                if (high - low) < u16::MAX as Register {
+                    // switch to iterative: it is very fast to go through 2^16 values
+                    for i in low..=high {
+                        if is_found(i) {
+                            return Some(i);
+                        }
+                    }
+                    // didn't work -> discard this whole range
+                    continue;
+                }
+
+                let midpoint = low + ((high - low) / 2);
+                if is_found(midpoint) {
+                    return Some(midpoint);
+                }
+                queue.push_back((low, midpoint));
+                queue.push_back((midpoint, high));
+            }
         }
-        queue.push_back((low, midpoint));
-        queue.push_back((midpoint, high));
+        Algo::BinarySearchLen => {
+            let ans = binary_search_on_answer(
+                Register::MIN,
+                Register::MAX,
+                |register_a: Register| -> bool {
+                    run_output_for_a(register_a).len() == program_str.len()
+                },
+            );
+            if is_found(ans) {
+                return Some(ans);
+            }
+        }
+        Algo::Special => {
+            let (low, high) = binary_search_range_on_answer(|register_a: Register| -> bool {
+                run_output_for_a(register_a).len() == program_str.len()
+            });
+
+            for a in low..=high {
+                if is_found(a) {
+                    return Some(a);
+                }
+            }
+        }
     }
     return None;
+}
+
+pub fn binary_search_range_on_answer(
+    is_same_len: impl Fn(Register) -> Ordering,
+) -> (Register, Register) {
+    let mut low = Register::MIN;
+    let mut high = Register::MAX;
+    println!("START[high range]: low={low:?} | high={high:?}");
+    while low + 1 < high {
+        // loop {
+        //     if high <= plus_one(&low) {
+        //         println!("FOUND! low={low:?} | high={high:?}");
+        //         break;
+        //     }
+        let midpoint = low + (high.checked_sub(low).unwrap() / 2);
+
+        match is_same_len(midpoint) {
+            Ordering::Equal => panic!(),
+            Ordering::Greater => panic!(),
+            Ordering::Less => panic!(),
+        }
+
+        if is_same_len(midpoint) {
+            println!(
+                "\t is found[high range]:  midpoint={midpoint:?} | low={low:?} | high={high:?}"
+            );
+            // high = midpoint;
+            low = midpoint;
+        } else {
+            println!(
+                "\t not found[high range]: midpoint={midpoint:?} | low={low:?} | high={high:?}"
+            );
+            // low = midpoint;
+            high = midpoint;
+        }
+    }
+    let high_range = high.clone();
+    // println!("END[high range]: {high_range}");
+
+    low = Register::MIN;
+    high = high.clone();
+    println!("START[low range]: low={low:?} | high={high:?}");
+    while low + 1 < high {
+        let midpoint = low + (high.checked_sub(low).unwrap() / 2);
+        match is_same_len(midpoint) {
+            Ordering::Equal => panic!(),
+            Ordering::Greater => panic!(),
+            Ordering::Less => panic!(),
+        }
+        if !is_same_len(midpoint) {
+            println!(
+                "\t is found[low range]:  midpoint={midpoint:?} | low={low:?} | high={high:?}"
+            );
+            // low = midpoint;
+            high = midpoint;
+        } else {
+            println!(
+                "\t not found[low range]: midpoint={midpoint:?} | low={low:?} | high={high:?}"
+            );
+            // high = midpoint;
+            low = midpoint;
+        }
+    }
+    let low_range = high.clone();
+    // println!("END[low range]: {low_range}");
+
+    println!("search range: {low_range} - {high_range}");
+
+    (low_range, high_range)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -575,6 +682,7 @@ mod test {
         let actual = minimum_register_a_for_quine(
             &Computer { A: 0, B: 0, C: 0 },
             &compile(parse_raw_program("0,3,5,4,3,0".to_string()).unwrap()).unwrap(),
+            Algo::Special,
         )
         .unwrap();
         assert_eq!(actual, 117440);
