@@ -221,6 +221,8 @@ pub fn main() {
         Aoc::new(15, 2, Fn::FnU64(aoc_15::solution_pt2)),
         Aoc::new(16, 1, Fn::FnU64(aoc_16::solution_pt1)),
         Aoc::new(16, 2, Fn::FnU64(aoc_16::solution_pt2)),
+        Aoc::new(17, 1, Fn::FnStr(aoc_17::solution_pt1)),
+        Aoc::new(17, 2, Fn::FnStr(aoc_17::solution_pt2)),
     ];
 
     let args = Args::parse();

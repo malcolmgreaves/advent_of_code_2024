@@ -104,8 +104,6 @@ fn compile(program: RawProgram) -> Result<Program, String> {
 }
 
 fn construct(mut lines: impl Iterator<Item = String>) -> Result<(Computer, Program), String> {
-    let mut program_line = None;
-
     let register_lines = [
         match lines.next() {
             Some(l) => l,
@@ -132,7 +130,6 @@ fn construct(mut lines: impl Iterator<Item = String>) -> Result<(Computer, Progr
             }
         },
     ];
-
     let computer = parse_computer(&register_lines)?;
 
     // ingore the next line -> is a blank line
@@ -149,9 +146,16 @@ fn construct(mut lines: impl Iterator<Item = String>) -> Result<(Computer, Progr
     Ok((computer, program))
 }
 
-fn parse_computer(lines: [String; 3]) -> Result<Computer, String> {
+fn parse_computer(lines: &[String]) -> Result<Computer, String> {
+    if lines.len() != 3 {
+        return Err(format!(
+            "expecting three (3) register lines but found: {}",
+            lines.len()
+        ));
+    }
     let (mut registers, errors) = collect_results(
         lines
+            .iter()
             .map(|line| {
                 let mut bits = line.split(": ").collect::<Vec<_>>();
                 if bits.len() != 2 {
@@ -162,7 +166,6 @@ fn parse_computer(lines: [String; 3]) -> Result<Computer, String> {
                     bits.swap_remove(1).parse::<i32>().map_err(|e| format!("{e}"))
                 }
             })
-            .into_iter()
     );
     #[allow(non_snake_case)]
     if errors.len() > 0 {
@@ -215,15 +218,15 @@ fn parse_raw_program(line: String) -> Result<RawProgram, String> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt1() -> Result<u64, String> {
+pub fn solution_pt1() -> Result<String, String> {
     let lines = io_help::read_lines("./inputs/???");
-    let _ = lines;
+    let (computer, program) = construct(lines)?;
     Err(format!("part 1 is unimplemented!"))
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn solution_pt2() -> Result<u64, String> {
+pub fn solution_pt2() -> Result<String, String> {
     let lines = io_help::read_lines("./inputs/???");
     let _ = lines;
     Err(format!("part 2 is unimplemented!"))
