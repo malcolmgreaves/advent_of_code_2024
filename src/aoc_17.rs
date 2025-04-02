@@ -560,6 +560,15 @@ mod test {
         assert_eq!(output, raw);
     }
 
+    #[test]
+    fn binary_search_quine() {
+        let actual = minimum_register_a_for_quine(
+            &Computer { A: 0, B: 0, C: 0 },
+            &compile(parse_raw_program("0,3,5,4,3,0".to_string()).unwrap()).unwrap(),
+        );
+        assert_eq!(actual, 117440);
+    }
+
     #[ignore]
     #[test]
     fn pt2_soln_example() {
