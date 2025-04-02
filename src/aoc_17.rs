@@ -365,6 +365,66 @@ mod test {
 
     ///////////////////////////////////////////////
 
+    /// If register C contains 9, the program 2,6 would set register B to 1.
+    #[test]
+    fn test_run_step_1() {
+        let mut computer = Computer { A: 0, B: 0, C: 9 };
+        let program = compile(parse_raw_program("2,6".to_string()).unwrap()).unwrap();
+        let _ = run_step(&mut computer, &program[0]);
+        assert_eq!(computer.B, 1);
+    }
+
+    /// If register A contains 10, the program 5,0,5,1,5,4 would output 0,1,2.
+    #[test]
+    fn test_run_step_2() {
+        let mut exe = Executable {
+            pc: 0,
+            computer: Computer { A: 10, B: 0, C: 0 },
+            program: compile(parse_raw_program("5,0,5,1,5,4".to_string()).unwrap()).unwrap(),
+        };
+        let output = exe.execute();
+        assert_eq!(output.join(","), "0,1,2");
+    }
+
+    /// If register A contains 2024, the program 0,1,5,4,3,0 would output 4,2,5,6,7,7,7,7,3,1,0 and leave 0 in register A.
+    #[test]
+    fn test_run_step_3() {
+        let mut exe = Executable {
+            pc: 0,
+            computer: Computer {
+                A: 2024,
+                B: 0,
+                C: 0,
+            },
+            program: compile(parse_raw_program("0,1,5,4,3,0".to_string()).unwrap()).unwrap(),
+        };
+        let output = exe.execute();
+        assert_eq!(output.join(","), "4,2,5,6,7,7,7,7,3,1,0");
+        assert_eq!(exe.computer.A, 0);
+    }
+
+    /// If register B contains 29, the program 1,7 would set register B to 26.
+    #[test]
+    fn test_run_step_4() {
+        let mut computer = Computer { A: 0, B: 29, C: 0 };
+        let program = compile(parse_raw_program("1,7".to_string()).unwrap()).unwrap();
+        let _ = run_step(&mut computer, &program[0]);
+        assert_eq!(computer.B, 26);
+    }
+
+    /// If register B contains 2024 and register C contains 43690, the program 4,0 would set register B to 44354.
+    #[test]
+    fn test_run_step_5() {
+        let mut computer = Computer {
+            A: 0,
+            B: 2024,
+            C: 43690,
+        };
+        let program = compile(parse_raw_program("4,0".to_string()).unwrap()).unwrap();
+        let _ = run_step(&mut computer, &program[0]);
+        assert_eq!(computer.B, 44354);
+    }
+
     #[ignore]
     #[test]
     fn pt1_soln_example() {
