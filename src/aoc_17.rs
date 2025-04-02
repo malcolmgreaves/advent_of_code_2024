@@ -155,7 +155,9 @@ fn parse_computer(lines: [String; 3]) -> Result<Computer, String> {
             .map(|line| {
                 let mut bits = line.split(": ").collect::<Vec<_>>();
                 if bits.len() != 2 {
-                    Err(format!("Expecting each register to list its label and value with ':'. Failed to parse: {line}"))
+                    Err(format!(
+                        "Expecting each register to list its label and value with ':'. Failed to parse: {line}"
+                    ))
                 } else {
                     bits.swap_remove(1).parse::<i32>().map_err(|e| format!("{e}"))
                 }
@@ -187,7 +189,7 @@ fn parse_raw_program(line: String) -> Result<RawProgram, String> {
     );
     if errors.len() > 0 {
         Err(format!(
-            "encountered {} errors when parsing raw program's opcode & operand pairs:\n\t",
+            "encountered {} errors when parsing raw program's opcode & operand pairs:\n\t{}",
             errors.len(),
             errors.join("\n\t")
         ))
@@ -211,20 +213,12 @@ fn parse_raw_program(line: String) -> Result<RawProgram, String> {
     }
 }
 
-/*
-Register A: 18427963
-Register B: 0
-Register C: 0
-
-Program: 2,4,1,1,7,5,0,3,4,3,1,6,5,5,3,0
- */
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub fn solution_pt1() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/???");
     let _ = lines;
-    Err(format!("part 1 is unimplemented!"));
+    Err(format!("part 1 is unimplemented!"))
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
