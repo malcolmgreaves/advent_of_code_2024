@@ -357,7 +357,7 @@ pub fn solution_pt2() -> Result<u64, String> {
 
     println!("program: {:?}", program);
 
-    match minimum_register_a_for_quine(&computer, &program, Algo::BinarySearchLen) {
+    match minimum_register_a_for_quine(&computer, &program, Algo::Special) {
         Some(register_a) => Ok(register_a as Register),
         None => Err(format!(
             "could not find a value for register A that makes this program a quine: '{}'",
