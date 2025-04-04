@@ -460,8 +460,8 @@ fn minimum_register_a_for_quine(
             }
         }
         Algo::Special => {
-            let (low, high) = binary_search_range_on_answer(|register_a: Register| -> bool {
-                run_output_for_a(register_a).len() == program_str.len()
+            let (low, high) = binary_search_range_on_answer(|register_a: Register| -> Ordering {
+                run_output_for_a(register_a).len().cmp(&program_str.len())
             });
 
             for a in low..=high {
@@ -479,67 +479,48 @@ pub fn binary_search_range_on_answer(
 ) -> (Register, Register) {
     let mut low = Register::MIN;
     let mut high = Register::MAX;
-    println!("START[high range]: low={low:?} | high={high:?}");
+
+    let mut high_range = Register::MIN;
     while low + 1 < high {
-        // loop {
-        //     if high <= plus_one(&low) {
-        //         println!("FOUND! low={low:?} | high={high:?}");
-        //         break;
-        //     }
         let midpoint = low + (high.checked_sub(low).unwrap() / 2);
 
         match is_same_len(midpoint) {
-            Ordering::Equal => panic!(),
-            Ordering::Greater => panic!(),
-            Ordering::Less => panic!(),
-        }
-
-        if is_same_len(midpoint) {
-            println!(
-                "\t is found[high range]:  midpoint={midpoint:?} | low={low:?} | high={high:?}"
-            );
-            // high = midpoint;
-            low = midpoint;
-        } else {
-            println!(
-                "\t not found[high range]: midpoint={midpoint:?} | low={low:?} | high={high:?}"
-            );
-            // low = midpoint;
-            high = midpoint;
+            Ordering::Equal => {
+                high_range = midpoint;
+                println!("\tnewest high range limit: {high_range}");
+                // keep going -> what's the TOP of this equal range?
+                low = midpoint;
+            }
+            Ordering::Greater => {
+                low = midpoint;
+            }
+            Ordering::Less => {
+                high = midpoint;
+            }
         }
     }
-    let high_range = high.clone();
-    // println!("END[high range]: {high_range}");
 
     low = Register::MIN;
-    high = high.clone();
-    println!("START[low range]: low={low:?} | high={high:?}");
+    high = high_range;
+    let mut low_range = Register::MAX;
     while low + 1 < high {
         let midpoint = low + (high.checked_sub(low).unwrap() / 2);
         match is_same_len(midpoint) {
-            Ordering::Equal => panic!(),
-            Ordering::Greater => panic!(),
-            Ordering::Less => panic!(),
-        }
-        if !is_same_len(midpoint) {
-            println!(
-                "\t is found[low range]:  midpoint={midpoint:?} | low={low:?} | high={high:?}"
-            );
-            // low = midpoint;
-            high = midpoint;
-        } else {
-            println!(
-                "\t not found[low range]: midpoint={midpoint:?} | low={low:?} | high={high:?}"
-            );
-            // high = midpoint;
-            low = midpoint;
+            Ordering::Equal => {
+                low_range = midpoint;
+                // keep going -> what's the BOTTOM of this equal range?
+                high = midpoint;
+            }
+            Ordering::Greater => {
+                low = midpoint;
+            }
+            Ordering::Less => {
+                high = midpoint;
+            }
         }
     }
-    let low_range = high.clone();
-    // println!("END[low range]: {low_range}");
 
-    println!("search range: {low_range} - {high_range}");
-
+    println!("[found] range of equal-len programs is: [{low_range}, {high_range}]");
     (low_range, high_range)
 }
 
