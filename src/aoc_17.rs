@@ -137,6 +137,13 @@ impl Executable {
         }
         output
     }
+
+    fn execute_compare_output(&mut self, comparision_output: &[String]) -> bool {
+        let mut comp_i = 0;
+        while self.is_ready() {
+            let (pc, maybe_output) = run_step(&mut self.computer, &self.program[self.pc]);
+        }
+    }
 }
 
 fn compile(program: RawProgram) -> Result<Program, String> {
