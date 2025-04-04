@@ -461,7 +461,8 @@ fn minimum_register_a_for_quine(
         }
         Algo::Special => {
             let (low, high) = binary_search_range_on_answer(|register_a: Register| -> Ordering {
-                run_output_for_a(register_a).len().cmp(&program_str.len())
+                // run_output_for_a(register_a).len().cmp(&program_str.len())
+                program_str.len().cmp(&run_output_for_a(register_a).len())
             });
 
             for a in low..=high {
@@ -475,7 +476,7 @@ fn minimum_register_a_for_quine(
 }
 
 pub fn binary_search_range_on_answer(
-    is_same_len: impl Fn(Register) -> Ordering,
+    program_to_output_len: impl Fn(Register) -> Ordering,
 ) -> (Register, Register) {
     let mut low = Register::MIN;
     let mut high = Register::MAX;
@@ -484,10 +485,9 @@ pub fn binary_search_range_on_answer(
     while low + 1 < high {
         let midpoint = low + (high.checked_sub(low).unwrap() / 2);
 
-        match is_same_len(midpoint) {
+        match program_to_output_len(midpoint) {
             Ordering::Equal => {
                 high_range = midpoint;
-                println!("\tnewest high range limit: {high_range}");
                 // keep going -> what's the TOP of this equal range?
                 low = midpoint;
             }
@@ -505,7 +505,7 @@ pub fn binary_search_range_on_answer(
     let mut low_range = Register::MAX;
     while low + 1 < high {
         let midpoint = low + (high.checked_sub(low).unwrap() / 2);
-        match is_same_len(midpoint) {
+        match program_to_output_len(midpoint) {
             Ordering::Equal => {
                 low_range = midpoint;
                 // keep going -> what's the BOTTOM of this equal range?
@@ -520,7 +520,7 @@ pub fn binary_search_range_on_answer(
         }
     }
 
-    println!("[found] range of equal-len programs is: [{low_range}, {high_range}]");
+    println!("[STOP] range of equal-len programs is: [{low_range}, {high_range}]");
     (low_range, high_range)
 }
 
