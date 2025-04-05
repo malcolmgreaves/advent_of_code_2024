@@ -68,6 +68,7 @@ pub fn binary_search_range_on_answer<N: Numeric>(
         low < high,
         "FATAL: must ensure that low < high | low={low:?}, high={high:?}"
     );
+    let mut found_once = false;
     let initial_low_bound = low;
     let initial_high_bound = high;
     let two = N::one() + N::one();
@@ -81,6 +82,7 @@ pub fn binary_search_range_on_answer<N: Numeric>(
 
         match compare(midpoint) {
             Ordering::Equal => {
+                found_once = true;
                 high_range = midpoint;
                 // keep going -> what's the TOP of this equal range?
                 low = midpoint;
@@ -96,15 +98,18 @@ pub fn binary_search_range_on_answer<N: Numeric>(
             }
         }
     }
+    // high_range = high;
     println!("\t[find high] STOP: [{low:?}, {high:?}] high_range={high_range:?}");
 
     low = initial_low_bound;
     high = high_range;
-    let mut low_range = initial_high_bound;
+    // let mut low_range = initial_high_bound;
+    let mut low_range = high;
     while plus_one(&low) < high {
         let midpoint = low + (high.checked_sub(&low).unwrap() / two);
         match compare(midpoint) {
             Ordering::Equal => {
+                found_once = true;
                 low_range = midpoint;
                 // keep going -> what's the BOTTOM of this equal range?
                 high = midpoint;
@@ -120,12 +125,15 @@ pub fn binary_search_range_on_answer<N: Numeric>(
             }
         }
     }
+    // low_range = low;
     println!("\t[find low] STOP: [{low:?}, {high:?}] low_range={low_range:?}");
 
-    if low_range > high_range {
+    if !found_once {
         // failed to find even a single instance!
+        println!("\t[STOP-ERR] answer: [{initial_low_bound:?}, {initial_high_bound:?}]");
         (initial_low_bound, initial_high_bound)
     } else {
+        println!("\t[STOP-FND] answer: [{low_range:?}, {high_range:?}]");
         (low_range, high_range)
     }
 }
@@ -139,7 +147,7 @@ mod test {
     type N = u16;
 
     fn compare(checking: N) -> impl Fn(N) -> Ordering {
-        move |v: N| -> Ordering { checking.cmp(&v)}
+        move |v: N| -> Ordering { checking.cmp(&v) }
     }
 
     fn compare_range(min: N, max: N) -> impl Fn(N) -> Ordering {
@@ -173,7 +181,7 @@ mod test {
         let (low, high) = binary_search_range_on_answer(0, 10, compare(0));
         println!("low={low} | high={high}");
         assert_eq!(low, 0, "low check");
-        assert_eq!(high, 1, "high check");
+        assert_eq!(high, 0, "high check");
     }
 
     #[test]
@@ -181,7 +189,7 @@ mod test {
         // single element, last
         let (low, high) = binary_search_range_on_answer(0, 10, compare(10));
         println!("low={low} | high={high}");
-        assert_eq!(low, 9, "low check");
+        assert_eq!(low, 10, "low check");
         assert_eq!(high, 10, "high check");
     }
 
