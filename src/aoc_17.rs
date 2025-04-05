@@ -138,11 +138,26 @@ impl Executable {
         output
     }
 
+    // Fail-fast comparision of the expected output with the execution of the program.
     fn execute_compare_output(&mut self, comparision_output: &[String]) -> bool {
         let mut comp_i = 0;
         while self.is_ready() {
             let (pc, maybe_output) = run_step(&mut self.computer, &self.program[self.pc]);
+            match pc {
+                Some(instruction_pointer) => self.jump(instruction_pointer),
+                None => self.increment(),
+            };
+            match maybe_output {
+                Some(o) => {
+                    if *comparision_output[comp_i] != o {
+                        return false;
+                    }
+                    comp_i += 1;
+                }
+                None => (),
+            };
         }
+        true
     }
 }
 
@@ -373,20 +388,28 @@ pub fn solution_pt2() -> Result<u64, String> {
     }
 }
 
-#[allow(dead_code)]
-fn raw_program(program: &Program) -> RawProgram {
+// The raw `u8` opcode & operand values for each `Program` `Instruction`.
+fn raw_program_iter(program: &Program) -> impl Iterator<Item = (Opcode, Operand)> {
     program
         .iter()
         .map(|instr| (instr.opcode(), instr.operand()))
-        .collect::<Vec<_>>()
 }
 
+// Items are stringified raw program u8 values.
+// Each `String` is either an `Opcode` or an `Operand` from the `Program`.
+// Values in this `Iterator` always follow the pattern:
+//      let mut iter = stringify_raw(program);
+//      let opcode = iter.next();
+//      let operand = iter.next();
+// As every opcode is paired with an operand.
+fn stringify_raw(program: &Program) -> impl Iterator<Item = String> {
+    raw_program_iter(program)
+        .flat_map(|(opcode, operand)| [format!("{opcode}"), format!("{operand}")])
+}
+
+// Joins each stringified raw opcode and opcode by a comma.
 fn stringify_program(program: &Program) -> String {
-    program
-        .iter()
-        .map(|instr| format!("{},{}", instr.opcode(), instr.operand()))
-        .collect::<Vec<_>>()
-        .join(",")
+    stringify_raw(program).collect::<Vec<_>>().join(",")
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -403,6 +426,7 @@ fn minimum_register_a_for_quine(
     choice: Algo,
 ) -> Option<Register> {
     let program_str = stringify_program(program);
+    let raw = stringify_raw(program).collect::<Vec<_>>();
 
     let run_output_for_a = |register_a: Register| -> String {
         let mut exe = {
@@ -417,7 +441,14 @@ fn minimum_register_a_for_quine(
         output
     };
 
-    let is_found = |register_a: Register| -> bool { run_output_for_a(register_a) == program_str };
+    let is_found = |register_a: Register| -> bool {
+        let mut exe = {
+            let mut c = computer.clone();
+            c.A = register_a;
+            Executable::new(&c, program)
+        };
+        exe.execute_compare_output(&raw)
+    };
 
     match choice {
         Algo::BruteForce => {
@@ -674,6 +705,26 @@ mod test {
         )
         .unwrap();
         assert_eq!(actual, 117440);
+    }
+
+    #[test]
+    fn execute_method_equality() {
+        let expected_s = "4,6,3,5,6,3,5,2,1,0";
+        let expected_o = ["4", "6", "3", "5", "6", "3", "5", "2", "1", "0"].map(|s| s.to_string());
+
+        let new = || -> Executable {
+            Executable::new(&EXAMPLE_EXPECTED_COMPUTER, &EXAMPLE_EXPECTED_PROGRAM)
+        };
+
+        let output_e = new().execute();
+        assert_eq!(output_e.join(","), expected_s);
+
+        let compare_self = new().execute_compare_output(&expected_o);
+        assert!(compare_self);
+
+        let compare_other =
+            new().execute_compare_output(&["4", "6", "2", "4"].map(|s| s.to_string()));
+        assert!(!compare_other)
     }
 
     #[ignore]
