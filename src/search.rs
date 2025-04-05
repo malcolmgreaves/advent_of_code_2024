@@ -29,7 +29,7 @@ pub fn plus_one<N: Numeric>(x: &N) -> N {
 /// Panics if `high` is not greater than `low`.
 pub fn binary_search_on_answer<N: Numeric>(low: N, high: N, is_found: impl Fn(N) -> bool) -> N {
     assert!(
-        low >= high,
+        low < high,
         "FATAL: must ensure that low < high | low={low:?}, high={high:?}"
     );
     let mut low = low;
@@ -65,7 +65,7 @@ pub fn binary_search_range_on_answer<N: Numeric>(
     compare: impl Fn(N) -> Ordering,
 ) -> (N, N) {
     assert!(
-        low >= high,
+        low < high,
         "FATAL: must ensure that low < high | low={low:?}, high={high:?}"
     );
     let initial_low_bound = low;

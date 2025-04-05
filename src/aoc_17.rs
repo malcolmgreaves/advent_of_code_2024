@@ -1,6 +1,13 @@
 use std::{cmp::Ordering, collections::VecDeque};
 
-use crate::{io_help, search::binary_search_on_answer, utils::collect_results};
+use num::range_step;
+use regex::Regex;
+
+use crate::{
+    io_help,
+    search::{binary_search_on_answer, binary_search_range_on_answer},
+    utils::collect_results,
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -84,10 +91,14 @@ struct Executable {
 
 impl Executable {
     pub fn new(computer: &Computer, program: &Program) -> Executable {
+        Self::initialize(computer.clone(), program.clone())
+    }
+
+    pub fn initialize(computer: Computer, program: Program) -> Executable {
         Executable {
             pc: 0,
-            computer: computer.clone(),
-            program: program.clone(),
+            computer,
+            program,
         }
     }
 
@@ -366,7 +377,7 @@ fn combo_operand_value(computer: &Computer, combo: Operand) -> Register {
 pub fn solution_pt1() -> Result<String, String> {
     let lines = io_help::read_lines("./inputs/17");
     let (computer, program) = construct(lines)?;
-    let mut exe = Executable::new(&computer, &program);
+    let mut exe = Executable::initialize(computer, program);
     let output = exe.execute();
     Ok(output.join(","))
 }
@@ -427,29 +438,23 @@ fn minimum_register_a_for_quine(
     choice: Algo,
 ) -> Option<Register> {
     let program_str = stringify_program(program);
-    let raw = stringify_raw(program).collect::<Vec<_>>();
+    let raw_u8s = raw_program_iter(program)
+        .flat_map(|x| [x.0, x.1])
+        .collect::<Vec<_>>();
+    let raw_output = stringify_raw(program).collect::<Vec<_>>();
 
-    let run_output_for_a = |register_a: Register| -> String {
-        let mut exe = {
-            let mut c = computer.clone();
-            c.A = register_a;
-            Executable::new(&c, program)
-        };
-        let output = exe.execute().join(",");
-        // println!("[{register_a}] {output} =?= {program_str}");
-        // println!("[{register_a}] len(output)={} =?= len(program)={}", output.len(), program_str.len());
-        // println!("[{register_a}] {output} ({}) =?= ({}) {program_str}", output.len(), program_str.len());
-        output
+    let new = |register_a: Register| -> Executable {
+        let mut c = computer.clone();
+        c.A = register_a;
+        Executable::initialize(c, program.clone())
     };
 
-    let is_found = |register_a: Register| -> bool {
-        let mut exe = {
-            let mut c = computer.clone();
-            c.A = register_a;
-            Executable::new(&c, program)
-        };
-        exe.execute_compare_output(&raw)
-    };
+    let is_found =
+        |register_a: Register| -> bool { new(register_a).execute_compare_output(&raw_output) };
+
+    let execute = |register_a: Register| -> Vec<String> { new(register_a).execute() };
+
+    let run_output = |register_a: Register| -> String { execute(register_a).join(",") };
 
     match choice {
         Algo::BruteForce => {
@@ -491,7 +496,7 @@ fn minimum_register_a_for_quine(
                 Register::MIN,
                 Register::MAX,
                 |register_a: Register| -> bool {
-                    run_output_for_a(register_a).len() == program_str.len()
+                    run_output(register_a).len() == program_str.len()
                 },
             );
             if is_found(ans) {
@@ -499,11 +504,14 @@ fn minimum_register_a_for_quine(
             }
         }
         Algo::NarrowLenBrute => {
-            let (low, high) =
-                binary_search_register_range_on_answer(|register_a: Register| -> Ordering {
+            let (low, high) = binary_search_range_on_answer(
+                Register::MIN,
+                Register::MAX,
+                |register_a: Register| -> Ordering {
                     // run_output_for_a(register_a).len().cmp(&program_str.len())
-                    program_str.len().cmp(&run_output_for_a(register_a).len())
-                });
+                    program_str.len().cmp(&run_output(register_a).len())
+                },
+            );
             println!("[STOP] range of equal-len programs is: [{low}, {high}]");
 
             for a in low..=high {
@@ -513,69 +521,48 @@ fn minimum_register_a_for_quine(
             }
         }
         Algo::NarrowLenNarrowComapre => {
-            let (low, high) =
-                binary_search_register_range_on_answer(|register_a: Register| -> Ordering {
+            let (len_low, len_high) = binary_search_range_on_answer(
+                Register::MIN,
+                Register::MAX,
+                |register_a: Register| -> Ordering {
                     // run_output_for_a(register_a).len().cmp(&program_str.len())
-                    program_str.len().cmp(&run_output_for_a(register_a).len())
-                });
-            println!("[STOP] range of equal-len programs is: [{low}, {high}]");
+                    program_str.len().cmp(&run_output(register_a).len())
+                },
+            );
+            println!("[STOP] range of equal-len programs is: [{len_low}, {len_high}]");
 
-            for a in low..=high {
-                println!("{program_str} =?= {}", run_output_for_a(a));
+            for a in range_step(len_low, len_high, (len_high - len_low) / 20) {
+                let o = run_output(a);
+                println!(
+                    "(len: {}, last:{}) len:{} -> {}",
+                    program_str.len(),
+                    raw_u8s[raw_u8s.len() - 1],
+                    o.len(),
+                    o
+                );
             }
 
-            panic!()
+            let last_raw_digit = raw_u8s[raw_u8s.len() - 1].clone();
+
+            let (last_low, last_high) = binary_search_range_on_answer(
+                len_low,
+                len_high,
+                |register_a: Register| -> Ordering {
+                    let output = execute(register_a);
+                    let last_output_digit = output[output.len() - 1].parse::<u8>().unwrap();
+                    println!("{} =?= {}", raw_output.join(","), output.join(","));
+                    // last_raw_digit.cmp(&last_output_digit)
+                    last_output_digit.cmp(&last_raw_digit)
+                },
+            );
+            println!("[STOP] range of equal-last-output is:  [{last_low}, {last_high}]");
+
+            for a in last_low..=last_high {
+                println!("{program_str} =?= {}", run_output(a));
+            }
         }
     }
     return None;
-}
-
-pub fn binary_search_register_range_on_answer(
-    program_to_output_len: impl Fn(Register) -> Ordering,
-) -> (Register, Register) {
-    let mut low = Register::MIN;
-    let mut high = Register::MAX;
-
-    let mut high_range = Register::MIN;
-    while low + 1 < high {
-        let midpoint = low + (high.checked_sub(low).unwrap() / 2);
-
-        match program_to_output_len(midpoint) {
-            Ordering::Equal => {
-                high_range = midpoint;
-                // keep going -> what's the TOP of this equal range?
-                low = midpoint;
-            }
-            Ordering::Greater => {
-                low = midpoint;
-            }
-            Ordering::Less => {
-                high = midpoint;
-            }
-        }
-    }
-
-    low = Register::MIN;
-    high = high_range;
-    let mut low_range = Register::MAX;
-    while low + 1 < high {
-        let midpoint = low + (high.checked_sub(low).unwrap() / 2);
-        match program_to_output_len(midpoint) {
-            Ordering::Equal => {
-                low_range = midpoint;
-                // keep going -> what's the BOTTOM of this equal range?
-                high = midpoint;
-            }
-            Ordering::Greater => {
-                low = midpoint;
-            }
-            Ordering::Less => {
-                high = midpoint;
-            }
-        }
-    }
-
-    (low_range, high_range)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
