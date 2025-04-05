@@ -379,7 +379,7 @@ pub fn solution_pt2() -> Result<u64, String> {
 
     println!("program: {:?}", program);
 
-    match minimum_register_a_for_quine(&computer, &program, Algo::Special) {
+    match minimum_register_a_for_quine(&computer, &program, Algo::NarrowLenNarrowComapre) {
         Some(register_a) => Ok(register_a as Register),
         None => Err(format!(
             "could not find a value for register A that makes this program a quine: '{}'",
@@ -417,7 +417,8 @@ enum Algo {
     BruteForce,
     BinaryBrute,
     BinarySearchLen,
-    Special,
+    NarrowLenBrute,
+    NarrowLenNarrowComapre,
 }
 
 fn minimum_register_a_for_quine(
@@ -497,11 +498,13 @@ fn minimum_register_a_for_quine(
                 return Some(ans);
             }
         }
-        Algo::Special => {
-            let (low, high) = binary_search_range_on_answer(|register_a: Register| -> Ordering {
-                // run_output_for_a(register_a).len().cmp(&program_str.len())
-                program_str.len().cmp(&run_output_for_a(register_a).len())
-            });
+        Algo::NarrowLenBrute => {
+            let (low, high) =
+                binary_search_register_range_on_answer(|register_a: Register| -> Ordering {
+                    // run_output_for_a(register_a).len().cmp(&program_str.len())
+                    program_str.len().cmp(&run_output_for_a(register_a).len())
+                });
+            println!("[STOP] range of equal-len programs is: [{low}, {high}]");
 
             for a in low..=high {
                 if is_found(a) {
@@ -509,11 +512,25 @@ fn minimum_register_a_for_quine(
                 }
             }
         }
+        Algo::NarrowLenNarrowComapre => {
+            let (low, high) =
+                binary_search_register_range_on_answer(|register_a: Register| -> Ordering {
+                    // run_output_for_a(register_a).len().cmp(&program_str.len())
+                    program_str.len().cmp(&run_output_for_a(register_a).len())
+                });
+            println!("[STOP] range of equal-len programs is: [{low}, {high}]");
+
+            for a in low..=high {
+                println!("{program_str} =?= {}", run_output_for_a(a));
+            }
+
+            panic!()
+        }
     }
     return None;
 }
 
-pub fn binary_search_range_on_answer(
+pub fn binary_search_register_range_on_answer(
     program_to_output_len: impl Fn(Register) -> Ordering,
 ) -> (Register, Register) {
     let mut low = Register::MIN;
@@ -558,7 +575,6 @@ pub fn binary_search_range_on_answer(
         }
     }
 
-    println!("[STOP] range of equal-len programs is: [{low_range}, {high_range}]");
     (low_range, high_range)
 }
 
@@ -701,7 +717,7 @@ mod test {
         let actual = minimum_register_a_for_quine(
             &Computer { A: 0, B: 0, C: 0 },
             &compile(parse_raw_program("0,3,5,4,3,0".to_string()).unwrap()).unwrap(),
-            Algo::Special,
+            Algo::NarrowLenBrute,
         )
         .unwrap();
         assert_eq!(actual, 117440);
