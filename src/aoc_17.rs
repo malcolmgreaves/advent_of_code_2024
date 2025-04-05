@@ -521,6 +521,44 @@ fn minimum_register_a_for_quine(
             }
         }
         Algo::NarrowLenNarrowComapre => {
+            let preview = |low_p: Register, high_p: Register| {
+                for a in range_step(low_p, high_p, (high_p - low_p) / 20) {
+                    let o = run_output(a);
+                    println!(
+                        "(len: {} -> {}) len:{} -> {}",
+                        program_str.len(),
+                        program_str,
+                        o.len(),
+                        o
+                    );
+                }
+            };
+
+            let range_where_digit_i_is_equal =
+                |low_check: Register, high_check: Register, index: usize| -> (Register, Register) {
+                    let raw_digit = raw_u8s[index].clone();
+
+                    let (i_low, i_high) = binary_search_range_on_answer(
+                        low_check,
+                        high_check,
+                        |register_a: Register| -> Ordering {
+                            let output = execute(register_a);
+                            assert_eq!(
+                                raw_u8s.len(),
+                                output.len(),
+                                "invalid output length, expecting {} got {}",
+                                raw_u8s.len(),
+                                output.len()
+                            );
+                            let output_digit = output[index].parse::<u8>().unwrap();
+                            println!("digit at index: {index} => {output_digit} =?= {raw_digit}");
+                            output_digit.cmp(&raw_digit)
+                        },
+                    );
+                    println!("[STOP] range of equal-output-{index} is:  [{i_low}, {i_high}]");
+                    (i_low, i_high)
+                };
+
             let (len_low, len_high) = binary_search_range_on_answer(
                 Register::MIN,
                 Register::MAX,
@@ -531,34 +569,21 @@ fn minimum_register_a_for_quine(
             );
             println!("[STOP] range of equal-len programs is: [{len_low}, {len_high}]");
 
-            for a in range_step(len_low, len_high, (len_high - len_low) / 20) {
-                let o = run_output(a);
-                println!(
-                    "(len: {}, last:{}) len:{} -> {}",
-                    program_str.len(),
-                    raw_u8s[raw_u8s.len() - 1],
-                    o.len(),
-                    o
-                );
+            let mut low = len_low;
+            let mut high = len_high;
+            for index in (0..raw_u8s.len()).rev() {
+                let (narrowed_low, narrowed_high) = range_where_digit_i_is_equal(low, high, index);
+                assert!(narrowed_low >= low, "low range did not go up");
+                assert!(narrowed_high <= high, "high range did not go down");
+                low = narrowed_low;
+                high = narrowed_high;
             }
+            assert!(low <= high, "narrowing failed");
 
-            let last_raw_digit = raw_u8s[raw_u8s.len() - 1].clone();
-
-            let (last_low, last_high) = binary_search_range_on_answer(
-                len_low,
-                len_high,
-                |register_a: Register| -> Ordering {
-                    let output = execute(register_a);
-                    let last_output_digit = output[output.len() - 1].parse::<u8>().unwrap();
-                    println!("{} =?= {}", raw_output.join(","), output.join(","));
-                    // last_raw_digit.cmp(&last_output_digit)
-                    last_output_digit.cmp(&last_raw_digit)
-                },
-            );
-            println!("[STOP] range of equal-last-output is:  [{last_low}, {last_high}]");
-
-            for a in last_low..=last_high {
-                println!("{program_str} =?= {}", run_output(a));
+            for register_a in low..=high {
+                if is_found(register_a) {
+                    return Some(register_a);
+                }
             }
         }
     }
