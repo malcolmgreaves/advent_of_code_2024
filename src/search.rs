@@ -114,5 +114,83 @@ pub fn binary_search_range_on_answer<N: Numeric>(
         }
     }
 
-    (low_range, high_range)
+    if low_range > high_range {
+        // failed to find even a single instance!
+        (initial_low_bound, initial_high_bound)
+    } else {
+        (low_range, high_range)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::collections::HashSet;
+
+    use super::*;
+
+    type N = u16;
+
+    fn compare(checking: N) -> impl Fn(N) -> Ordering {
+        move |v: N| -> Ordering { v.cmp(&checking) }
+    }
+
+    fn compare_range(min: N, max: N) -> impl Fn(N) -> Ordering {
+        move |v: N| -> Ordering {
+            if v < min {
+                Ordering::Less
+            } else if v > max {
+                Ordering::Greater
+            } else {
+                Ordering::Equal
+            }
+        }
+    }
+
+    #[test]
+    fn range_nothing() {
+        for compare in [
+            |v: N| -> Ordering { v.cmp(&10) },
+            |v: N| -> Ordering { 10.cmp(&v) },
+        ] {
+            let (low, high) = binary_search_range_on_answer(0, 10, compare);
+            println!("low={low} | high={high}");
+            assert_eq!(low, 0, "low check");
+            assert_eq!(high, 10, "high check");
+        }
+    }
+
+    #[test]
+    fn range_first() {
+        // single element, first
+        let (low, high) = binary_search_range_on_answer(0, 10, compare(0));
+        println!("low={low} | high={high}");
+        assert_eq!(low, 0, "low check");
+        assert_eq!(high, 1, "high check");
+    }
+
+    #[test]
+    fn range_last() {
+        // single element, last
+        let (low, high) = binary_search_range_on_answer(0, 10, compare(10));
+        println!("low={low} | high={high}");
+        assert_eq!(low, 9, "low check");
+        assert_eq!(high, 10, "high check");
+    }
+
+    #[test]
+    fn range_single() {
+        // single element, middle
+        let (low, high) = binary_search_range_on_answer(0, 10, compare(5));
+        println!("low={low} | high={high}");
+        assert_eq!(low, 9, "low check");
+        assert_eq!(high, 10, "high check");
+    }
+
+    #[test]
+    fn range_middle() {
+        let (low, high) = binary_search_range_on_answer(0, 10, compare_range(3, 7));
+        println!("low={low} | high={high}");
+        assert_eq!(low, 3, "low check");
+        assert_eq!(high, 7, "high check");
+    }
 }

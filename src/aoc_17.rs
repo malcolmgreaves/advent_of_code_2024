@@ -522,7 +522,7 @@ fn minimum_register_a_for_quine(
         }
         Algo::NarrowLenNarrowComapre => {
             let preview = |low_p: Register, high_p: Register| {
-                for a in range_step(low_p, high_p, (high_p - low_p) / 20) {
+                for a in range_step(low_p, high_p, (high_p - low_p) / 35) {
                     let o = run_output(a);
                     println!(
                         "(len: {} -> {}) len:{} -> {}",
@@ -536,6 +536,8 @@ fn minimum_register_a_for_quine(
 
             let range_where_digit_i_is_equal =
                 |low_check: Register, high_check: Register, index: usize| -> (Register, Register) {
+                    preview(low_check, high_check);
+
                     let raw_digit = raw_u8s[index].clone();
 
                     let (i_low, i_high) = binary_search_range_on_answer(
@@ -551,8 +553,9 @@ fn minimum_register_a_for_quine(
                                 output.len()
                             );
                             let output_digit = output[index].parse::<u8>().unwrap();
-                            println!("digit at index: {index} => {output_digit} =?= {raw_digit}");
-                            output_digit.cmp(&raw_digit)
+                            println!("\t\ti={index} | out={output_digit} raw={raw_digit}");
+                            // output_digit.cmp(&raw_digit)
+                            raw_digit.cmp(&output_digit)
                         },
                     );
                     println!("[STOP] range of equal-output-{index} is:  [{i_low}, {i_high}]");
@@ -726,13 +729,22 @@ mod test {
 
     #[test]
     fn search_for_quine() {
-        let actual = minimum_register_a_for_quine(
-            &Computer { A: 0, B: 0, C: 0 },
-            &compile(parse_raw_program("0,3,5,4,3,0".to_string()).unwrap()).unwrap(),
+        for choice in [
+            Algo::NarrowLenNarrowComapre,
             Algo::NarrowLenBrute,
-        )
-        .unwrap();
-        assert_eq!(actual, 117440);
+            Algo::BruteForce,
+        ] {
+            let actual = minimum_register_a_for_quine(
+                &Computer { A: 0, B: 0, C: 0 },
+                &compile(parse_raw_program("0,3,5,4,3,0".to_string()).unwrap()).unwrap(),
+                choice,
+            )
+            .unwrap();
+            assert_eq!(
+                actual, 117440,
+                "{choice:?} failed to find correct register A"
+            );
+        }
     }
 
     #[test]
