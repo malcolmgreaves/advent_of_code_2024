@@ -176,6 +176,22 @@ pub fn binary_search_range_on_answer<N: Numeric>(
     // }
 }
 
+pub fn binary_search_range_on_answer_2<N: Numeric>(
+    low: N,
+    high: N,
+    is_found: impl Fn(N) -> bool,
+) -> (N, N) {
+    assert!(
+        low < high,
+        "FATAL: must ensure that low < high | low={low:?}, high={high:?}"
+    );
+
+    let is_found = &is_found;
+    let high_range = binary_search_on_answer(low, high, is_found);
+    let low_range = binary_search_on_answer(low, high, |x: N| !is_found(x));
+    (low_range, high_range)
+}
+
 #[cfg(test)]
 mod test {
     use std::collections::HashSet;
