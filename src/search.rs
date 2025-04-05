@@ -68,7 +68,6 @@ pub fn binary_search_range_on_answer<N: Numeric>(
         low < high,
         "FATAL: must ensure that low < high | low={low:?}, high={high:?}"
     );
-    let mut found_once = false;
     let initial_low_bound = low;
     let initial_high_bound = high;
     let two = N::one() + N::one();
@@ -76,13 +75,14 @@ pub fn binary_search_range_on_answer<N: Numeric>(
     let mut low = initial_low_bound;
     let mut high = initial_high_bound;
 
-    let mut high_range = initial_low_bound;
+    let mut high_range = initial_high_bound;
+    let mut high_found_once = false;
     while plus_one(&low) < high {
         let midpoint = low + (high.checked_sub(&low).unwrap() / two);
 
         match compare(midpoint) {
             Ordering::Equal => {
-                found_once = true;
+                high_found_once = true;
                 high_range = midpoint;
                 // keep going -> what's the TOP of this equal range?
                 low = midpoint;
@@ -103,13 +103,15 @@ pub fn binary_search_range_on_answer<N: Numeric>(
     println!("\t[find high] STOP: [{low:?}, {high:?}] high_range={high_range:?}");
 
     low = initial_low_bound;
+    let mut low_range = low;
     // high = high_range;
-    let mut low_range = high;
+
+    let mut low_found_once = false;
     while plus_one(&low) < high {
         let midpoint = low + (high.checked_sub(&low).unwrap() / two);
         match compare(midpoint) {
             Ordering::Equal => {
-                found_once = true;
+                low_found_once = true;
                 low_range = midpoint;
                 // keep going -> what's the BOTTOM of this equal range?
                 high = midpoint;
@@ -125,11 +127,20 @@ pub fn binary_search_range_on_answer<N: Numeric>(
             }
         }
     }
+
+    if !low_found_once {
+        low_range = high;
+    }
+
     // let low_range = low;
     // low_range = low;
     println!("\t[find low] STOP: [{low:?}, {high:?}] low_range={low_range:?}");
 
-    if !found_once {
+    if !high_found_once
+        && !low_found_once
+        && compare(low_range) != Ordering::Equal
+        && compare(high_range) != Ordering::Equal
+    {
         // failed to find even a single instance!
         println!("\t[STOP-ERR] answer: [{initial_low_bound:?}, {initial_high_bound:?}]");
         (initial_low_bound, initial_high_bound)
