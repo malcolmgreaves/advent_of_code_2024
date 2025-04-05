@@ -196,7 +196,7 @@ mod test {
         // single element, middle
         let (low, high) = binary_search_range_on_answer(0, 10, compare(5));
         println!("low={low} | high={high}");
-        assert_eq!((low, high), (9, 10));
+        assert_eq!((low, high), (5, 5));
     }
 
     #[test]
