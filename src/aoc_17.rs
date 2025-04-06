@@ -534,63 +534,71 @@ fn minimum_register_a_for_quine(
                 }
             };
 
-            let range_where_digit_i_is_equal =
-                |low_check: Register, high_check: Register, index: usize| -> (Register, Register) {
-                    preview(low_check, high_check);
+            let range_where_digit_i_is_equal = |low_check: Register,
+                                                high_check: Register,
+                                                index: usize|
+             -> (Register, Register) {
+                // preview(low_check, high_check);
 
-                    let raw_digit = raw_u8s[index].clone();
+                let raw_digit = raw_u8s[index].clone();
 
-                    let (i_low, i_high) = binary_search_range_on_answer(
-                        low_check,
-                        high_check,
-                        |register_a: Register| -> Ordering {
-                            let output = execute(register_a);
-                            assert_eq!(
-                                raw_u8s.len(),
-                                output.len(),
-                                "invalid output length, expecting {} got {}",
-                                raw_u8s.len(),
-                                output.len()
-                            );
-                            let output_digit = output[index].parse::<u8>().unwrap();
-                            println!("\t\ti={index} | out={output_digit} raw={raw_digit}");
-                            // output_digit.cmp(&raw_digit)
-                            // raw_digit.cmp(&output_digit)
+                let (i_low, i_high) = binary_search_range_on_answer(
+                    low_check,
+                    high_check,
+                    |register_a: Register| -> Ordering {
+                        let output = execute(register_a);
+                        if register_a > high_check {
+                            return Ordering::Greater;
+                        }
+                        assert_eq!(
+                            raw_u8s.len(),
+                            output.len(),
+                            "[{register_a}] invalid output length, expecting {} got {} => raw={} | out={}",
+                            raw_u8s.len(),
+                            output.len(),
+                            raw_output.join(","),
+                            output.join(","),
+                        );
+                        let output_digit = output[index].parse::<u8>().unwrap();
+                        // println!("\t\t[{register_a}] i={index} | out={output_digit} raw={raw_digit}");
+                        output_digit.cmp(&raw_digit)
 
-                            if raw_digit < output_digit {
-                                Ordering::Greater
-                            } else if raw_digit > output_digit {
-                                Ordering::Less
-                            } else {
-                                Ordering::Equal
-                            }
-                        },
-                    );
-                    println!("[STOP] range of equal-output-{index} is:  [{i_low}, {i_high}]");
-                    (i_low, i_high)
-                };
+                        // raw_digit.cmp(&output_digit)
+                        // if raw_digit < output_digit {
+                        //     Ordering::Less
+                        // } else if raw_digit > output_digit {
+                        //     Ordering::Greater
+                        // } else {
+                        //     Ordering::Equal
+                        // }
+                    },
+                );
+                println!("[STOP] range of equal-output-{index} is:  [{i_low}, {i_high}]");
+                (i_low, i_high)
+            };
 
             let (len_low, len_high) = binary_search_range_on_answer(
                 Register::MIN,
                 Register::MAX,
                 |register_a: Register| -> Ordering {
                     let x = run_output(register_a);
-                    println!("\t{program_str} =?= {x}");
+                    // println!("\t[{register_a}] {program_str} =?= {x}");
                     // program_str.len().cmp(&x.len())
-                    if program_str.len() < x.len() {
-                        Ordering::Greater
-                    } else if program_str.len() > x.len() {
-                        Ordering::Less
-                    } else {
-                        Ordering::Equal
-                    }
+                    x.len().cmp(&program_str.len())
+                    // if program_str.len() < x.len() {
+                    //     Ordering::Greater
+                    // } else if program_str.len() > x.len() {
+                    //     Ordering::Less
+                    // } else {
+                    //     Ordering::Equal
+                    // }
                 },
             );
             println!("[STOP] range of equal-len programs is: [{len_low}, {len_high}]");
 
             let mut low = len_low;
             let mut high = len_high;
-            for index in (0..raw_u8s.len()).rev() {
+            for index in (0..raw_u8s.len() - 1).rev() {
                 let (narrowed_low, narrowed_high) = range_where_digit_i_is_equal(low, high, index);
                 assert!(narrowed_low >= low, "low range did not go up");
                 assert!(narrowed_high <= high, "high range did not go down");
@@ -599,7 +607,10 @@ fn minimum_register_a_for_quine(
             }
             assert!(low <= high, "narrowing failed");
 
+            println!("Brute force register A range: [{low}, {high}]");
+
             for register_a in low..=high {
+                println!("\ttrying: {register_a}");
                 if is_found(register_a) {
                     return Some(register_a);
                 }
@@ -747,7 +758,7 @@ mod test {
     fn search_for_quine() {
         for choice in [
             Algo::NarrowLenNarrowComapre,
-            Algo::NarrowLenBrute,
+            // Algo::NarrowLenBrute,
             // Algo::BinarySearchLen,
         ] {
             let actual = minimum_register_a_for_quine(

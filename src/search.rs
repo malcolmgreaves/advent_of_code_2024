@@ -32,6 +32,8 @@ pub fn binary_search_on_answer<N: Numeric>(low: N, high: N, is_found: impl Fn(N)
         low < high,
         "FATAL: must ensure that low < high | low={low:?}, high={high:?}"
     );
+    let initial_low = low;
+    let initial_high = high;
     let mut low = low;
     let mut high = high;
     let two = N::one() + N::one();
@@ -39,6 +41,9 @@ pub fn binary_search_on_answer<N: Numeric>(low: N, high: N, is_found: impl Fn(N)
     // println!("START: low={low:?} | high={high:?}");
     while plus_one(&low) < high {
         let midpoint = low + (high.checked_sub(&low).unwrap() / two);
+        if midpoint < initial_low || midpoint > initial_high {
+            break;
+        }
         if is_found(midpoint) {
             // println!("\t is found:  midpoint={midpoint:?} | low={low:?} | high={high:?}");
             high = midpoint;
