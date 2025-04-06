@@ -72,7 +72,7 @@ pub fn binary_search_range_on_answer<N: Numeric>(
     // is_found: impl Fn(N) -> bool,
     compare: impl Fn(N) -> Ordering,
 ) -> (N, N) {
-    binary_search_range_on_answer_2(low, high, compare)
+    binary_search_range_on_answer_1(low, high, compare)
 }
 
 pub fn binary_search_range_on_answer_1<N: Numeric>(
