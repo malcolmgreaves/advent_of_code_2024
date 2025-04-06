@@ -538,7 +538,7 @@ fn minimum_register_a_for_quine(
                                                 high_check: Register,
                                                 index: usize|
              -> (Register, Register) {
-                preview(low_check, high_check);
+                // preview(low_check, high_check);
 
                 let raw_digit = raw_u8s[index].clone();
 
@@ -598,6 +598,15 @@ fn minimum_register_a_for_quine(
             let mut low = len_low;
             let mut high = len_high;
             for index in (0..raw_u8s.len() - 1).rev() {
+                if high - low < 10000 {
+                    for register_a in low..=high {
+                        println!("\ttrying: {register_a}");
+                        if is_found(register_a) {
+                            return Some(register_a);
+                        }
+                    }
+                    return None;
+                }
                 // if low == high {
                 //     if is_found(low) {
                 //         return Some(low)
