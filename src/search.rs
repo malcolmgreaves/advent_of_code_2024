@@ -269,122 +269,122 @@ pub fn binary_search_range_on_answer_2<N: Numeric>(
     // }
 }
 
-// pub fn binary_search_range_on_answer_3<N: Numeric>(
-//     low: N,
-//     high: N,
-//     compare: impl Fn(N) -> Ordering,
-// ) -> (N, N) {
-//     assert!(
-//         low < high,
-//         "FATAL: must ensure that low < high | low={low:?}, high={high:?}"
-//     );
-//     let initial_low_bound = low;
-//     let initial_high_bound = high;
-//     let two = N::one() + N::one();
+pub fn binary_search_range_on_answer_3<N: Numeric>(
+    low: N,
+    high: N,
+    compare: impl Fn(N) -> Ordering,
+) -> (N, N) {
+    assert!(
+        low < high,
+        "FATAL: must ensure that low < high | low={low:?}, high={high:?}"
+    );
+    let initial_low_bound = low;
+    let initial_high_bound = high;
+    let two = N::one() + N::one();
 
-//     let mut low = initial_low_bound;
-//     let mut high = initial_high_bound;
+    let mut low = initial_low_bound;
+    let mut high = initial_high_bound;
 
-//     let mut high_found_once = false;
-//     let mut high_range = initial_high_bound;
-//     while plus_one(&low) < high {
-//         let midpoint = low + (high.checked_sub(&low).unwrap() / two);
+    let mut high_found_once = false;
+    let mut high_range = initial_high_bound;
+    while plus_one(&low) < high {
+        let midpoint = low + (high.checked_sub(&low).unwrap() / two);
 
-//         match compare(midpoint) {
-//             Ordering::Equal => {
-//                 high_found_once = true;
-//                 high_range = midpoint;
-//                 // keep going -> what's the TOP of this equal range?
-//                 low = midpoint;
-//                 println!("\t[find high] =: [{low:?}, {high:?}]");
-//             }
-//             Ordering::Greater => {
-//                 low = midpoint;
-//                 println!("\t[find high] >: [{low:?}, {high:?}]");
-//             }
-//             Ordering::Less => {
-//                 high = midpoint;
-//                 println!("\t[find high] <: [{low:?}, {high:?}]");
-//             }
-//         }
-//     }
-//     // if !high_found_once {
-//     //     high_range = high;
-//     // }
+        match compare(midpoint) {
+            Ordering::Equal => {
+                high_found_once = true;
+                high_range = midpoint;
+                // keep going -> what's the TOP of this equal range?
+                low = midpoint;
+                println!("\t[find high] =: [{low:?}, {high:?}]");
+            }
+            Ordering::Greater => {
+                low = midpoint;
+                println!("\t[find high] >: [{low:?}, {high:?}]");
+            }
+            Ordering::Less => {
+                high = midpoint;
+                println!("\t[find high] <: [{low:?}, {high:?}]");
+            }
+        }
+    }
+    // if !high_found_once {
+    //     high_range = high;
+    // }
 
-//     // let high_range = high;
-//     // high_range = high;
-//     println!("\t[find high] STOP: [{low:?}, {high:?}] high_range={high_range:?}");
+    // let high_range = high;
+    // high_range = high;
+    println!("\t[find high] STOP: [{low:?}, {high:?}] high_range={high_range:?}");
 
-//     low = initial_low_bound;
-//     let mut low_range = low;
-//     // high = high_range;
+    low = initial_low_bound;
+    let mut low_range = low;
+    // high = high_range;
 
-//     let mut low_found_once = false;
-//     // if plus_one(&low) >= high {
-//     //     low_range = high_range;
-//     //     println!("\t\tSET: {low_range:?} - {high_range:?}");
-//     // } else {
-//     while plus_one(&low) < high {
-//         let midpoint = low + (high.checked_sub(&low).unwrap() / two);
-//         match compare(midpoint) {
-//             Ordering::Equal => {
-//                 low_found_once = true;
-//                 low_range = midpoint;
-//                 // keep going -> what's the BOTTOM of this equal range?
-//                 high = midpoint;
-//                 println!("\t[find low] =: [{low:?}, {high:?}]");
-//             }
-//             Ordering::Greater => {
-//                 low = midpoint;
-//                 println!("\t[find low] >: [{low:?}, {high:?}]");
-//             }
-//             Ordering::Less => {
-//                 high = midpoint;
-//                 println!("\t[find low] <: [{low:?}, {high:?}]");
-//             }
-//         }
-//     }
+    let mut low_found_once = false;
+    // if plus_one(&low) >= high {
+    //     low_range = high_range;
+    //     println!("\t\tSET: {low_range:?} - {high_range:?}");
+    // } else {
+    while plus_one(&low) < high {
+        let midpoint = low + (high.checked_sub(&low).unwrap() / two);
+        match compare(midpoint) {
+            Ordering::Equal => {
+                low_found_once = true;
+                low_range = midpoint;
+                // keep going -> what's the BOTTOM of this equal range?
+                high = midpoint;
+                println!("\t[find low] =: [{low:?}, {high:?}]");
+            }
+            Ordering::Greater => {
+                low = midpoint;
+                println!("\t[find low] >: [{low:?}, {high:?}]");
+            }
+            Ordering::Less => {
+                high = midpoint;
+                println!("\t[find low] <: [{low:?}, {high:?}]");
+            }
+        }
+    }
 
-//     // if !low_found_once {
-//     //     low_range = high;
-//     // }
-//     // }
-//     // let low_range = low;
-//     // low_range = low;
-//     println!("\t[find low] STOP: [{low:?}, {high:?}] low_range={low_range:?}");
+    // if !low_found_once {
+    //     low_range = high;
+    // }
+    // }
+    // let low_range = low;
+    // low_range = low;
+    println!("\t[find low] STOP: [{low:?}, {high:?}] low_range={low_range:?}");
 
-//     if plus_one(&low_range) >= high_range {
-//         if compare(low_range) == Ordering::Equal {
-//             let ans = low_range;
-//             println!("\t[STOP-CHK] answer: [{ans:?},{ans:?}]");
-//             (ans, ans)
-//         } else if compare(high_range) == Ordering::Equal {
-//             let ans = high_range;
-//             println!("\t[STOP-CHK] answer: [{ans:?},{ans:?}]");
-//             (ans, ans)
-//         } else {
-//             println!("\t[STOP-ERR] answer: [{initial_low_bound:?}, {initial_high_bound:?}]");
-//             (initial_low_bound, initial_high_bound)
-//         }
-//     } else {
-//         println!("\t[STOP-FND] answer: [{low_range:?}, {high_range:?}]");
-//         (low_range, high_range)
-//     }
+    if plus_one(&low_range) >= high_range {
+        if compare(low_range) == Ordering::Equal {
+            let ans = low_range;
+            println!("\t[STOP-CHK] answer: [{ans:?},{ans:?}]");
+            (ans, ans)
+        } else if compare(high_range) == Ordering::Equal {
+            let ans = high_range;
+            println!("\t[STOP-CHK] answer: [{ans:?},{ans:?}]");
+            (ans, ans)
+        } else {
+            println!("\t[STOP-ERR] answer: [{initial_low_bound:?}, {initial_high_bound:?}]");
+            (initial_low_bound, initial_high_bound)
+        }
+    } else {
+        println!("\t[STOP-FND] answer: [{low_range:?}, {high_range:?}]");
+        (low_range, high_range)
+    }
 
-//     // if !high_found_once
-//     //     && !low_found_once
-//     //     && compare(low_range) != Ordering::Equal
-//     //     && compare(high_range) != Ordering::Equal
-//     // {
-//     //     // failed to find even a single instance!
-//     //     println!("\t[STOP-ERR] answer: [{initial_low_bound:?}, {initial_high_bound:?}]");
-//     //     (initial_low_bound, initial_high_bound)
-//     // } else {
-//     //     println!("\t[STOP-FND] answer: [{low_range:?}, {high_range:?}]");
-//     //     (low_range, high_range)
-//     // }
-// }
+    // if !high_found_once
+    //     && !low_found_once
+    //     && compare(low_range) != Ordering::Equal
+    //     && compare(high_range) != Ordering::Equal
+    // {
+    //     // failed to find even a single instance!
+    //     println!("\t[STOP-ERR] answer: [{initial_low_bound:?}, {initial_high_bound:?}]");
+    //     (initial_low_bound, initial_high_bound)
+    // } else {
+    //     println!("\t[STOP-FND] answer: [{low_range:?}, {high_range:?}]");
+    //     (low_range, high_range)
+    // }
+}
 
 #[cfg(test)]
 mod test {
