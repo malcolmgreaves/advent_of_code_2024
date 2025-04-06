@@ -27,20 +27,50 @@ type Operand = u8;
 type RawProgram = Vec<(Opcode, Operand)>;
 type Program = Vec<Instruction>;
 
+/// Assembly instrutions for the Computer.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Instruction {
+    /// The adv instruction (opcode 0) performs division.
+    /// The numerator is the value in the A register.
+    /// The denominator is found by raising 2 to the power of the instruction's combo operand.
+    /// (So, an operand of 2 would divide A by 4 (2^2); an operand of 5 would divide A by 2^B.)
+    /// The result of the division operation is truncated and then written to the A register.
     adv(Operand),
+
+    /// The bxl instruction (opcode 1) calculates the bitwise XOR of register B and
+    /// the instruction's literal operand, then stores the result in register B.
     bxl(Operand),
+
+    /// The bst instruction (opcode 2) calculates the value of its combo operand modulo 8
+    /// (thereby keeping only its lowest 3 bits), then writes that value to the B register.
     bst(Operand),
+
+    /// The jnz instruction (opcode 3) does nothing if the A register is 0.
+    /// However, if the A register is not zero, it jumps by setting the instruction pointer
+    /// to the value of its literal operand; if this instruction jumps, the instruction pointer
+    /// is not increased by 2 after this instruction.
     jnz(Operand),
+
+    /// The bxc instruction (opcode 4) calculates the bitwise XOR of register B and register C,
+    /// then stores the result in register B.
+    /// (For legacy reasons, this instruction reads an operand but ignores it.)
     bxc(Operand),
+
+    /// The out instruction (opcode 5) calculates the value of its combo operand modulo 8, then
+    /// outputs that value. (If a program outputs multiple values, they are separated by commas.)
     out(Operand),
+
+    /// This instruction (opcode 6) is like `adv`, except its result is stored in register B.
     bdv(Operand),
+
+    /// This instruction (opcode 7) is like `adv`, except its result is stored in register C.
     cdv(Operand),
 }
 
 impl Instruction {
+    /// Creates instruction from Opcode and Operand.
+    /// Panics if supplied invalid Opcode (only 0-7 allowed).
     fn new(opcode: Opcode, operand: Operand) -> Result<Instruction, String> {
         match opcode {
             0 => Ok(Self::adv(operand)),
@@ -189,25 +219,23 @@ impl Executable {
 
         let mut output = Vec::new();
 
-        println!("[start] oct(a)={:o}", self.computer.A);
+        println!("oct(A={})={:o}", self.computer.A, self.computer.A);
         if verbose {
             println!(
-                "[start] pc={} | A={} B={} C={}",
+                "pc={} | A={} B={} C={}",
                 self.pc, self.computer.A, self.computer.B, self.computer.C
             );
         }
         while self.is_ready() {
             if verbose {
                 println!(
-                    "\tpc={} | A={} B={} C={} | instr={:?}",
+                    "\tpc={} | instr={:?} | A={} B={} C={}",
                     self.pc,
+                    &self.program[self.pc],
                     self.computer.A,
                     self.computer.B,
                     self.computer.C,
-                    &self.program[self.pc]
                 );
-            } else {
-                println!("\tpc={} | instr={:?}", self.pc, &self.program[self.pc]);
             }
 
             let (pc, maybe_output) = run_step(&mut self.computer, &self.program[self.pc]);
@@ -229,18 +257,20 @@ impl Executable {
                 }
                 None => (),
             };
-            wait();
+            if verbose {
+                wait();
+            }
         }
         if verbose {
             println!(
-                "[end] pc={} | A={} B={} C={}",
+                "pc={} | A={} B={} C={}",
                 self.pc, self.computer.A, self.computer.B, self.computer.C
             );
-            println!("[end] out({})={}", output.len(), output.join(","));
-            println!("---------------------------------------------------------");
+            println!("out({})={}", output.len(), output.join(","));
         } else {
-            println!("[end] out({})={}", output.len(), output.join(","));
+            println!("out({})={}", output.len(), output.join(","));
         }
+        println!("---------------------------------------------------------");
         wait();
         output
     }
@@ -469,7 +499,9 @@ pub fn solution_pt2() -> Result<u64, String> {
         &program,
         Algo::Inspect {
             verbose: true,
-            wait_ms: 50,
+            // wait_ms: 25,
+            // verbose: false,
+            wait_ms: 10,
         }, // Algo::NarrowLenNarrowComapre
     ) {
         Some(register_a) => Ok(register_a as Register),
