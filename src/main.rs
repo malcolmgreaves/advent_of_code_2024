@@ -6,6 +6,7 @@ mod aoc_13;
 mod aoc_14;
 mod aoc_15;
 mod aoc_16;
+mod aoc_17;
 mod aoc_2;
 mod aoc_3;
 mod aoc_4;
@@ -20,6 +21,7 @@ mod graph;
 mod io_help;
 mod matrix;
 mod nums;
+mod search;
 mod set_ops;
 mod testing_utilities;
 mod utils;
@@ -220,6 +222,8 @@ pub fn main() {
         Aoc::new(15, 2, Fn::FnU64(aoc_15::solution_pt2)),
         Aoc::new(16, 1, Fn::FnU64(aoc_16::solution_pt1)),
         Aoc::new(16, 2, Fn::FnU64(aoc_16::solution_pt2)),
+        Aoc::new(17, 1, Fn::FnStr(aoc_17::solution_pt1)),
+        Aoc::new(17, 2, Fn::FnU64(aoc_17::solution_pt2)),
     ];
 
     let args = Args::parse();
