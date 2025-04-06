@@ -555,7 +555,15 @@ fn minimum_register_a_for_quine(
                             let output_digit = output[index].parse::<u8>().unwrap();
                             println!("\t\ti={index} | out={output_digit} raw={raw_digit}");
                             // output_digit.cmp(&raw_digit)
-                            raw_digit.cmp(&output_digit)
+                            // raw_digit.cmp(&output_digit)
+
+                            if raw_digit < output_digit {
+                                Ordering::Greater
+                            } else if raw_digit > output_digit {
+                                Ordering::Less
+                            } else {
+                                Ordering::Equal
+                            }
                         },
                     );
                     println!("[STOP] range of equal-output-{index} is:  [{i_low}, {i_high}]");
@@ -566,8 +574,16 @@ fn minimum_register_a_for_quine(
                 Register::MIN,
                 Register::MAX,
                 |register_a: Register| -> Ordering {
-                    // run_output_for_a(register_a).len().cmp(&program_str.len())
-                    program_str.len().cmp(&run_output(register_a).len())
+                    let x = run_output(register_a);
+                    println!("\t{program_str} =?= {x}");
+                    // program_str.len().cmp(&x.len())
+                    if program_str.len() < x.len() {
+                        Ordering::Greater
+                    } else if program_str.len() > x.len() {
+                        Ordering::Less
+                    } else {
+                        Ordering::Equal
+                    }
                 },
             );
             println!("[STOP] range of equal-len programs is: [{len_low}, {len_high}]");

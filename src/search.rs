@@ -40,10 +40,10 @@ pub fn binary_search_on_answer<N: Numeric>(low: N, high: N, is_found: impl Fn(N)
     while plus_one(&low) < high {
         let midpoint = low + (high.checked_sub(&low).unwrap() / two);
         if is_found(midpoint) {
-            println!("\t is found:  midpoint={midpoint:?} | low={low:?} | high={high:?}");
+            // println!("\t is found:  midpoint={midpoint:?} | low={low:?} | high={high:?}");
             high = midpoint;
         } else {
-            println!("\t not found: midpoint={midpoint:?} | low={low:?} | high={high:?}");
+            // println!("\t not found: midpoint={midpoint:?} | low={low:?} | high={high:?}");
             low = midpoint;
         }
     }
@@ -72,19 +72,23 @@ pub fn binary_search_range_on_answer<N: Numeric>(
         "FATAL: must ensure that low < high | low={low:?}, high={high:?}"
     );
 
-    match (compare(low), compare(high)) {
-        (Ordering::Equal, Ordering::Equal) => return (low, high),
-        _ => (),
-    };
-
     let low_range = {
         let low_range_found = binary_search_on_answer(low, high, |val: N| match compare(val) {
             Ordering::Greater | Ordering::Equal => true,
             _ => false,
         });
-        match compare(low_range_found) {
-            Ordering::Equal => low_range_found,
-            _ => low_range_found - N::one(),
+
+        if low_range_found == N::zero() {
+            low_range_found
+        } else {
+            let l_m_1 = low_range_found - N::one();
+            match compare(low_range_found) {
+                Ordering::Equal => match compare(l_m_1) {
+                    Ordering::Equal => l_m_1,
+                    _ => low_range_found,
+                },
+                _ => l_m_1,
+            }
         }
     };
 
@@ -95,9 +99,13 @@ pub fn binary_search_range_on_answer<N: Numeric>(
                 _ => false,
             })
         });
-        match compare(high_range_found) {
-            Ordering::Equal => high_range_found,
-            _ => high_range_found - N::one(),
+
+        let h_m_1 = high_range_found - N::one();
+        let h_p_1 = high_range_found + N::one();
+        match (compare(h_m_1), compare(high_range_found), compare(h_p_1)) {
+            (_, _, Ordering::Equal) => h_p_1,
+            (_, Ordering::Equal, _) => high_range_found,
+            _ => h_m_1,
         }
     };
 
@@ -316,5 +324,21 @@ mod test {
         // let (low, high) = binary_search_range_on_answer_2(0, 10, compare_range(0, 10));
         println!("low={low} | high={high}");
         assert_eq!((low, high), (0, 10));
+    }
+
+    #[test]
+    fn range_low_to_middle() {
+        let (low, high) = binary_search_range_on_answer(0, 10, compare_range(0, 4));
+        // let (low, high) = binary_search_range_on_answer_2(0, 10, compare_range(0, 10));
+        println!("low={low} | high={high}");
+        assert_eq!((low, high), (0, 4));
+    }
+
+    #[test]
+    fn range_middle_to_high() {
+        let (low, high) = binary_search_range_on_answer(0, 10, compare_range(2, 10));
+        // let (low, high) = binary_search_range_on_answer_2(0, 10, compare_range(0, 10));
+        println!("low={low} | high={high}");
+        assert_eq!((low, high), (2, 10));
     }
 }
