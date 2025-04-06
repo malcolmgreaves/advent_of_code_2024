@@ -188,7 +188,8 @@ impl Executable {
         let wait = wait_box.as_ref();
 
         let mut output = Vec::new();
-        println!("[start] program: {:?}", self.program);
+
+        println!("[start] oct(a)={:o}", self.computer.A);
         if verbose {
             println!(
                 "[start] pc={} | A={} B={} C={}",
@@ -230,14 +231,15 @@ impl Executable {
             };
             wait();
         }
-        println!("[end] output {} strings", output.len());
         if verbose {
             println!(
                 "[end] pc={} | A={} B={} C={}",
                 self.pc, self.computer.A, self.computer.B, self.computer.C
             );
-            println!("[end] {}", output.join(","));
-            println!("---------------------------------------------------------")
+            println!("[end] out({})={}", output.len(), output.join(","));
+            println!("---------------------------------------------------------");
+        } else {
+            println!("[end] out({})={}", output.len(), output.join(","));
         }
         wait();
         output
@@ -465,7 +467,10 @@ pub fn solution_pt2() -> Result<u64, String> {
     match minimum_register_a_for_quine(
         &computer,
         &program,
-        Algo::Inspect { wait_ms: 100 }, // Algo::NarrowLenNarrowComapre
+        Algo::Inspect {
+            verbose: true,
+            wait_ms: 50,
+        }, // Algo::NarrowLenNarrowComapre
     ) {
         Some(register_a) => Ok(register_a as Register),
         None => Err(format!(
@@ -502,7 +507,7 @@ fn stringify_program(program: &Program) -> String {
 #[allow(dead_code)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Algo {
-    Inspect { wait_ms: u64 },
+    Inspect { verbose: bool, wait_ms: u64 },
     BruteForce,
     BinaryBrute,
     BinarySearchLen,
@@ -535,10 +540,10 @@ fn minimum_register_a_for_quine(
     let run_output = |register_a: Register| -> String { execute(register_a).join(",") };
 
     match choice {
-        Algo::Inspect { wait_ms } => {
+        Algo::Inspect { verbose, wait_ms } => {
             for a in Register::MIN..=Register::MAX {
                 let exe = new(a);
-                exe.inspect_execution(true, wait_ms);
+                exe.inspect_execution(verbose, wait_ms);
             }
         }
         Algo::BruteForce => {
