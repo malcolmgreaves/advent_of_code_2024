@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, collections::VecDeque, fmt::Display};
+use std::{cmp::Ordering, collections::VecDeque, fmt::Display, thread, time};
 
 use num::range_step;
 use regex::Regex;
@@ -170,6 +170,77 @@ impl Executable {
             };
         }
         true
+    }
+
+    fn waiter(wait_ms: u64) -> Box<dyn Fn() -> ()> {
+        if wait_ms > 0 {
+            let duration = time::Duration::from_millis(wait_ms);
+            Box::new(move || {
+                thread::sleep(duration);
+            })
+        } else {
+            Box::new(|| ())
+        }
+    }
+
+    fn inspect_execution(mut self, verbose: bool, wait_ms: u64) -> Vec<String> {
+        let wait_box = Self::waiter(wait_ms);
+        let wait = wait_box.as_ref();
+
+        let mut output = Vec::new();
+        println!("[start] program: {:?}", self.program);
+        if verbose {
+            println!(
+                "[start] pc={} | A={} B={} C={}",
+                self.pc, self.computer.A, self.computer.B, self.computer.C
+            );
+        }
+        while self.is_ready() {
+            if verbose {
+                println!(
+                    "\tpc={} | A={} B={} C={} | instr={:?}",
+                    self.pc,
+                    self.computer.A,
+                    self.computer.B,
+                    self.computer.C,
+                    &self.program[self.pc]
+                );
+            } else {
+                println!("\tpc={} | instr={:?}", self.pc, &self.program[self.pc]);
+            }
+
+            let (pc, maybe_output) = run_step(&mut self.computer, &self.program[self.pc]);
+            match pc {
+                Some(instruction_pointer) => {
+                    if verbose {
+                        println!("\t\tjumping to: {instruction_pointer}");
+                    }
+                    self.jump(instruction_pointer)
+                }
+                None => self.increment(),
+            };
+            match maybe_output {
+                Some(o) => {
+                    if verbose {
+                        println!("\t\toutputting: {o}");
+                    }
+                    output.push(o);
+                }
+                None => (),
+            };
+            wait();
+        }
+        println!("[end] output {} strings", output.len());
+        if verbose {
+            println!(
+                "[end] pc={} | A={} B={} C={}",
+                self.pc, self.computer.A, self.computer.B, self.computer.C
+            );
+            println!("[end] {}", output.join(","));
+            println!("---------------------------------------------------------")
+        }
+        wait();
+        output
     }
 }
 
@@ -391,7 +462,11 @@ pub fn solution_pt2() -> Result<u64, String> {
 
     println!("program: {:?}", program);
 
-    match minimum_register_a_for_quine(&computer, &program, Algo::NarrowLenNarrowComapre) {
+    match minimum_register_a_for_quine(
+        &computer,
+        &program,
+        Algo::Inspect { wait_ms: 100 }, // Algo::NarrowLenNarrowComapre
+    ) {
         Some(register_a) => Ok(register_a as Register),
         None => Err(format!(
             "could not find a value for register A that makes this program a quine: '{}'",
@@ -427,6 +502,7 @@ fn stringify_program(program: &Program) -> String {
 #[allow(dead_code)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Algo {
+    Inspect { wait_ms: u64 },
     BruteForce,
     BinaryBrute,
     BinarySearchLen,
@@ -459,6 +535,12 @@ fn minimum_register_a_for_quine(
     let run_output = |register_a: Register| -> String { execute(register_a).join(",") };
 
     match choice {
+        Algo::Inspect { wait_ms } => {
+            for a in Register::MIN..=Register::MAX {
+                let exe = new(a);
+                exe.inspect_execution(true, wait_ms);
+            }
+        }
         Algo::BruteForce => {
             for a in Register::MIN..=Register::MAX {
                 if is_found(a) {
@@ -603,7 +685,11 @@ fn minimum_register_a_for_quine(
                         // program_str.len().cmp(&x.len())
                         out.len().cmp(&program_str.len())
                     };
-                    println!("\t[{register_a}] {program_str} ({}) =?= ({}) {out} | cmp={cmp:?}", program_str.len(), out.len());
+                    println!(
+                        "\t[{register_a}] {program_str} ({}) =?= ({}) {out} | cmp={cmp:?}",
+                        program_str.len(),
+                        out.len()
+                    );
                     cmp
                 },
             );
