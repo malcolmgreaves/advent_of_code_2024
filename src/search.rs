@@ -36,13 +36,6 @@ pub fn binary_search_on_answer<N: Numeric>(low: N, high: N, is_found: impl Fn(N)
     let mut high = high;
     let two = N::one() + N::one();
 
-    println!("DEBUG:");
-    let mut a = low;
-    while a <= high {
-        println!("\t\tis_found({a:?})={}", is_found(a));
-        a = plus_one(&a);
-    }
-
     // println!("START: low={low:?} | high={high:?}");
     while plus_one(&low) < high {
         let midpoint = low + (high.checked_sub(&low).unwrap() / two);

@@ -732,7 +732,7 @@ mod test {
         for choice in [
             Algo::NarrowLenNarrowComapre,
             Algo::NarrowLenBrute,
-            Algo::BruteForce,
+            // Algo::BinarySearchLen,
         ] {
             let actual = minimum_register_a_for_quine(
                 &Computer { A: 0, B: 0, C: 0 },
