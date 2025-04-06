@@ -538,7 +538,7 @@ fn minimum_register_a_for_quine(
                                                 high_check: Register,
                                                 index: usize|
              -> (Register, Register) {
-                // preview(low_check, high_check);
+                preview(low_check, high_check);
 
                 let raw_digit = raw_u8s[index].clone();
 
@@ -547,9 +547,6 @@ fn minimum_register_a_for_quine(
                     high_check,
                     |register_a: Register| -> Ordering {
                         let output = execute(register_a);
-                        if register_a > high_check {
-                            return Ordering::Greater;
-                        }
                         assert_eq!(
                             raw_u8s.len(),
                             output.len(),
@@ -560,7 +557,9 @@ fn minimum_register_a_for_quine(
                             output.join(","),
                         );
                         let output_digit = output[index].parse::<u8>().unwrap();
-                        // println!("\t\t[{register_a}] i={index} | out={output_digit} raw={raw_digit}");
+                        println!(
+                            "\t\t[{register_a}] i={index} | raw={raw_digit} out={output_digit}"
+                        );
                         output_digit.cmp(&raw_digit)
 
                         // raw_digit.cmp(&output_digit)
