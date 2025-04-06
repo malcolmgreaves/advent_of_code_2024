@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, collections::VecDeque};
+use std::{cmp::Ordering, collections::VecDeque, fmt::Display};
 
 use num::range_step;
 use regex::Regex;
@@ -90,6 +90,7 @@ struct Executable {
 }
 
 impl Executable {
+    #[allow(dead_code)]
     pub fn new(computer: &Computer, program: &Program) -> Executable {
         Self::initialize(computer.clone(), program.clone())
     }
@@ -423,6 +424,7 @@ fn stringify_program(program: &Program) -> String {
     stringify_raw(program).collect::<Vec<_>>().join(",")
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Algo {
     BruteForce,
@@ -457,88 +459,104 @@ fn minimum_register_a_for_quine(
     let run_output = |register_a: Register| -> String { execute(register_a).join(",") };
 
     match choice {
-        // Algo::BruteForce => {
-        //     for a in Register::MIN..=Register::MAX {
-        //         if is_found(a) {
-        //             return Some(a);
-        //         }
-        //     }
-        // }
-        // Algo::BinaryBrute => {
-        //     let mut queue = VecDeque::new();
-        //     queue.push_back((Register::MIN, Register::MAX));
-        //     while let Some((low, high)) = queue.pop_front() {
-        //         if high < low + 1 {
-        //             return None;
-        //         }
+        Algo::BruteForce => {
+            for a in Register::MIN..=Register::MAX {
+                if is_found(a) {
+                    return Some(a);
+                }
+            }
+        }
+        Algo::BinaryBrute => {
+            let mut queue = VecDeque::new();
+            queue.push_back((Register::MIN, Register::MAX));
+            while let Some((low, high)) = queue.pop_front() {
+                if high < low + 1 {
+                    return None;
+                }
 
-        //         if (high - low) < u16::MAX as Register {
-        //             // switch to iterative: it is very fast to go through 2^16 values
-        //             for i in low..=high {
-        //                 if is_found(i) {
-        //                     return Some(i);
-        //                 }
-        //             }
-        //             // didn't work -> discard this whole range
-        //             continue;
-        //         }
+                if (high - low) < u16::MAX as Register {
+                    // switch to iterative: it is very fast to go through 2^16 values
+                    for i in low..=high {
+                        if is_found(i) {
+                            return Some(i);
+                        }
+                    }
+                    // didn't work -> discard this whole range
+                    continue;
+                }
 
-        //         let midpoint = low + ((high - low) / 2);
-        //         if is_found(midpoint) {
-        //             return Some(midpoint);
-        //         }
-        //         queue.push_back((low, midpoint));
-        //         queue.push_back((midpoint, high));
-        //     }
-        // }
-        // Algo::BinarySearchLen => {
-        //     let ans = binary_search_on_answer(
-        //         Register::MIN,
-        //         Register::MAX,
-        //         |register_a: Register| -> bool {
-        //             run_output(register_a).len() == program_str.len()
-        //         },
-        //     );
-        //     if is_found(ans) {
-        //         return Some(ans);
-        //     }
-        // }
-        // Algo::NarrowLenBrute => {
-        //     let (low, high) = binary_search_range_on_answer(
-        //         Register::MIN,
-        //         Register::MAX,
-        //         |register_a: Register| -> Ordering {
-        //             // run_output_for_a(register_a).len().cmp(&program_str.len())
-        //             program_str.len().cmp(&run_output(register_a).len())
-        //         },
-        //     );
-        //     println!("[STOP] range of equal-len programs is: [{low}, {high}]");
+                let midpoint = low + ((high - low) / 2);
+                if is_found(midpoint) {
+                    return Some(midpoint);
+                }
+                queue.push_back((low, midpoint));
+                queue.push_back((midpoint, high));
+            }
+        }
+        Algo::BinarySearchLen => {
+            let ans = binary_search_on_answer(
+                Register::MIN,
+                Register::MAX,
+                |register_a: Register| -> bool {
+                    run_output(register_a).len() == program_str.len()
+                },
+            );
+            if is_found(ans) {
+                return Some(ans);
+            }
+        }
+        Algo::NarrowLenBrute => {
+            let (low, high) = binary_search_range_on_answer(
+                Register::MIN,
+                Register::MAX,
+                |register_a: Register| -> Ordering {
+                    // run_output_for_a(register_a).len().cmp(&program_str.len())
+                    program_str.len().cmp(&run_output(register_a).len())
+                },
+            );
+            println!("[STOP] range of equal-len programs is: [{low}, {high}]");
 
-        //     for a in low..=high {
-        //         if is_found(a) {
-        //             return Some(a);
-        //         }
-        //     }
-        // }
+            for a in low..=high {
+                if is_found(a) {
+                    return Some(a);
+                }
+            }
+        }
         Algo::NarrowLenNarrowComapre => {
             let preview = |low_p: Register, high_p: Register| {
-                for a in range_step(low_p, high_p, (high_p - low_p) / 35) {
+                let o = run_output(low_p);
+                // println!(
+                //     "[STR] (len: {} -> {}) len:{} -> {}",
+                //     program_str.len(),
+                //     program_str,
+                //     o.len(),
+                //     o
+                // );
+                for a in range_step(low_p, high_p, (high_p - low_p) / 100) {
                     let o = run_output(a);
                     println!(
-                        "(len: {} -> {}) len:{} -> {}",
+                        "[...] (len: {} -> {}) len:{} -> {}",
                         program_str.len(),
                         program_str,
                         o.len(),
                         o
                     );
                 }
+                let o = run_output(high_p);
+                println!(
+                    "[END] (len: {} -> {}) len:{} -> {}",
+                    program_str.len(),
+                    program_str,
+                    o.len(),
+                    o
+                );
             };
 
             let range_where_digit_i_is_equal = |low_check: Register,
                                                 high_check: Register,
                                                 index: usize|
              -> (Register, Register) {
-                // preview(low_check, high_check);
+                preview(low_check, high_check);
 
                 let raw_digit = raw_u8s[index].clone();
 
@@ -580,36 +598,15 @@ fn minimum_register_a_for_quine(
                 Register::MIN,
                 Register::MAX,
                 |register_a: Register| -> Ordering {
-                    let x = run_output(register_a);
-                    // println!("\t[{register_a}] {program_str} =?= {x}");
-                    // program_str.len().cmp(&x.len())
-                    x.len().cmp(&program_str.len())
-                    // if program_str.len() < x.len() {
-                    //     Ordering::Greater
-                    // } else if program_str.len() > x.len() {
-                    //     Ordering::Less
-                    // } else {
-                    //     Ordering::Equal
-                    // }
+                    let out = run_output(register_a);
+                    let cmp = {
+                        // program_str.len().cmp(&x.len())
+                        out.len().cmp(&program_str.len())
+                    };
+                    println!("\t[{register_a}] {program_str} ({}) =?= ({}) {out} | cmp={cmp:?}", program_str.len(), out.len());
+                    cmp
                 },
             );
-            // let len_high = binary_search_on_answer(Register::MIN, Register::MAX,
-            //     |register_a: Register| -> Ordering {
-            //         let x = exe(register_a);
-            //         // println!("\t[{register_a}] {program_str} =?= {x}");
-            //         // program_str.len().cmp(&x.len())
-            //         x.len().cmp(&program_str.len())
-            //         // if program_str.len() < x.len() {
-            //         //     Ordering::Greater
-            //         // } else if program_str.len() > x.len() {
-            //         //     Ordering::Less
-            //         // } else {
-            //         //     Ordering::Equal
-            //         // }
-            //     },
-
-            // );
-            preview(Register::MIN, Register::MAX);
             println!("[STOP] range of equal-len programs is: [{len_low}, {len_high}]");
             println!(
                 "\t[{}] low->({}) {} | high->({}) {}",
@@ -619,27 +616,11 @@ fn minimum_register_a_for_quine(
                 run_output(len_high).len(),
                 run_output(len_high),
             );
+            preview(len_low, len_high);
 
             let mut low = len_low;
             let mut high = len_high;
             for index in (0..raw_u8s.len() - 1).rev() {
-                if high - low < 10000 {
-                    for register_a in low..=high {
-                        println!("\ttrying: {register_a}");
-                        if is_found(register_a) {
-                            return Some(register_a);
-                        }
-                    }
-                    return None;
-                }
-                // if low == high {
-                //     if is_found(low) {
-                //         return Some(low)
-                //     } else{
-                //         return None
-                //     }
-                // }
-
                 let (narrowed_low, narrowed_high) = range_where_digit_i_is_equal(low, high, index);
                 assert!(narrowed_low >= low, "low range did not go up");
                 assert!(narrowed_high <= high, "high range did not go down");
@@ -657,7 +638,6 @@ fn minimum_register_a_for_quine(
                 }
             }
         }
-        _ => panic!(),
     }
     return None;
 }
