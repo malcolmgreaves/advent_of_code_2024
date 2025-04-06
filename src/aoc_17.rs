@@ -598,6 +598,14 @@ fn minimum_register_a_for_quine(
             let mut low = len_low;
             let mut high = len_high;
             for index in (0..raw_u8s.len() - 1).rev() {
+                // if low == high {
+                //     if is_found(low) {
+                //         return Some(low)
+                //     } else{
+                //         return None
+                //     }
+                // }
+
                 let (narrowed_low, narrowed_high) = range_where_digit_i_is_equal(low, high, index);
                 assert!(narrowed_low >= low, "low range did not go up");
                 assert!(narrowed_high <= high, "high range did not go down");
