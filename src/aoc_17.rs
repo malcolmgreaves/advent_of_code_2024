@@ -239,11 +239,17 @@ impl Executable {
         while self.is_ready() {
             if verbose {
                 println!(
-                    "\tpc={} | instr={:?} | A={} B={} C={}",
+                    "\tpc={} | instr={:?} | A={},bin(A)={},oct(A)={} | B={},bin(B)={:b},oct(B)={:o} | C={},bin(C)={:b},oct(C)={:o}",
                     self.pc,
                     &self.program[self.pc],
                     self.computer.A,
+                    self.computer.A,
+                    self.computer.A,
                     self.computer.B,
+                    self.computer.B,
+                    self.computer.B,
+                    self.computer.C,
+                    self.computer.C,
                     self.computer.C,
                 );
             }
@@ -262,7 +268,7 @@ impl Executable {
             match maybe_output {
                 Some(o) => {
                     if verbose {
-                        println!("\t\t[from B={prev}, oct(B)={prev:o}] outputting: {o}");
+                        println!("\t\t[from B={prev} oct(B)={prev:o}] outputting: {o}");
                     }
                     output.push(o);
                 }
@@ -274,8 +280,17 @@ impl Executable {
         }
         if verbose {
             println!(
-                "pc={} | A={} B={} C={}",
-                self.pc, self.computer.A, self.computer.B, self.computer.C
+                "pc={} | A={},bin(A)={},oct(A)={} | B={},bin(B)={:b},oct(B)={:o} | C={},bin(C)={:b},oct(C)={:o}",
+                self.pc,
+                self.computer.A,
+                self.computer.A,
+                self.computer.A,
+                self.computer.B,
+                self.computer.B,
+                self.computer.B,
+                self.computer.C,
+                self.computer.C,
+                self.computer.C,
             );
             println!("out({})={}", output.len(), output.join(","));
         } else {
@@ -441,6 +456,12 @@ fn run_step(computer: &mut Computer, instruction: &Instruction) -> (Option<usize
         }
         Instruction::bxl(literal) => {
             // ^ is bitwise XOR: https://doc.rust-lang.org/std/ops/trait.BitXor.html
+            println!(
+                "\t\tbin(B)={:b} & bin(6)={:b} => bin(bit-xor)={:b}",
+                computer.B,
+                6,
+                computer.B ^ *literal as Register
+            );
             let val = computer.B ^ *literal as Register;
             computer.B = val;
         }
@@ -586,20 +607,23 @@ fn lookup_table_from(computer: &Computer, program: &Program) -> HashMap<Digits, 
         .collect()
 }
 
-fn generate_octals(length: usize) -> impl Iterator<Item = Vec<u8>> {
-    _generate_octals(length).into_iter()
+fn generate_octals(fixed_width: usize) -> impl Iterator<Item = Vec<u8>> {
+    _generate_octals(fixed_width).into_iter().map(|mut o| {
+        o.reverse();
+        o
+    })
 }
 
 fn _generate_octals(len: usize) -> Box<dyn Iterator<Item = Vec<u8>>> {
-    if len == 0 {
-        Box::new((0..=7).into_iter().map(|d| vec![d]))
-    } else {
-        Box::new((0..=7).flat_map(move |d| {
+    match len {
+        0 => Box::new([].into_iter()),
+        1 => Box::new((0..=7).into_iter().map(|d| vec![d])),
+        _ => Box::new((0..=7).flat_map(move |d| {
             _generate_octals(len - 1).into_iter().map(move |mut rest| {
                 rest.push(d);
                 rest
             })
-        }))
+        })),
     }
 }
 
@@ -680,19 +704,25 @@ fn minimum_register_a_for_quine(
             let lookup_table = lookup_table_from(computer, program);
 
             println!("HERE1");
-            (0..=7)
-                .flat_map(|a| {
-                    (0..=7).flat_map(move |b| {
-                        (0..=7).flat_map(move |c| (0..=7).map(move |d| [a, b, c, d]))
-                    })
-                })
-                .for_each(|octals| {
-                    let octal = octals.map(|o| format!("{o}")).join("");
-                    let register_a = u64::from_str_radix(&octal, 8).unwrap();
-                    let out = new(register_a).execute();
-                    println!("oct(A)={octal} | {}", out.join(","));
-                });
+            // (0..=7)
+            //     .flat_map(|a| {
+            //         (0..=7).flat_map(move |b| {
+            //             (0..=7).flat_map(move |c| (0..=7).map(move |d| [a, b, c, d]))
+            //         })
+            //     })
+            generate_octals(4).for_each(|octals| {
+                println!("oct={octals:?}");
+                // let octal = octals.into_iter().map(|o| format!("{o}")).collect::<Vec<_>>().join("");
+                // let register_a = u64::from_str_radix(&octal, 8).unwrap();
+                // let out = new(register_a).execute();
+                // println!("oct(A)={octal} | {}", out.join(","));
+            });
             println!("HERE2");
+
+            for a in [1000, 5000, 12519, 254124, 51252515252] {
+                println!("\t<>");
+                new(a).inspect_execution(true, wait_ms);
+            }
 
             // let solves = raw_pairs
             //     .iter()
