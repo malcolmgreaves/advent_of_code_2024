@@ -1,7 +1,12 @@
-use std::{cmp::Ordering, collections::VecDeque, fmt::Display, thread, time};
+use std::{
+    cmp::Ordering,
+    collections::{HashMap, VecDeque},
+    thread, time,
+};
 
 use num::range_step;
-use regex::Regex;
+
+use lazy_static::lazy_static;
 
 use crate::{
     io_help,
@@ -219,7 +224,12 @@ impl Executable {
 
         let mut output = Vec::new();
 
-        println!("oct(A={})={:o}", self.computer.A, self.computer.A);
+        println!(
+            "oct(A={})={:o} | len(A as octal)={}",
+            self.computer.A,
+            self.computer.A,
+            format!("{:o}", self.computer.A).len()
+        );
         if verbose {
             println!(
                 "pc={} | A={} B={} C={}",
@@ -493,8 +503,6 @@ pub fn solution_pt2() -> Result<u64, String> {
     let lines = io_help::read_lines("./inputs/17");
     let (computer, program) = construct(lines)?;
 
-    println!("program: {:?}", program);
-
     match minimum_register_a_for_quine(
         &computer,
         &program,
@@ -548,6 +556,53 @@ enum Algo {
     NarrowLenNarrowComapre,
 }
 
+type Digits = Vec<u8>;
+// type Octals = (u8,u8,u8);
+type Octals = (u8, u8);
+
+fn lookup_table_from(computer: &Computer, program: &Program) -> HashMap<Digits, Octals> {
+    (0..=7)
+        // .flat_map(|a| (0..=7).flat_map(move |b| (0..=7).map(move |c| (a, b, c))))
+        // .map(|(octal_a, octal_b, octal_c)| {
+        //     let a_as_octal = format!("{octal_a}{octal_b}{octal_c}");
+        .flat_map(|a| (0..=7).map(move |b| (a, b)))
+        .map(|(octal_a, octal_b)| {
+            let a_as_octal = format!("{octal_a}{octal_b}");
+            let register_a = u64::from_str_radix(&a_as_octal, 8).unwrap();
+            let result = {
+                let mut exe = Executable::new(computer, program);
+                exe.computer.A = register_a;
+                exe.execute()
+            };
+            let digits = result
+                .into_iter()
+                .map(|d| d.parse::<u8>().unwrap())
+                .collect::<Vec<_>>();
+            // println!("\toct={octal_a}{octal_b}{octal_c} | digits={digits:?}");
+            // (digits, (octal_a, octal_b, octal_c))
+            println!("\toct={octal_a}{octal_b} | digits={digits:?}");
+            (digits, (octal_a, octal_b))
+        })
+        .collect()
+}
+
+fn generate_octals(length: usize) -> impl Iterator<Item = Vec<u8>> {
+    _generate_octals(length).into_iter()
+}
+
+fn _generate_octals(len: usize) -> Box<dyn Iterator<Item = Vec<u8>>> {
+    if len == 0 {
+        Box::new((0..=7).into_iter().map(|d| vec![d]))
+    } else {
+        Box::new((0..=7).flat_map(move |d| {
+            _generate_octals(len - 1).into_iter().map(move |mut rest| {
+                rest.push(d);
+                rest
+            })
+        }))
+    }
+}
+
 fn minimum_register_a_for_quine(
     computer: &Computer,
     program: &Program,
@@ -574,10 +629,120 @@ fn minimum_register_a_for_quine(
 
     match choice {
         Algo::Inspect { verbose, wait_ms } => {
-            for a in Register::MIN..=Register::MAX {
-                let exe = new(a);
-                exe.inspect_execution(verbose, wait_ms);
+            // for a in Register::MIN..=Register::MAX {
+            //     let exe = new(a);
+            //     exe.inspect_execution(verbose, wait_ms);
+            // }
+            // let test_a_octal = "34530"; // 0o34530
+            let n_raw = raw_u8s.len();
+            println!(
+                "...\nprogram(#raw={n_raw}): {:?}\n----------------------------",
+                program
+            );
+
+            let raw_pairs = program
+                .iter()
+                .map(|instr| (instr.opcode(), instr.operand()))
+                .collect::<Vec<_>>();
+
+            for (a, b) in raw_pairs.iter() {
+                println!("\t{a},{b}");
             }
+
+            // let testing = [
+            //     "445021",
+            //     "445031",
+            //     "445041",
+            //     "445011",
+            //     "445111",
+            //     "445211",
+            //     "445311",
+            //     "445411",
+            //     "445511",
+            //     "445611",
+            //     "445711",
+            //     "545311",
+            //     "645311",
+            //     "355311",
+            //     "365311",
+            //     "375311",
+            //     "777777311",
+            // ];
+
+            // let testing = (0..=7)
+            //     .flat_map(|a| (0..=7).map(move |b| (a, b)))
+            //     .map(|(a, b)| {
+            //         // format!("4450{a}{b}")
+            //         format!("{a}{b}")
+            //     })
+            //     .collect::<Vec<_>>();
+
+            let lookup_table = lookup_table_from(computer, program);
+
+            println!("HERE1");
+            (0..=7)
+                .flat_map(|a| {
+                    (0..=7).flat_map(move |b| {
+                        (0..=7).flat_map(move |c| (0..=7).map(move |d| [a, b, c, d]))
+                    })
+                })
+                .for_each(|octals| {
+                    let octal = octals.map(|o| format!("{o}")).join("");
+                    let register_a = u64::from_str_radix(&octal, 8).unwrap();
+                    let out = new(register_a).execute();
+                    println!("oct(A)={octal} | {}", out.join(","));
+                });
+            println!("HERE2");
+
+            // let solves = raw_pairs
+            //     .iter()
+            //     .map(|(digit_a, digit_b)| {
+            //         let digits = vec![*digit_a, *digit_b];
+            //         // let (octal_a,octal_b) = lookup_table.get(&digits).unwrap().clone();
+            //         match lookup_table.get(&digits) {
+            //             Some((octal_a,octal_b)) => {
+            //                 println!("for instructions: {digits:?} the octal bits need to be {octal_a},{octal_b}");
+            //                 Some((*octal_a, *octal_b))
+            //             },
+            //             // Some((octal_a,octal_b, octal_c)) => {
+            //             //     println!("for instructions: {digits:?} the octal bits need to be {octal_a},{octal_b},{octal_c}");
+            //             // },
+            //             None => {
+            //                 println!("ERROR: no octals for digits={digits:?}");
+            //                 None
+            //             },
+            //         }
+            //     }
+            // )
+            // .collect::<Vec<_>>();
+
+            // let partial_oct = {
+            //     let mut x = solves
+            //     .iter()
+            //     .map(|x| match x {
+            //         Some((a, b)) => format!("{a}{b}"),
+            //         None => "??".to_string(),
+            //     })
+            //     .collect::<Vec<_>>();
+            //     // x.reverse();
+            //     x.join("")
+            // };
+
+            // println!("partialy solved octal value: {partial_oct}");
+
+            // let try_oct = partial_oct.replace("????", "0000");
+            // println!("TRYING: {try_oct}");
+
+            // let test_octals_for_a = (0..=7).flat_map(|a| (0..=7).flat_map(move |b| (0..=7).flat_map(move |c| (0..=7).map(move |d| (a,b,c,d)))))
+            // .map(|(a,b,c,d)| {
+            //     partial_oct.replace("????", &format!("{a}{b}{c}{d}"))
+            // }).collect::<Vec<_>>();
+
+            // for oct in test_octals_for_a {
+            //     let a = u64::from_str_radix(&oct, 8).unwrap();
+            //     let output = new(a).execute(); //.inspect_execution(verbose, wait_ms);
+            //     println!("oct(A={a})={oct} | output={}", output.join(","));
+            // }
         }
         Algo::BruteForce => {
             for a in Register::MIN..=Register::MAX {
@@ -772,7 +937,6 @@ fn minimum_register_a_for_quine(
 mod test {
 
     use indoc::indoc;
-    use lazy_static::lazy_static;
 
     use crate::io_help::read_lines_in_memory;
 
