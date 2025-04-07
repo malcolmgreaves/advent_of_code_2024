@@ -238,6 +238,7 @@ impl Executable {
                 );
             }
 
+            let prev = self.computer.B;
             let (pc, maybe_output) = run_step(&mut self.computer, &self.program[self.pc]);
             match pc {
                 Some(instruction_pointer) => {
@@ -251,7 +252,7 @@ impl Executable {
             match maybe_output {
                 Some(o) => {
                     if verbose {
-                        println!("\t\toutputting: {o}");
+                        println!("\t\t[from B={prev}, oct(B)={prev:o}] outputting: {o}");
                     }
                     output.push(o);
                 }
