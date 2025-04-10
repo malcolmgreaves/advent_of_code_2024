@@ -10,6 +10,7 @@ impl Numeric for u16 {}
 impl Numeric for u32 {}
 impl Numeric for u64 {}
 impl Numeric for u128 {}
+impl Numeric for usize {}
 impl Numeric for i8 {}
 impl Numeric for i16 {}
 impl Numeric for i32 {}
