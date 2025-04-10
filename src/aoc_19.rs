@@ -1,6 +1,37 @@
+use std::fmt::Display;
+
 use crate::io_help;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+enum Color{
+    White,
+    Blue,
+    Black,
+    Red,
+    Green,
+}
+
+impl Color {
+    fn code(&self) -> char {
+        match self {
+            Self::White => 'w',
+            Self::Blue => 'u',
+            Self::Black => 'b',
+            Self::Red => 'r',
+            Self::Green => 'g',
+        }
+    }
+}
+
+impl Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.code())
+    }
+}
+
+type Towel = Vec<Color>;
 
 struct TODO {}
 
@@ -39,6 +70,16 @@ mod test {
     ///////////////////////////////////////////////
 
     const EXAMPLE_INPUT_STR: &str = indoc! {"
+        r, wr, b, g, bwu, rb, gb, br
+
+        brwrr
+        bggr
+        gbbr
+        rrbgbr
+        ubwu
+        bwurrg
+        brgr
+        bbrgwb
     "};
 
     lazy_static! {
