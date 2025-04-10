@@ -28,7 +28,7 @@ mod testing_utilities;
 mod utils;
 
 use std::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use std::fmt::Display;
 use std::io::Write;
@@ -190,44 +190,68 @@ fn wrap_u64(f: fn() -> Return<u64>) -> Box<dyn std::fmt::Display> {
 
 pub fn main() {
     // let problems: BTreeMap<&str, fn() -> u64> = BTreeMap::from([
-    let all_problems = [
-        Aoc::new(1, 1, Fn::FnU64(aoc_1::solution_pt1)),
-        Aoc::new(1, 2, Fn::FnU64(aoc_1::solution_pt2)),
-        Aoc::new(2, 1, Fn::FnU64(aoc_2::solution_pt1)),
-        Aoc::new(2, 2, Fn::FnU64(aoc_2::solution_pt2)),
-        Aoc::new(3, 1, Fn::FnU64(aoc_3::solution_pt1)),
-        Aoc::new(3, 2, Fn::FnU64(aoc_3::solution_pt2)),
-        Aoc::new(4, 1, Fn::FnU64(aoc_4::solution_pt1)),
-        Aoc::new(4, 2, Fn::FnU64(aoc_4::solution_pt2)),
-        Aoc::new(5, 1, Fn::FnU64(aoc_5::solution_pt1)),
-        Aoc::new(5, 2, Fn::FnU64(aoc_5::solution_pt2)),
-        Aoc::new(6, 1, Fn::FnU64(aoc_6::solution_pt1)),
-        Aoc::new(6, 2, Fn::FnU64(aoc_6::solution_pt2)),
-        Aoc::new(7, 1, Fn::FnU64(aoc_7::solution_pt1)),
-        Aoc::new(7, 2, Fn::FnU64(aoc_7::solution_pt2)),
-        Aoc::new(8, 1, Fn::FnU64(aoc_8::solution_pt1)),
-        Aoc::new(8, 2, Fn::FnU64(aoc_8::solution_pt2)),
-        Aoc::new(9, 1, Fn::FnU64(aoc_9::solution_pt1)),
-        Aoc::new(9, 2, Fn::FnU64(aoc_9::solution_pt2)),
-        Aoc::new(10, 1, Fn::FnU64(aoc_10::solution_pt1)),
-        Aoc::new(10, 2, Fn::FnU64(aoc_10::solution_pt2)),
-        Aoc::new(11, 1, Fn::FnU64(aoc_11::solution_pt1)),
-        Aoc::new(11, 2, Fn::FnU64(aoc_11::solution_pt2)),
-        Aoc::new(12, 1, Fn::FnU64(aoc_12::solution_pt1)),
-        Aoc::new(12, 2, Fn::FnU64(aoc_12::solution_pt2)),
-        Aoc::new(13, 1, Fn::FnU64(aoc_13::solution_pt1)),
-        Aoc::new(13, 2, Fn::FnU64(aoc_13::solution_pt2)),
-        Aoc::new(14, 1, Fn::FnU64(aoc_14::solution_pt1)),
-        Aoc::new(14, 2, Fn::FnU64(aoc_14::solution_pt2)),
-        Aoc::new(15, 1, Fn::FnU64(aoc_15::solution_pt1)),
-        Aoc::new(15, 2, Fn::FnU64(aoc_15::solution_pt2)),
-        Aoc::new(16, 1, Fn::FnU64(aoc_16::solution_pt1)),
-        Aoc::new(16, 2, Fn::FnU64(aoc_16::solution_pt2)),
-        Aoc::new(17, 1, Fn::FnStr(aoc_17::solution_pt1)),
-        Aoc::new(17, 2, Fn::FnU64(aoc_17::solution_pt2)),
-        Aoc::new(18, 1, Fn::FnU64(aoc_18::solution_pt1)),
-        Aoc::new(18, 2, Fn::FnStr(aoc_18::solution_pt2)),
-    ];
+    let all_problems = {
+        let all_problems = [
+            Aoc::new(1, 1, Fn::FnU64(aoc_1::solution_pt1)),
+            Aoc::new(1, 2, Fn::FnU64(aoc_1::solution_pt2)),
+            Aoc::new(2, 1, Fn::FnU64(aoc_2::solution_pt1)),
+            Aoc::new(2, 2, Fn::FnU64(aoc_2::solution_pt2)),
+            Aoc::new(3, 1, Fn::FnU64(aoc_3::solution_pt1)),
+            Aoc::new(3, 2, Fn::FnU64(aoc_3::solution_pt2)),
+            Aoc::new(4, 1, Fn::FnU64(aoc_4::solution_pt1)),
+            Aoc::new(4, 2, Fn::FnU64(aoc_4::solution_pt2)),
+            Aoc::new(5, 1, Fn::FnU64(aoc_5::solution_pt1)),
+            Aoc::new(5, 2, Fn::FnU64(aoc_5::solution_pt2)),
+            Aoc::new(6, 1, Fn::FnU64(aoc_6::solution_pt1)),
+            Aoc::new(6, 2, Fn::FnU64(aoc_6::solution_pt2)),
+            Aoc::new(7, 1, Fn::FnU64(aoc_7::solution_pt1)),
+            Aoc::new(7, 2, Fn::FnU64(aoc_7::solution_pt2)),
+            Aoc::new(8, 1, Fn::FnU64(aoc_8::solution_pt1)),
+            Aoc::new(8, 2, Fn::FnU64(aoc_8::solution_pt2)),
+            Aoc::new(9, 1, Fn::FnU64(aoc_9::solution_pt1)),
+            Aoc::new(9, 2, Fn::FnU64(aoc_9::solution_pt2)),
+            Aoc::new(10, 1, Fn::FnU64(aoc_10::solution_pt1)),
+            Aoc::new(10, 2, Fn::FnU64(aoc_10::solution_pt2)),
+            Aoc::new(11, 1, Fn::FnU64(aoc_11::solution_pt1)),
+            Aoc::new(11, 2, Fn::FnU64(aoc_11::solution_pt2)),
+            Aoc::new(12, 1, Fn::FnU64(aoc_12::solution_pt1)),
+            Aoc::new(12, 2, Fn::FnU64(aoc_12::solution_pt2)),
+            Aoc::new(13, 1, Fn::FnU64(aoc_13::solution_pt1)),
+            Aoc::new(13, 2, Fn::FnU64(aoc_13::solution_pt2)),
+            Aoc::new(14, 1, Fn::FnU64(aoc_14::solution_pt1)),
+            Aoc::new(14, 2, Fn::FnU64(aoc_14::solution_pt2)),
+            Aoc::new(15, 1, Fn::FnU64(aoc_15::solution_pt1)),
+            Aoc::new(15, 2, Fn::FnU64(aoc_15::solution_pt2)),
+            Aoc::new(16, 1, Fn::FnU64(aoc_16::solution_pt1)),
+            Aoc::new(16, 2, Fn::FnU64(aoc_16::solution_pt2)),
+            Aoc::new(17, 1, Fn::FnStr(aoc_17::solution_pt1)),
+            Aoc::new(17, 2, Fn::FnU64(aoc_17::solution_pt2)),
+            Aoc::new(18, 1, Fn::FnU64(aoc_18::solution_pt1)),
+            Aoc::new(18, 2, Fn::FnStr(aoc_18::solution_pt2)),
+        ];
+
+        let counter = all_problems
+            .iter()
+            .fold(HashMap::new(), |mut counter, aoc| {
+                let key = format!("{},{}", aoc.problem, aoc.part);
+                match counter.get_mut(&key) {
+                    Some(existing) => *existing += 1,
+                    None => _ = counter.insert(key, 1),
+                }
+                counter
+            });
+
+        let mut errors = 0;
+        for (duplicate_key, count) in counter.into_iter().filter(|(_, count)| *count != 1) {
+            println!("[ERROR] found {count} entires for AoC problem & part: {duplicate_key}");
+            errors += 1;
+        }
+        if errors > 0 {
+            panic!("fix {errors} errors in all_problems list!")
+        }
+
+        all_problems
+    };
 
     let args = Args::parse();
 
