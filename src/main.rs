@@ -19,6 +19,7 @@ mod aoc_9;
 mod fun_list;
 mod geometry;
 mod graph;
+mod graph_algo;
 mod io_help;
 mod matrix;
 mod nums;
