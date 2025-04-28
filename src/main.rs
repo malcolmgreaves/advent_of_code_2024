@@ -8,6 +8,7 @@ mod aoc_15;
 mod aoc_16;
 mod aoc_17;
 mod aoc_18;
+mod aoc_19;
 mod aoc_2;
 mod aoc_3;
 mod aoc_4;
@@ -228,6 +229,8 @@ pub fn main() {
             Aoc::new(17, 2, Fn::FnU64(aoc_17::solution_pt2)),
             Aoc::new(18, 1, Fn::FnU64(aoc_18::solution_pt1)),
             Aoc::new(18, 2, Fn::FnStr(aoc_18::solution_pt2)),
+            Aoc::new(19, 1, Fn::FnU64(aoc_19::solution_pt1)),
+            Aoc::new(19, 2, Fn::FnU64(aoc_19::solution_pt2)),
         ];
 
         let counter = all_problems
