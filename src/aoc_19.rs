@@ -1,5 +1,5 @@
-use std::fmt::Display;
-use trie_rs::TrieBuilder;
+use std::{collections::HashSet, fmt::Display};
+use trie_rs::{Trie, TrieBuilder};
 
 use crate::{io_help, matrix::Matrix, utils::collect_results};
 
@@ -460,14 +460,32 @@ fn count_solutions(puzzle: &Puzzle) -> u64 {
 }
 
 fn solve_full<'a>(designs: &'a [Design], towel: &[Color]) -> Vec<Solution<'a>> {
-    let trie_designs = {
-        let mut builder: TrieBuilder<Design> = TrieBuilder::new();
+    let trie_designs: Trie<Color> = {
+        let mut builder = TrieBuilder::new();
         for d in designs.iter() {
-            let new_d: Design = d.clone();
-            builder.insert([new_d].into_iter());
+            builder.push(d);
         }
         builder.build()
     };
+
+    let design_lens = {
+        let mut dls = designs
+            .iter()
+            .map(|d| d.len())
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect::<Vec<_>>();
+        dls.sort();
+        dls
+    };
+
+    let mut index = 0_usize;
+    while index < towel.len() {
+        let matching_designs: Vec<Design> = trie_designs
+            .predictive_search([towel[index].clone()])
+            .collect();
+    }
+
     panic!()
 }
 
