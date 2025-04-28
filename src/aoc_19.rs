@@ -461,45 +461,8 @@ fn count_solutions(puzzle: &Puzzle) -> u64 {
         .sum()
 }
 
-fn solve_full(designs: &[Design], towel: &[Color]) -> Vec<Vec<Design>> {
-    let mut cache = HashMap::new();
-    for idx_design in 0..designs.len() {
-        solve_full_recursive(designs, towel, &mut cache, idx_design, 0);
-    }
-
-    let mut collected = Vec::new();
-    let last_towel_index = towel.len() - 1;
-    for idx_design in 0..designs.len() {
-        match cache.get(&(idx_design, last_towel_index)) {
-            Some(results) => {
-                collected.extend(results);
-            }
-            None => (),
-        }
-    }
-    collected
-}
-
-fn solve_full_recursive(
-    designs: &[Design],
-    towel: &[Color],
-    cache: &mut HashMap<(usize, usize), Vec<Vec<Design>>>,
-    idx_design: usize,
-    idx_towel: usize,
-) -> Vec<Vec<Design>> {
-    let key = (idx_design, idx_towel);
-    match cache.get(&key) {
-        Some(existing) => existing.clone(),
-        None => {
-            let d = &designs[idx_design];
-            if towel[idx_towel..d.len()] == d {
-                cache.insert(
-                    key.clone(),
-                    solve_full_recursive(designs, towel, cache, idx_design, idx_towel + d.len()),
-                );
-            }
-        }
-    }
+fn solve_full<'a>(designs: &'a [Design], towel: &[Color]) -> Vec<Solution<'a>> {
+    panic!()
 }
 
 fn append<T: Clone>(accum: &Vec<T>, next: T) -> Vec<T> {
