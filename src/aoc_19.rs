@@ -1,13 +1,11 @@
-use std::{
-    collections::{HashMap, HashSet, hash_set},
-    fmt::Display,
-};
+use std::fmt::Display;
+use trie_rs::TrieBuilder;
 
 use crate::{io_help, matrix::Matrix, utils::collect_results};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 enum Color {
     White,
     Blue,
@@ -462,6 +460,14 @@ fn count_solutions(puzzle: &Puzzle) -> u64 {
 }
 
 fn solve_full<'a>(designs: &'a [Design], towel: &[Color]) -> Vec<Solution<'a>> {
+    let trie_designs = {
+        let mut builder: TrieBuilder<Design> = TrieBuilder::new();
+        for d in designs.iter() {
+            let new_d: Design = d.clone();
+            builder.insert([new_d].into_iter());
+        }
+        builder.build()
+    };
     panic!()
 }
 
@@ -479,6 +485,8 @@ fn append<T: Clone>(accum: &Vec<T>, next: T) -> Vec<T> {
 
 #[cfg(test)]
 mod test {
+
+    use std::collections::HashSet;
 
     use indoc::indoc;
     use lazy_static::lazy_static;
