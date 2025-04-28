@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashSet, hash_set},
+    collections::{HashMap, HashSet, hash_set},
     fmt::Display,
 };
 
@@ -455,84 +455,51 @@ fn count_solutions(puzzle: &Puzzle) -> u64 {
         .towels
         .iter()
         .map(|towel| {
-            let solutions: Vec<Solution<'_>> = solve_full(&puzzle.designs, towel);
+            let solutions = solve_full(&puzzle.designs, towel);
             solutions.len() as u64
         })
         .sum()
 }
 
-fn solve_full<'a>(designs: &'a [Design], towel: &'a [Color]) -> Vec<Solution<'a>> {
-    let table = fill_dp_table(designs, towel);
-    backtrack_full_solution(&table, &designs)
+fn solve_full(designs: &[Design], towel: &[Color]) -> Vec<Vec<Design>> {
+    let mut cache = HashMap::new();
+    for idx_design in 0..designs.len() {
+        solve_full_recursive(designs, towel, &mut cache, idx_design, 0);
+    }
+
+    let mut collected = Vec::new();
+    let last_towel_index = towel.len() - 1;
+    for idx_design in 0..designs.len() {
+        match cache.get(&(idx_design, last_towel_index)) {
+            Some(results) => {
+                collected.extend(results);
+            }
+            None => (),
+        }
+    }
+    collected
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
-enum CacheEntry<'a> {
-    Unvisisted,
-    NotViable,
-    Viable(HashSet<Solution<'a>>),
-}
-
-impl<'a> CacheEntry<'a> {
-    fn update(&mut self, viable: Solution<'a>) {
-        match self {
-            Self::Unvisisted => {
-                let mut h = HashSet::new();
-                h.insert(viable);
-                *self = Self::Viable(h);
-            }
-            Self::Viable(existing) => {
-                existing.insert(viable);
-            }
-            Self::NotViable => {
-                panic!("already marked as not-viable! cannot push viable solution: {viable:?}")
+fn solve_full_recursive(
+    designs: &[Design],
+    towel: &[Color],
+    cache: &mut HashMap<(usize, usize), Vec<Vec<Design>>>,
+    idx_design: usize,
+    idx_towel: usize,
+) -> Vec<Vec<Design>> {
+    let key = (idx_design, idx_towel);
+    match cache.get(&key) {
+        Some(existing) => existing.clone(),
+        None => {
+            let d = &designs[idx_design];
+            if towel[idx_towel..d.len()] == d {
+                cache.insert(
+                    key.clone(),
+                    solve_full_recursive(designs, towel, cache, idx_design, idx_towel + d.len()),
+                );
             }
         }
     }
-}
-
-fn backtrack_full_solution<'a>(table: &Matrix<bool>, designs: &'a [Design]) -> Vec<Solution<'a>> {
-    let end = table.len() - 1;
-
-    // NOTE: table's .len() is already towel.len() + 1
-    let mut cache: Matrix<CacheEntry<'a>> =
-        vec![vec![CacheEntry::Unvisisted; designs.len()]; table.len()];
-
-    candidates(table, end)
-        // flat-map: first non-empty solution will be what we
-        //           compute & return since we call .next() below
-        .flat_map(|idx_design| {
-            let mut complete = HashSet::new();
-            if backtrack_full(
-                table,
-                designs,
-                &mut cache,
-                &mut complete,
-                &mut vec![],
-                end,
-                idx_design,
-            ) {
-                println!(
-                    "Success INITIAL backtrack from d={} from end={end} --> {complete:?}",
-                    VecColor(&designs[idx_design]),
-                    // VecDesign(&complete),
-                );
-            } else {
-                println!(
-                    "Failed INITIAL backtrack from d={} from end={end} --> {complete:?}",
-                    VecColor(&designs[idx_design]),
-                    // VecDesign(&complete),
-                );
-            }
-            complete
-            // match &cache[end][idx_design] {
-            //     CacheEntry::Viable(fwds) => fwds.iter().map(|x| x.clone()).collect(),
-            //     _ => vec![],
-            // }
-        })
-        .collect::<HashSet<_>>()
-        .into_iter()
-        .collect()
 }
 
 fn append<T: Clone>(accum: &Vec<T>, next: T) -> Vec<T> {
@@ -543,174 +510,6 @@ fn append<T: Clone>(accum: &Vec<T>, next: T) -> Vec<T> {
         ax.push(next);
         ax
     }
-}
-
-fn extend<T: Clone>(accum: &Vec<T>, next: impl Iterator<Item = T>) -> Vec<T> {
-    let mut ax = accum.clone();
-    ax.extend(next);
-    ax
-}
-
-fn backtrack_full<'a>(
-    table: &Matrix<bool>,
-    designs: &'a [Design],
-    cache: &mut Matrix<CacheEntry<'a>>,
-    complete: &mut HashSet<Vec<&'a Design>>,
-    accum: &Vec<usize>,
-    end: usize,
-    idx_design: usize,
-) -> bool {
-    match &cache[end][idx_design] {
-        CacheEntry::Viable(forward_computed) => {
-            if end == table.len() - 1 {
-                println!("\t\t\t\t\t++short-circut!");
-                for f in forward_computed.iter() {
-                    complete.insert(f.clone());
-                }
-                return true;
-            }
-        }
-        CacheEntry::NotViable => {
-            println!("\t\t\t\t\t--short-circut!");
-            return false;
-        }
-        _ => (),
-    }
-
-    let result = if end == 0 {
-        println!(
-            "\t\t\tSUCCESS (bottom): [{end}][d:{} -- {}] --> {:?}",
-            idx_design,
-            VecColor(&designs[idx_design]),
-            append(accum, idx_design)
-        );
-
-        let finished = {
-            // let mut ax = append(accum, idx_design);
-            let mut ax = accum.clone();
-            ax.reverse();
-            ax.into_iter().map(|d| &designs[d]).collect::<Vec<_>>()
-        };
-        complete.insert(finished.clone());
-
-        // cache[end][idx_design].update(vec![&designs[idx_design]]);
-
-        true
-    } else if !table[end][idx_design] {
-        println!(
-            "\t\t\tFAILED: [{end}][{}] --> cannot end here!",
-            VecColor(&designs[idx_design])
-        );
-
-        cache[end][idx_design] = CacheEntry::NotViable;
-        false
-    } else if table[end][idx_design] && end == 1 {
-        println!(
-            "\t\t\tSUCCESS: made it to beginning, first design is: [{idx_design}] {} --> {:?}",
-            VecColor(&designs[idx_design]),
-            append(accum, idx_design),
-        );
-
-        let finished = {
-            let mut ax = append(accum, idx_design);
-            // let mut ax = accum.clone();
-            ax.reverse();
-            ax.into_iter().map(|d| &designs[d]).collect::<Vec<_>>()
-        };
-        complete.insert(finished.clone());
-
-        cache[end][idx_design].update(vec![&designs[idx_design]]);
-
-        true
-    } else {
-        println!(
-            "<end: {end} idx_design: {idx_design} = {}>",
-            VecColor(&designs[idx_design])
-        );
-        let d_len = designs[idx_design].len();
-        match end.checked_sub(d_len) {
-            Some(potential_preceeding_end) => candidates(table, potential_preceeding_end)
-                .flat_map(|idx_preceeding| {
-                    let attempt_accum = append(accum, idx_design);
-
-                    match &cache[potential_preceeding_end][idx_preceeding] {
-                        // CacheEntry::NotViable => {
-                        //     println!("\t\t\t\tshort circut => failed path detected");
-                        //     None
-                        // },
-                        // CacheEntry::Viable(fwds_from_here) => {
-                        //     let xs = fwds_from_here.iter().map(|f| append(f, &designs[idx_design])).collect::<HashSet<_>>();
-                        //     println!("\t\t\t\tshort circut => viable path detected: [{potential_preceeding_end}][{idx_preceeding}]--> {xs:?}");
-                        //     cache[end][idx_design] = CacheEntry::Viable(xs);
-                        //     Some(true)
-                        // },
-                        // CacheEntry::Unvisisted => {
-                        _ => {
-                            if backtrack_full(
-                                table,
-                                designs,
-                                cache,
-                                complete,
-                                &attempt_accum,
-                                potential_preceeding_end,
-                                idx_preceeding,
-                            ) {
-                                let new_entires = match &cache[end][idx_preceeding] {
-                                    CacheEntry::NotViable => panic!("CANNOT BE INVALID HERE!"),
-                                    CacheEntry::Unvisisted => {
-                                        println!("WARNING: unvisisted @ [{end}][{idx_preceeding}]");
-                                        let mut h = HashSet::new();
-                                        h.insert(vec![&designs[idx_design]]);
-                                        h
-                                    },
-                                    CacheEntry::Viable(forwards) => {
-                                        if forwards.is_empty() {
-                                            let mut h = HashSet::new();
-                                            h.insert(vec![&designs[idx_design]]);
-                                            h
-
-                                        } else {
-                                            forwards
-                                                .iter()
-                                                .map(|fwd| append(fwd, &designs[idx_design]))
-                                                .collect::<HashSet<_>>()
-                                        }
-                                    }
-                                };
-                                cache[end][idx_design] = CacheEntry::Viable(new_entires);
-                                println!(
-                                    "\t\tSUCCESS backtrack from d={} [{}, {end}) to new={} (end@: {potential_preceeding_end}) --> accum: {} -> CACHE design: {:?}",
-                                    VecColor(&designs[idx_design]),
-                                    potential_preceeding_end + 1,
-                                    VecColor(&designs[idx_preceeding]),
-                                    VecDesign(&accum.iter().map(|i| &designs[*i]).collect::<Vec<_>>()),
-                                    // VecColor(&designs[idx_design])
-                                    cache[end][idx_preceeding],
-                                );
-                                Some(true)
-                            } else {
-                                println!(
-                                    "\t\tFailed backtrack from d={} [{}, {end}) to new={} (end@: {potential_preceeding_end})",
-                                    VecColor(&designs[idx_design]),
-                                    potential_preceeding_end + 1,
-                                    VecColor(&designs[idx_preceeding]),
-                                );
-                                cache[end][idx_preceeding] = CacheEntry::NotViable;
-                                None
-                            }
-                        }
-                    }
-                })
-                .into_iter()
-                .fold(false, |at_least_one_ok, check| at_least_one_ok || check),
-            None => {
-                println!("\t\t\tFAILED out of bounds: {end} and design: {}", VecColor(&designs[idx_design]));
-                cache[end][idx_design] = CacheEntry::NotViable;
-                false
-            }
-        }
-    };
-    result
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
